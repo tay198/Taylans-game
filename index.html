@@ -1183,7 +1183,7 @@
                                  .replace(/\s+/g, ' ').trim(); // Normalize spaces
             const utterance = new SpeechSynthesisUtterance(plainText);
             utterance.lang = 'en-US'; 
-            speechSynthesis.cancel(); 
+            if (speechSynthesis.speaking) speechSynthesis.cancel(); 
             speechSynthesis.speak(utterance);
         }
         function setupSpeechRecognition() {
