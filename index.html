@@ -1,541 +1,624 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover"> <title>Evidence Lockdown: Sector Scan (V4.0 Proto) </title>
-  <style>
-    /* Font-Face Load Issue: Temporarily removed @font-face for 'PoliceTech' to avoid FOUT
-       If you have the font files, re-add the block like this:
-    @font-face {
-      font-family: 'PoliceTech';
-      src: url('fonts/police-tech-font.woff2') format('woff2'),
-           url('fonts/police-tech-font.woff') format('woff');
-      font-display: swap;
-    }
-    */
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat Assistant - Enhanced</title>
+    <style>
+        :root {
+            --body-bg-light: #f4f6f8;
+            --body-bg-dark: #121212; /* Darker dark mode */
+            --chat-bg-light: #ffffff;
+            --chat-bg-dark: #1e1e1e;
+            --header-bg-light: #007bff;
+            --header-bg-dark: #0056b3;
+            --header-text-light: #ffffff;
+            --header-text-dark: #e0e0e0;
+            --user-msg-bg-light: #007bff;
+            --user-msg-bg-dark: #0056b3;
+            --user-msg-text-light: #ffffff;
+            --user-msg-text-dark: #e0e0e0;
+            --bot-msg-bg-light: #e9ecef;
+            --bot-msg-bg-dark: #3a3a3a; /* Slightly lighter bot message in dark */
+            --bot-msg-text-light: #333333;
+            --bot-msg-text-dark: #d0d0d0;
+            --input-bg-light: #ffffff;
+            --input-bg-dark: #2c2c2c;
+            --input-text-light: #333333;
+            --input-text-dark: #e0e0e0;
+            --input-border-light: #ced4da;
+            --input-border-dark: #555555;
+            --button-bg-light: #007bff;
+            --button-bg-dark: #0056b3;
+            --button-text-light: #ffffff;
+            --button-text-dark: #e0e0e0;
+            --text-color-light: #212529;
+            --text-color-dark: #f8f9fa;
+            --border-color-light: #dee2e6;
+            --border-color-dark: #444444;
+            --shadow-light: 0 2px 10px rgba(0,0,0,0.1);
+            --shadow-dark: 0 2px 10px rgba(0,0,0,0.4); /* Darker shadow for dark mode */
+            --icon-filter-light: invert(0%);
+            --icon-filter-dark: invert(100%);
 
-    body, html {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      color: #E0E0E0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      /* Fallback fonts since PoliceTech is removed for now */
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      cursor: default;
-      background-color: #000;
-    }
-
-    #gameContainer {
-        position: relative;
-        width: 100vw;
-        height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    canvas {
-      display: block;
-      /* Canvas Z-Index Bug Fix */
-      position: absolute;
-      left: 0; /* Ensure it fills container if gameContainer is the direct parent */
-      top: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-      box-shadow: 0 0 20px rgba(0, 255, 255, 0.4); /* Kept shadow, might need adjustment if it looks off with z-index */
-      /* UX Enhancements: Custom Cursor */
-      touch-action: none; /* Already managed by JS init, but good for CSS too */
-      pointer-events: auto; /* Default, but explicit */
-    }
-
-    .police-tape {
-      position: absolute; /* Will be placed inside gameContainer via JS/HTML change if not already */
-      background-image: repeating-linear-gradient(
-        45deg,
-        #ffd700,
-        #ffd700 20px,
-        #333 20px,
-        #333 40px
-      );
-      color: #000;
-      font-weight: bold;
-      text-align: center;
-      font-size: 1.5vw;
-      line-height: 3vw;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
-      z-index: 2; /* Above canvas(0) and wanted posters(1) */
-      pointer-events: none; /* UX Enhancements: Interactive Layers Block Taps */
-    }
-    .police-tape-top, .police-tape-bottom { width: 100%; height: 3vw; left: 0; }
-    .police-tape-left, .police-tape-right { height: 100%; width: 3vw; top: 0; writing-mode: vertical-rl; text-orientation: mixed; }
-    .police-tape-top { top: 0; }
-    .police-tape-bottom { bottom: 0; }
-    .police-tape-left { left: 0; }
-    .police-tape-right { right: 0; }
-
-    #wantedPosterContainer {
-        position: absolute;
-        top: 0; left: 0; width: 100%; height: 100%;
-        pointer-events: none; /* Already had this, which is correct */
-        overflow: hidden;
-        z-index: 1; /* Above canvas(0) */
-    }
-
-    .wanted-poster {
-        position: absolute;
-        /* Poster Responsiveness */
-        width: clamp(80px, 20vw, 160px);
-        font-size: clamp(10px, 2vw, 16px);
-        aspect-ratio: 0.7; /* Maintain aspect ratio */
-        background-color: #f0e6d2;
-        border: 5px solid #5c3a21;
-        box-shadow: 5px 5px 10px rgba(0,0,0,0.5);
-        padding: 8px;
-        text-align: center;
-        font-family: 'Times New Roman', serif; /* Fallback if PoliceTech not available */
-        color: #333;
-        opacity: 0.7;
-        /* pointer-events: none; -- Handled by container */
-    }
-    .wanted-poster h3 { margin: 0 0 5px 0; font-size: 1.1em; /* slightly larger for name */ color: #000;}
-    .wanted-poster img { width: 80%; margin-bottom: 5px; border: 1px solid #333;}
-    .wanted-poster p { margin: 0; font-size: 0.9em;} /* For reason text */
-
-    .footer-credit { /* UX Enhancements: Attribution */
-      position: absolute;
-      bottom: 5px;
-      width: 100%;
-      text-align: center;
-      font-size: clamp(10px, 1.5vw, 14px); /* Responsive font size for footer */
-      color: rgba(224, 224, 224, 0.5); /* Adjusted for better visibility on dark bg */
-      z-index: 100; /* High z-index to be on top of everything */
-      pointer-events: none;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Ensure readable font */
-    }
-
-  </style>
-</head>
-<body>
-  <div id="gameContainer">
-    <div id="wantedPosterContainer"></div>
-    <canvas id="gameCanvas"></canvas>
-    <div class="police-tape police-tape-top">POLICE LINE DO NOT CROSS --- POLICE LINE DO NOT CROSS</div>
-    <div class="police-tape police-tape-bottom">POLICE LINE DO NOT CROSS --- POLICE LINE DO NOT CROSS</div>
-    <div class="police-tape police-tape-left">POLICE LINE DO NOT CROSS</div>
-    <div class="police-tape police-tape-right">POLICE LINE DO NOT CROSS</div>
-  </div>
-
-  <div class="footer-credit">Made by Taylan</div> <script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    let screenWidth, screenHeight;
-    let gameRunning = false;
-    let gamePaused = false;
-    let animationFrameId;
-
-    const MAX_PARTICLES = 200;
-    const MAX_FEEDBACK_MESSAGES = 15;
-
-    let audioContext;
-    const sounds = {
-        dispatchStart: null, backgroundMusic: null, radioStatic: null, siren: null,
-        intercomMessages: [],
-    };
-    let backgroundMusicSource = null;
-
-    async function loadSound(url) { /* ... (no changes from previous) ... */ }
-    function playSound(buffer, loop = false, volume = 1) { /* ... (no changes) ... */ }
-
-    const difficulties = { /* ... (no changes) ... */ };
-    let currentDifficultySetting;
-    let difficultySelection = ['Normal', 'Easy', 'Hard'];
-    let selectedDifficultyIndex = 0;
-
-    let currentBeatInterval, baseScannerSpeedMs, currentScannerSpeedMs, currentItemSpawnChance, currentItemActiveDurationMs;
-    let lastBeatTime = 0, beatCount = 0;
-
-    function applyDifficultySettings(difficultyNameOrObject) { /* ... (no changes from previous) ... */ }
-
-    const SCANNER_COLOR_BASE = 'rgba(0, 255, 255, 0.7)';
-    let scannerColor = SCANNER_COLOR_BASE;
-    const SCANNER_WIDTH = 8;
-    let scannerX = 0, scannerDirection = 1;
-    const MAX_SCANNER_SPEED_INCREASE_FACTOR = 1.5;
-
-    let items = [];
-    const ITEM_RADIUS_BASE = 18;
-    // ... (other item consts remain same)
-
-    let score = 0, highScore = 0, lifetimeScore = 0, combo = 0;
-    // ... (score consts remain same)
-
-    let tapFeedback = [], particles = [];
-    let lives = 3, INITIAL_LIVES = 3;
-    // ... (stat counters remain same)
-    let powerUpsStats = { focus: 0, freeze: 0, flashlight: 0 };
-
-
-    let focusModeActive = false, focusModeEndTime = 0;
-    // ... (power-up mode vars and consts remain same)
-    let flashlightModeActive = false, flashlightModeEndTime = 0;
-
-    const evidenceTypes = ['key', 'phone', 'footprint', 'document', 'sample', 'weapon_outline', 'datapad'];
-    let backgroundHue = 200;
-
-    let bossScanModeActive = false, bossScanTimer = 0, bossScanEndTime = 0;
-    // ... (boss mode consts remain same)
-    let difficultyBeforeBoss;
-
-    const wantedPostersData = [ /* ... (no changes) ... */ ];
-    let activeWantedPosters = [];
-
-    let sirenFlashActive = false, sirenFlashEndTime = 0; // ... (siren consts remain same)
-
-    const achievements = { /* ... (no changes) ... */ };
-    const rankThresholds = [ /* ... (no changes) ... */ ];
-    let currentRank; // Initialized in init
-
-    let detectiveModeActive = false;
-    const detectiveModeTapSequence = ['TOP_LEFT', 'BOTTOM_RIGHT', 'TOP_RIGHT', 'BOTTOM_LEFT'];
-    let currentTapSequence = [];
-    const DETECTIVE_MODE_TAP_AREA_SIZE_RATIO = 0.25;
-
-    const intercomMessages = [ /* ... (paths should be valid, no code change here) ... */ ];
-    let currentIntercomMessage = null, intercomMessageEndTime = 0, nextIntercomMessageTime = 0;
-
-    function getItemFromStorage(key) { /* ... (no changes from previous) ... */ }
-    function setItemInStorage(key, value) { /* ... (no changes from previous) ... */ }
-    function getJsonFromStorage(key) { /* ... (no changes from previous) ... */ }
-    function setJsonInStorage(key, value) { /* ... (no changes from previous) ... */ }
-
-    function getRandom(min, max) { /* ... (no changes) ... */ }
-    function getRandomInt(min, max) { /* ... (no changes) ... */ }
-
-    function updateRankAndAchievements() { /* ... (no changes from previous) ... */ }
-
-    function resizeCanvas() {
-      screenWidth = window.innerWidth;
-      screenHeight = window.innerHeight;
-      
-      const gameContainer = document.getElementById('gameContainer');
-      gameContainer.style.width = `${screenWidth}px`;
-      gameContainer.style.height = `${screenHeight}px`;
-
-      // Canvas already set to 100% width/height of gameContainer in CSS
-      // but setting width/height attributes resizes the drawing buffer
-      canvas.width = screenWidth;
-      canvas.height = screenHeight;
-      scannerX = SCANNER_WIDTH / 2;
-
-      const tapeElements = document.querySelectorAll('.police-tape');
-      const tapeFontSize = Math.min(screenWidth * 0.015, screenHeight * 0.03, 18); // Slightly smaller max for tape
-      tapeElements.forEach(tape => {
-          tape.style.fontSize = `${tapeFontSize}px`;
-          const tapeHeight = tapeFontSize * 2;
-          tape.style.lineHeight = `${tapeHeight}px`;
-          if (tape.classList.contains('police-tape-top') || tape.classList.contains('police-tape-bottom')) {
-              tape.style.height = `${tapeHeight}px`;
-          } else {
-              tape.style.width = `${tapeHeight}px`;
-          }
-      });
-      displayWantedPosters(false); 
-      
-      if (!gameRunning) {
-          if (lives <= 0 && score > 0) drawEndGameReport();
-          else drawStartScreen();
-      } else {
-          draw();
-      }
-    }
-    
-    function cycleDifficulty() { /* ... (no changes from previous) ... */ }
-    function getTapZone(tapX, tapY) { /* ... (no changes from previous) ... */ }
-    
-    function handleTap(event) { /* ... (no changes from previous logic, audio loading moved to init more robustly) ... */ }
-
-    function activateFocusMode(currentTime) { /* ... (no changes) ... */ }
-    function deactivateFocusMode() { /* ... (no changes) ... */ }
-    function activateFreezeMode(currentTime) { /* ... (no changes) ... */ }
-    function deactivateFreezeMode() { /* ... (no changes) ... */ }
-    function activateFlashlightMode(currentTime) { /* ... (no changes) ... */ }
-    function deactivateFlashlightMode() { /* ... (no changes) ... */ }
-
-    function addTapFeedback(x, y, text, color, time, isBonus = false) { /* ... (no changes from previous resource limit fix) ... */ }
-    
-    function spawnItem(currentTime) { /* ... (no changes from previous) ... */ }
-    function updateItems(currentTime, deltaTime) { /* ... (no changes from previous) ... */ }
-    function updateScanner(deltaTime) { /* ... (no changes from previous) ... */ }
-
-    function createParticleExplosion(x,y,color,isError=false){ /* ... (no changes from previous resource limit fix) ... */ }
-    function updateParticles(deltaTime){ /* ... (no changes) ... */ }
-    function drawParticles(){ /* ... (no changes) ... */ }
-    
-    function drawIcon(type,x,y,radius,alpha,itemHidden = false){ /* ... (no changes from previous flashlight & roundRect fix) ... */ }
-
-    function drawBackground(){ 
-        backgroundHue=(backgroundHue+0.05)%360;
-        let baseBgColor = `hsl(${backgroundHue},30%,5%)`;
-        let midBgColor = `hsl(${backgroundHue},30%,10%)`;
-
-        if (detectiveModeActive) {
-            baseBgColor = `hsl(0,0%,10%)`; midBgColor = `hsl(0,0%,20%)`;
+            /* Apply light theme by default */
+            --body-bg: var(--body-bg-light);
+            --chat-bg: var(--chat-bg-light);
+            --header-bg: var(--header-bg-light);
+            --header-text: var(--header-text-light);
+            --user-msg-bg: var(--user-msg-bg-light);
+            --user-msg-text: var(--user-msg-text-light);
+            --bot-msg-bg: var(--bot-msg-bg-light);
+            --bot-msg-text: var(--bot-msg-text-light);
+            --input-bg: var(--input-bg-light);
+            --input-text: var(--input-text-light);
+            --input-border: var(--input-border-light);
+            --button-bg: var(--button-bg-light);
+            --button-text: var(--button-text-light);
+            --text-color: var(--text-color-light);
+            --border-color: var(--border-color-light);
+            --shadow: var(--shadow-light);
+            --icon-filter: var(--icon-filter-light);
         }
 
-        // document.body.style.backgroundColor is already set in CSS / can be dynamic if needed
-        ctx.fillStyle = midBgColor;
-        ctx.fillRect(0,0,screenWidth,screenHeight);
-        
-        ctx.save();
-        if (detectiveModeActive) {
-            ctx.filter = 'grayscale(100%) contrast(1.1)';
-        } else {
-            ctx.filter = 'none';
-        }
-        
-        let overlayColor = null;
-        // ... (overlay logic remains same) ...
-        if (focusModeActive) overlayColor = 'rgba(100,0,100,0.15)';
-        else if (freezeModeActive) overlayColor = 'rgba(0,100,100,0.25)';
-        else if (flashlightModeActive) {
-            const pulse = Math.sin(performance.now() / 300) * 0.05 + 0.05;
-            overlayColor = `rgba(255, 255, 150, ${pulse})`;
-        } else if (sirenFlashActive) {
-            const flashCycle = Math.sin(performance.now() / 80);
-            overlayColor = flashCycle > 0 ? 'rgba(255,0,0,0.3)' : 'rgba(0,0,255,0.3)';
-        } else if (bossScanModeActive) {
-            overlayColor = 'rgba(255,50,0,0.15)';
+        body.dark-mode {
+            --body-bg: var(--body-bg-dark);
+            --chat-bg: var(--chat-bg-dark);
+            --header-bg: var(--header-bg-dark);
+            --header-text: var(--header-text-dark);
+            --user-msg-bg: var(--user-msg-bg-dark);
+            --user-msg-text: var(--user-msg-text-dark);
+            --bot-msg-bg: var(--bot-msg-bg-dark);
+            --bot-msg-text: var(--bot-msg-text-dark);
+            --input-bg: var(--input-bg-dark);
+            --input-text: var(--input-text-dark);
+            --input-border: var(--input-border-dark);
+            --button-bg: var(--button-bg-dark);
+            --button-text: var(--button-text-dark);
+            --text-color: var(--text-color-dark);
+            --border-color: var(--border-color-dark);
+            --shadow: var(--shadow-dark);
+            --icon-filter: var(--icon-filter-dark);
         }
 
-        if(overlayColor) {
-            ctx.fillStyle = overlayColor;
-            ctx.fillRect(0,0,screenWidth,screenHeight);
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
         }
-        // Filter remains active for subsequent canvas draws until ctx.restore()
-    }
 
-    function displayWantedPosters(randomize = true) {
-        const container = document.getElementById('wantedPosterContainer');
-        if (!container) return;
+        body {
+            background-color: var(--body-bg);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
+            overflow: hidden;
+        }
 
-        if (randomize) {
-            container.innerHTML = ''; 
-            activeWantedPosters = [];
-            const numPosters = getRandomInt(1,Math.min(3, wantedPostersData.length));
-            for(let i=0; i < numPosters; i++) {
-                let posterData; let attempts = 0;
-                do {
-                    posterData = wantedPostersData[getRandomInt(0, wantedPostersData.length - 1)];
-                    attempts++;
-                } while (activeWantedPosters.some(p => p.name === posterData.name) && attempts < wantedPostersData.length * 2)
+        .chat-container {
+            width: 100%;
+            max-width: 800px;
+            height: 100vh; 
+            background-color: var(--chat-bg);
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: background-color 0.3s;
+        }
 
-                if (!activeWantedPosters.some(p => p.name === posterData.name)) {
-                    const posterEl = document.createElement('div');
-                    posterEl.classList.add('wanted-poster');
-                    // Position posters more centrally, considering their size for edges
-                    let posterWidthVW = parseFloat(getComputedStyle(posterEl).width) / screenWidth * 100 || 20; // estimate poster width as %
-                    posterEl.style.left = `${getRandom(5, Math.max(10, 85 - posterWidthVW))}%`;
-                    posterEl.style.top = `${getRandom(10, 70)}%`; // Keep from very top/bottom
-                    // Wanted Poster Duplication Fix: Name now in H3
-                    posterEl.innerHTML = `
-                        <h3>WANTED: ${posterData.name}</h3>
-                        <img src="${posterData.img}" alt="Wanted: ${posterData.name}" onerror="this.style.display='none'; this.parentElement.querySelector('h3').innerText='IMAGE CORRUPT';">
-                        <p><small>${posterData.reason}</small></p>
-                    `;
-                    container.appendChild(posterEl);
-                    activeWantedPosters.push(posterData);
-                }
+        .chat-header {
+            padding: 12px 20px; /* Reduced padding */
+            background-color: var(--header-bg);
+            color: var(--header-text);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+            flex-shrink: 0; /* Prevent header from shrinking */
+        }
+
+        .chat-header h2 {
+            font-size: 1.1em; /* Adjusted size */
+            margin: 0;
+        }
+
+        #theme-toggle {
+            background: none;
+            border: 1px solid var(--header-text);
+            color: var(--header-text);
+            padding: 6px 10px;
+            border-radius: 20px; /* More rounded */
+            cursor: pointer;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        #theme-toggle:hover {
+            background-color: var(--header-text);
+            color: var(--header-bg);
+        }
+        #theme-toggle .icon {
+            font-size: 1.1em;
+        }
+
+        .chat-window {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--button-bg) var(--chat-bg);
+        }
+        .chat-window::-webkit-scrollbar { width: 8px; }
+        .chat-window::-webkit-scrollbar-track { background: var(--chat-bg); }
+        .chat-window::-webkit-scrollbar-thumb {
+            background-color: var(--button-bg);
+            border-radius: 10px;
+            border: 2px solid var(--chat-bg);
+        }
+
+        .message {
+            padding: 10px 15px;
+            border-radius: 18px;
+            max-width: 75%;
+            line-height: 1.5;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: fadeInMessage 0.3s ease forwards;
+            word-wrap: break-word;
+        }
+        .message.fade-out {
+            animation: fadeOutMessage 0.3s ease forwards;
+        }
+
+        @keyframes fadeInMessage {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeOutMessage {
+            to { opacity: 0; transform: translateY(-5px); height: 0; padding-top: 0; padding-bottom: 0; margin-bottom: 0; }
+        }
+
+
+        .message.user {
+            background-color: var(--user-msg-bg);
+            color: var(--user-msg-text);
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .message.bot {
+            background-color: var(--bot-msg-bg);
+            color: var(--bot-msg-text);
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .message.bot.typing .dot { /* Changed class for clarity */
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: currentColor; /* Use message text color */
+            animation: bounceTyping 1.2s infinite ease-in-out;
+            margin: 0 2px;
+        }
+        .message.bot.typing .dot:nth-child(1) { animation-delay: 0s; }
+        .message.bot.typing .dot:nth-child(2) { animation-delay: 0.2s; }
+        .message.bot.typing .dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounceTyping {
+            0%, 60%, 100% { transform: scale(0.4); opacity: 0.5; }
+            30% { transform: scale(1.0); opacity: 1; }
+        }
+
+        .chat-input-form { /* Renamed for clarity with form tag */
+            display: flex;
+            padding: 15px 20px;
+            border-top: 1px solid var(--border-color);
+            background-color: var(--chat-bg);
+            transition: background-color 0.3s, border-color 0.3s;
+            flex-shrink: 0; /* Prevent input area from shrinking */
+        }
+
+        #userInput {
+            flex-grow: 1;
+            padding: 12px 15px;
+            border: 1px solid var(--input-border);
+            border-radius: 20px;
+            font-size: 1em;
+            background-color: var(--input-bg);
+            color: var(--input-text);
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+            margin-right: 10px;
+        }
+        #userInput:focus {
+            outline: none;
+            border-color: var(--button-bg);
+            box-shadow: 0 0 0 2px color-mix(in srgb, var(--button-bg) 25%, transparent);
+        }
+
+        #sendButton {
+            padding: 12px 20px;
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: background-color 0.2s, opacity 0.2s;
+        }
+        #sendButton:hover:not(:disabled) {
+            opacity: 0.85;
+        }
+        #sendButton:disabled {
+            background-color: color-mix(in srgb, var(--button-bg) 50%, #888);
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        /* Mobile responsiveness */
+        @media (min-width: 801px) {
+            .chat-container {
+                border-radius: 8px;
+                height: calc(100vh - 40px);
+                margin: 20px auto;
             }
         }
-    }
 
-    function drawScanner(){ 
-      // ... (previous scanner drawing logic) ...
-      let baseColor = SCANNER_COLOR_BASE;
-      let glowWidthMultiplier = 2;
-
-      if (bossScanModeActive) { /* ... */ }
-      else if (combo >= HIGH_COMBO_THRESHOLD){ /* ... */ }
-      if (focusModeActive) baseColor=`rgba(255,0,255,0.8)`;
-      else if (freezeModeActive) baseColor=`rgba(150,200,255,0.8)`;
-      
-      ctx.fillStyle=baseColor;
-      ctx.fillRect(scannerX-SCANNER_WIDTH/2,0,SCANNER_WIDTH,screenHeight);
-      
-      const timeSinceLastBeat=performance.now()-lastBeatTime;
-      const pulseProgress=gamePaused?0:Math.min(1,timeSinceLastBeat/currentBeatInterval);
-      
-      // Scanner Flash Pulse Intensity Fix
-      let baseSinPulse = Math.sin(pulseProgress*Math.PI); // Value from 0 to 1
-      let clampedSinPulse = Math.max(0.05, baseSinPulse); // Ensures minimum visibility
-      const pulseAlpha = clampedSinPulse * (focusModeActive?0.5:(freezeModeActive?0.4:0.3)); // Apply mode-specific factor
-
-      let pulseColorRGB = '0,255,255';
-      // ... (pulse color logic remains same) ...
-      if (bossScanModeActive) pulseColorRGB = '255,100,0';
-      else if (combo >= HIGH_COMBO_THRESHOLD) pulseColorRGB = '255,255,0';
-      else if (focusModeActive) pulseColorRGB = '255,0,255';
-      else if (freezeModeActive) pulseColorRGB = '150,200,255';
-
-      ctx.fillStyle=`rgba(${pulseColorRGB}, ${pulseAlpha})`;
-      ctx.fillRect(scannerX-SCANNER_WIDTH*glowWidthMultiplier,0,SCANNER_WIDTH*glowWidthMultiplier*2,screenHeight);
-    }
-
-    function drawItems(currentTime){ /* ... (no changes from previous) ... */ }
-    
-    function drawUI() {
-      const xPadding = 40; // Scanner/Combo UI Clipping Fix
-      ctx.fillStyle = detectiveModeActive ? '#A0A0A0' : '#E0E0E0';
-      const fontSize = Math.max(18, screenWidth * 0.025);
-      // Font family will use fallbacks since 'PoliceTech' is removed for now
-      const gameFont = `'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`;
-      ctx.font = `${fontSize}px ${gameFont}`;
-      ctx.textAlign = 'left';
-      
-      ctx.fillText(`Units: ${lives}`, xPadding, fontSize*3);
-      ctx.fillText(`Score: ${score}`, xPadding, fontSize*1.5);
-
-      const comboBarWidth = screenWidth * 0.25;
-      const comboBarHeight = fontSize * 0.8;
-      const comboBarX = xPadding; // Align with padded text
-      const comboBarY = fontSize * 4.2;
-      // ... (combo bar logic remains same) ...
-      ctx.strokeStyle = detectiveModeActive ? '#777' : '#E0E0E0'; ctx.lineWidth = 1;
-      ctx.strokeRect(comboBarX, comboBarY, comboBarWidth, comboBarHeight);
-      const comboProgress = Math.min(1, combo / MAX_COMBO_FOR_METER);
-      ctx.fillStyle = combo >= HIGH_COMBO_THRESHOLD ? 'rgba(255,255,0,0.7)' : (bossScanModeActive ? 'rgba(255,100,0,0.7)' : SCANNER_COLOR_BASE);
-      ctx.fillRect(comboBarX + 1, comboBarY + 1, comboProgress * (comboBarWidth-2), comboBarHeight-2);
-
-
-      ctx.textAlign = 'right';
-      ctx.fillStyle = detectiveModeActive ? '#A0A0A0' : '#E0E0E0';
-      ctx.fillText(`Highest Score: ${highScore}`, screenWidth - xPadding, fontSize*1.5); // Add padding
-      if (combo > 1) {
-        const comboAlpha = Math.min(1, 0.3 + (combo * 0.07));
-        ctx.fillStyle = bossScanModeActive ? `rgba(255,100,0, ${comboAlpha})` : `rgba(0, 255, 255, ${comboAlpha})`; 
-        ctx.fillText(`Chain: x${combo}`, screenWidth - xPadding, fontSize*3); // Add padding
-      }
-
-      const rankBarY = fontSize * 5.7;
-      const rankBarWidth = screenWidth * 0.25;
-      ctx.textAlign = 'left'; // Switch back for rank label
-      ctx.fillText(`Rank: ${currentRank.name}`, xPadding, rankBarY - fontSize * 0.3);
-      // ... (rank bar logic remains same) ...
-      ctx.strokeStyle = detectiveModeActive ? '#777' : '#E0E0E0';
-      ctx.strokeRect(comboBarX, rankBarY, rankBarWidth, comboBarHeight * 0.8);
-      const nextRankIndex = rankThresholds.findIndex(r => r.name === currentRank.name) + 1;
-      let rankProgress = 0;
-      if (nextRankIndex < rankThresholds.length) {
-          const scoreInCurrentRank = lifetimeScore - currentRank.score;
-          const scoreNeededForNextRank = rankThresholds[nextRankIndex].score - currentRank.score;
-          rankProgress = scoreNeededForNextRank > 0 ? Math.min(1, scoreInCurrentRank / scoreNeededForNextRank) : 1;
-      } else { rankProgress = 1; }
-      ctx.fillStyle = 'rgba(200, 200, 255, 0.7)';
-      ctx.fillRect(comboBarX + 1, rankBarY + 1, rankProgress * (rankBarWidth-2), (comboBarHeight*0.8)-2);
-
-      // ... (power-up messages and intercom UI remain same) ...
-      ctx.textAlign = 'center';
-      if (focusModeActive) { /* ... */ } else if (freezeModeActive) { /* ... */ }
-      else if (flashlightModeActive) { /* ... */ } else if (bossScanModeActive) { /* ... */ }
-      if (currentIntercomMessage && performance.now() < intercomMessageEndTime) { /* ... */ }
-    }
-
-    function drawTapFeedback(currentTime){ /* ... (no changes from previous) ... */ }
-    function drawStartScreen(){ /* ... (font family updated to fallback) ... */ }
-    function drawEndGameReport(){ /* ... (font family updated to fallback) ... */ }
-
-    let lastTime = 0;
-    function gameLoop(currentTime) {
-      if (!gameRunning && !freezeModeActive) { /* ... (no changes) ... */ }
-      animationFrameId = requestAnimationFrame(gameLoop);
-
-      const rawDeltaTime = currentTime - lastTime;
-      // deltaTime Overflow Skipping Fix
-      const deltaTime = gamePaused ? 0 : Math.min(rawDeltaTime, 100); // Use 0 if paused, else capped deltaTime
-      lastTime = currentTime; // Always update lastTime to current real time
-
-      // ... (power-up deactivation logic remains same) ...
-      if (focusModeActive && currentTime >= focusModeEndTime) deactivateFocusMode();
-      if (freezeModeActive && currentTime >= freezeModeEndTime) deactivateFreezeMode();
-      if (flashlightModeActive && currentTime >= flashlightModeEndTime) deactivateFlashlightMode();
-      if (sirenFlashActive && currentTime >= sirenFlashEndTime) sirenFlashActive = false;
-
-
-      // ... (Boss Scan Logic, use 'deltaTime' which is now capped) ...
-      if (!bossScanModeActive && gameRunning && !gamePaused) {
-          bossScanTimer += deltaTime; // Use capped deltaTime for game timers
-          // ... (rest of boss scan start logic)
-      } else if (bossScanModeActive && currentTime >= bossScanEndTime) {
-          // ... (boss scan end logic)
-      }
-
-      // ... (Police Intercom Logic, use 'deltaTime' for timing if needed, though current logic is fine) ...
-      if (gameRunning && !gamePaused && currentTime >= nextIntercomMessageTime) { /* ... */ }
-      if (currentTime > intercomMessageEndTime) currentIntercomMessage = null;
-
-      if (!gamePaused) {
-        if (currentTime - lastBeatTime >= currentBeatInterval) {
-            lastBeatTime = currentTime - ((currentTime - lastBeatTime) % currentBeatInterval); // Sync beatTime
-            beatCount++;
-            if (gameRunning) spawnItem(currentTime);
+        @media (max-width: 600px) {
+            .chat-header h2 { font-size: 1em; }
+            #theme-toggle { padding: 5px 8px; font-size: 0.85em; }
+            .message { max-width: 90%; font-size: 0.95em; }
+            #userInput, #sendButton { font-size: 0.95em; }
+            .chat-input-form { padding: 10px 15px; }
+            .chat-window { padding: 15px 10px; }
         }
-        updateScanner(deltaTime); // Use capped deltaTime
-        updateItems(currentTime, deltaTime); // Pass both currentTime and capped deltaTime
-      }
-      updateParticles(deltaTime); // Use capped deltaTime
-      draw();
-    }
+    </style>
+</head>
+<body>
 
-    function draw(){ /* ... (no changes from previous ctx.restore() fix) ... */ }
-    function startGame() { /* ... (no changes from previous) ... */ }
-    function gameOver() { /* ... (no changes from previous) ... */ }
+    <div class="chat-container">
+        <header class="chat-header">
+            <h2>AI Assistant</h2>
+            <button id="theme-toggle" aria-label="Toggle color theme">
+                <span class="icon"></span> <span class="text">Toggle Theme</span>
+            </button>
+        </header>
+        <div class="chat-window" id="chatWindow" role="log" aria-live="polite">
+        </div>
+        <form class="chat-input-form" id="chatForm">
+            <input type="text" id="userInput" placeholder="Type your message..." autocomplete="off" aria-label="User message input">
+            <button type="submit" id="sendButton" aria-label="Send message">Send</button>
+        </form>
+    </div>
 
-    function init() {
-      // UX Enhancements: Custom Cursor already handled by CSS for canvas, JS sets for non-touch
-      if (!('ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0)) {
-        canvas.style.cursor = "url('images/cursors/flashlight_cursor.cur'), auto";
-      }
-      // canvas.style.touchAction = 'none'; // Already in CSS
-      // document.body.style.touchAction = 'none'; // Keep for global effect
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const chatWindow = document.getElementById('chatWindow');
+            const userInput = document.getElementById('userInput');
+            const chatForm = document.getElementById('chatForm'); // Changed from sendButton direct listener
+            const sendButton = document.getElementById('sendButton');
+            const themeToggleButton = document.getElementById('theme-toggle');
+            const themeToggleIcon = themeToggleButton.querySelector('.icon');
+            const themeToggleText = themeToggleButton.querySelector('.text');
 
-      // Robust audio context initialization moved to first tap (handleTap)
-      // but we can pre-load data paths for intercom here if not actual audio buffers
-      // For now, intercomMessages array with paths is sufficient until first tap loads them.
+            let conversationHistory = [];
+            let userName = localStorage.getItem('userName') || null;
+            let aiTemperature = "balanced"; // "safe", "balanced", "creative"
+            let initialFocusDone = false;
+            const MAX_MESSAGES = 50; // For pruning old messages
 
-      const storedAchievements = getJsonFromStorage('evidenceLockdownAchievementsV4Proto');
-      if (storedAchievements) { /* ... */ }
-      lifetimeScore = parseInt(getItemFromStorage('evidenceLockdownLifetimeScoreV4Proto') || "0");
-      highScore = parseInt(getItemFromStorage('evidenceLockdownHighScoreV4Proto') || "0");
-      
-      // Initialize currentRank correctly before first drawStartScreen
-      currentRank = rankThresholds[0]; // Default
-      updateRankAndAchievements(); // Calculate initial rank based on loaded lifetimeScore
+            // --- INITIAL GREETING & SETUP ---
+            function initializeChat() {
+                loadTheme();
+                const greeting = userName 
+                    ? `Welcome back, ${userName}! How can I help you today?`
+                    : "Hello! I'm your friendly AI Assistant. How can I assist you?";
+                addMessageToChat(greeting, 'bot');
+                conversationHistory.push({ role: 'assistant', content: greeting });
+                
+                if (!initialFocusDone) {
+                    userInput.focus();
+                    initialFocusDone = true;
+                }
+                // Attempt to handle mobile keyboard pushback slightly by scrolling after focus
+                setTimeout(scrollToBottom, 100); 
+            }
 
-      applyDifficultySettings(difficultySelection[selectedDifficultyIndex]);
+            // --- ADD MESSAGE TO CHAT UI ---
+            function addMessageToChat(text, sender, isTyping = false) {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('message', sender);
 
-      resizeCanvas(); 
-      window.addEventListener('resize', resizeCanvas);
-      canvas.addEventListener('mousedown', handleTap);
-      canvas.addEventListener('touchstart', handleTap, { passive: false });
-      
-      // Initial audio loading can start here if not dependent on user interaction for AudioContext
-      // However, current setup defers to first tap for AudioContext creation.
-      // This is generally safer across browsers.
-      // If you pre-load paths, actual loading happens in handleTap.
+                if (isTyping) {
+                    messageElement.classList.add('typing');
+                    messageElement.innerHTML = `<span class="dot"></span><span class="dot"></span><span class="dot"></span>`;
+                    messageElement.setAttribute('aria-label', 'Bot is typing');
+                } else {
+                    if (sender === 'user') {
+                        messageElement.textContent = text; // Use textContent for user messages (security)
+                    } else {
+                        // For bot, allow simple bold/italics via innerHTML. Sanitize if source is untrusted.
+                        text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                        text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+                        messageElement.innerHTML = text;
+                    }
+                }
+                
+                chatWindow.appendChild(messageElement);
+                pruneOldMessages();
+                scrollToBottom();
+                return messageElement;
+            }
+            
+            // --- PRUNE OLD MESSAGES ---
+            function pruneOldMessages() {
+                while (chatWindow.children.length > MAX_MESSAGES) {
+                    chatWindow.removeChild(chatWindow.firstChild);
+                }
+                if (conversationHistory.length > MAX_MESSAGES) {
+                    conversationHistory = conversationHistory.slice(conversationHistory.length - MAX_MESSAGES);
+                }
+            }
 
-      drawStartScreen(); 
-    }
+            // --- SCROLL TO BOTTOM ---
+            function scrollToBottom() {
+                // A slight delay can sometimes help ensure rendering is complete before scrolling
+                setTimeout(() => { 
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
+                }, 0);
+            }
+            
+            // --- AI RESPONSE SIMULATION ---
+            function getSynonym(baseWord, options) {
+                return options[Math.floor(Math.random() * options.length)];
+            }
 
-    // Initialize audio context and load essential sounds on first user interaction
-    // This is mostly handled in handleTap now. If you need truly global sounds before any tap:
-    // window.addEventListener('load', () => { /* init some non-gameplay sounds if desired */});
+            async function getAIResponse(prompt) {
+                const typingIndicator = addMessageToChat('', 'bot', true);
+                sendButton.disabled = true;
+                userInput.disabled = true;
 
-    init();
-  </script>
+                // Simulate API call delay 
+                await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 1200));
+
+                // Smoother typing indicator removal
+                if (typingIndicator) {
+                    typingIndicator.classList.add('fade-out');
+                    setTimeout(() => {
+                        if (typingIndicator.parentNode) { // Check if still in DOM
+                           typingIndicator.remove();
+                        }
+                    }, 300); // Match fadeOutMessage animation duration
+                }
+
+                sendButton.disabled = false;
+                userInput.disabled = false;
+                // userInput.focus(); // Removed auto-focus after every message
+
+                let response = "I'm not quite sure how to respond to that. Could you try rephrasing?";
+                const lowerPrompt = prompt.toLowerCase();
+
+                // Improved Name Extraction
+                if (lowerPrompt.includes("my name is")) {
+                    const nameMatch = lowerPrompt.match(/my name is ([\w\s']+)/i);
+                    if (nameMatch && nameMatch[1]) {
+                        userName = nameMatch[1].split(' ').map(n => n.charAt(0).toUpperCase() + n.slice(1)).join(' ');
+                        localStorage.setItem('userName', userName);
+                        response = `${getSynonym("Nice to meet you", ["Great to meet you", "Pleasure to meet you", "Hello"])} ${userName}! What can I do for you?`;
+                    }
+                } else if (lowerPrompt.includes("call me")) {
+                     const nameMatch = lowerPrompt.match(/call me ([\w\s']+)/i);
+                    if (nameMatch && nameMatch[1]) {
+                        userName = nameMatch[1].split(' ').map(n => n.charAt(0).toUpperCase() + n.slice(1)).join(' ');
+                        localStorage.setItem('userName', userName);
+                        response = `Alright, ${userName}! How can I help?`;
+                    }
+                }
+
+                // Command/Plugin System Placeholder
+                if (prompt.startsWith('/')) {
+                    const [command, ...args] = prompt.substring(1).split(' ');
+                    switch (command.toLowerCase()) {
+                        case 'weather':
+                            response = `I can't check the real weather yet, but let's imagine it's sunny! (args: ${args.join(' ')})`;
+                            break;
+                        case 'joke':
+                            response = getJoke();
+                            break;
+                        case 'temp':
+                            if (args[0] && ["safe", "balanced", "creative"].includes(args[0].toLowerCase())) {
+                                aiTemperature = args[0].toLowerCase();
+                                response = `AI temperature set to: ${aiTemperature}.`;
+                            } else {
+                                response = `Current AI temperature is ${aiTemperature}. Use /temp [safe|balanced|creative].`;
+                            }
+                            break;
+                        default:
+                            response = `Unknown command: ${command}`;
+                    }
+                } else { // Regular conversation
+                    const greetings = ["hello", "hi", "hey", "greetings"];
+                    if (greetings.some(g => lowerPrompt.startsWith(g))) {
+                        response = userName ? `${getSynonym("Hello", ["Hi", "Hey there"])} ${userName}! ${getSynonym("How can I help?", ["What's up?", "How can I assist?"])}` 
+                                          : `${getSynonym("Hello", ["Hi there", "Greetings"])}! ${getSynonym("How can I assist you?", ["What can I do for you?", "How can I help?"])}`;
+                    } else if (lowerPrompt.includes("what is your name") || lowerPrompt.includes("who are you")) {
+                        response = "I am AI Assistant 3000, your virtual helper.";
+                    } else if (lowerPrompt.includes("how are you")) {
+                        const feelingOptions = ["I'm functioning optimally", "I'm doing well", "I'm ready to assist"];
+                        response = `${feelingOptions[Math.floor(Math.random() * feelingOptions.length)]}, thank you!`;
+                    } else if (lowerPrompt.includes("what can you do") || lowerPrompt.includes("help")) {
+                        response = "I can chat with you, remember your name (if you tell me!), tell jokes (/joke), and simulate different response styles (/temp).";
+                    } else if (lowerPrompt.includes("bye") || lowerPrompt.includes("goodbye")) {
+                        response = userName ? `Goodbye, ${userName}! ${getSynonym("Have a great day.", ["Take care.", "See you later."])}` 
+                                          : `${getSynonym("Goodbye!", ["Farewell!", "See you!"])} Have a wonderful day.`;
+                    } else if (lowerPrompt.includes("time")) {
+                        response = `The current time is ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`;
+                    } else if (lowerPrompt.includes("date")) {
+                        response = `Today's date is ${new Date().toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.`;
+                    } else if (lowerPrompt.includes("thank you") || lowerPrompt.includes("thanks")) {
+                        response = `${getSynonym("You're welcome!", ["No problem!", "Happy to help!"])} ${getSynonym("Is there anything else?", ["What else can I do for you?", "Need help with anything more?"])}`;
+                    } else {
+                        // Temperature-based response variation
+                        if (aiTemperature === "creative" && Math.random() > 0.5) {
+                            const creativePrefixes = ["That's a fascinating thought!", "Let me ponder that...", "Hmm, interesting perspective."];
+                            response = `${creativePrefixes[Math.floor(Math.random() * creativePrefixes.length)]} I'm still learning about complex topics.`;
+                        } else if (aiTemperature === "safe") {
+                            response = "I understand. I'm designed to provide helpful and safe responses.";
+                        } else { // Balanced (default)
+                            const thoughtfulResponses = [
+                                `That's an interesting question, ${userName || 'friend'}.`,
+                                `I'll have to think about that one, ${userName || 'friend'}.`,
+                                `Tell me more about what you're thinking, ${userName || 'friend'}.`
+                            ];
+                            if (userName || conversationHistory.length > 4) { // Slightly more engaging if context exists
+                                response = thoughtfulResponses[Math.floor(Math.random() * thoughtfulResponses.length)];
+                            }
+                        }
+                    }
+                }
+                return response;
+            }
+            
+            function getJoke() {
+                const jokes = [
+                    "Why don't scientists trust atoms? Because they make up everything!",
+                    "Why did the scarecrow win an award? Because he was outstanding in his field!",
+                    "What do you call fake spaghetti? An Impasta!",
+                    "Why did the bicycle fall over? Because it was two-tired!"
+                ];
+                return jokes[Math.floor(Math.random() * jokes.length)];
+            }
+
+            // --- HANDLE SEND MESSAGE ---
+            async function handleSendMessage(event) {
+                if (event) event.preventDefault(); // Prevent form submission & page reload
+                const messageText = userInput.value.trim();
+                if (messageText === '') return;
+
+                addMessageToChat(messageText, 'user');
+                conversationHistory.push({ role: 'user', content: messageText });
+                userInput.value = ''; 
+
+                const aiResponseText = await getAIResponse(messageText);
+                addMessageToChat(aiResponseText, 'bot');
+                conversationHistory.push({ role: 'assistant', content: aiResponseText });
+            }
+
+            // --- EVENT LISTENERS ---
+            chatForm.addEventListener('submit', handleSendMessage);
+
+            themeToggleButton.addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode');
+                updateThemePreference();
+            });
+            
+            // Mobile Keyboard Pushback (Basic - ensure scroll after viewport changes slightly)
+            if (window.visualViewport) {
+                window.visualViewport.addEventListener('resize', () => {
+                    // Only scroll if input is focused, suggesting keyboard is likely cause
+                    if (document.activeElement === userInput) {
+                         scrollToBottom();
+                    }
+                });
+            }
+
+
+            // --- THEME MANAGEMENT ---
+            function updateThemePreference() {
+                const isDarkMode = document.body.classList.contains('dark-mode');
+                if (isDarkMode) {
+                    themeToggleIcon.textContent = '☀️'; // Sun icon
+                    themeToggleText.textContent = 'Light Mode';
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    themeToggleIcon.textContent = '🌙'; // Moon icon
+                    themeToggleText.textContent = 'Dark Mode';
+                    localStorage.setItem('theme', 'light');
+                }
+            }
+
+            function loadTheme() {
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme === 'dark') {
+                    document.body.classList.add('dark-mode');
+                } else {
+                    document.body.classList.remove('dark-mode'); // Default to light
+                }
+                updateThemePreference(); // Update button text/icon
+            }
+            
+            // --- VOICE INPUT & TTS (PLACEHOLDERS) ---
+            /*
+            function startVoiceInput() {
+                if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    const recognition = new SpeechRecognition();
+                    recognition.interimResults = false;
+                    recognition.lang = 'en-US';
+                    
+                    recognition.onstart = () => {
+                        console.log("Voice recognition started. Speak into the microphone.");
+                        userInput.placeholder = "Listening...";
+                    };
+                    
+                    recognition.onspeechend = () => {
+                        recognition.stop();
+                        userInput.placeholder = "Type your message...";
+                    };
+                    
+                    recognition.onresult = (event) => {
+                        const transcript = event.results[0][0].transcript;
+                        userInput.value = transcript;
+                        handleSendMessage(); // Optionally send immediately
+                    };
+                    
+                    recognition.onerror = (event) => {
+                        console.error("Speech recognition error", event.error);
+                        userInput.placeholder = "Voice input error. Type your message...";
+                    };
+                    
+                    recognition.start();
+                } else {
+                    console.log("Speech recognition not supported in this browser.");
+                    alert("Sorry, your browser doesn't support voice input.");
+                }
+            }
+
+            function speakText(text) {
+                if ('speechSynthesis' in window) {
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    // You can configure voice, pitch, rate here if desired
+                    // utterance.voice = speechSynthesis.getVoices().find(voice => voice.name === 'Google UK English Female');
+                    // utterance.pitch = 1;
+                    // utterance.rate = 1;
+                    speechSynthesis.speak(utterance);
+                } else {
+                    console.log("Text-to-speech not supported in this browser.");
+                }
+            }
+            // Example: To make the bot speak its response:
+            // Inside getAIResponse, before returning 'response':
+            // speakText(response); 
+            // And you'd need a button to trigger startVoiceInput()
+            */
+
+            // --- INITIALIZE ---
+            initializeChat();
+        });
+    </script>
 </body>
 </html>
