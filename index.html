@@ -245,8 +245,7 @@
             <header class="chat-header">
                 <h2>
                     <span class="title-main">AI Assistant</span>
-                    <span class="title-subtitle">by Taylan (Gemini Frontend)</span>
-                </h2>
+                    <span class="title-subtitle">by Taylan</span> </h2>
                 <div class="header-controls">
                     <label for="personaSelect">Persona:</label>
                     <select id="personaSelect">
@@ -276,11 +275,11 @@
         </div>
     </main>
 
-<script type="module" defer> // Ensure this is type="module"
+<script type="module" defer>
     // 1. Import the GoogleGenerativeAI library
     import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "https://esm.run/@google/generative-ai";
 
-    // --- DOM Elements (constants from your original code) ---
+    // --- DOM Elements ---
     const chatAppContainer = document.getElementById('chatAppContainer');
     const chatWindow = document.getElementById('chatWindow');
     const userInput = document.getElementById('userInput');
@@ -298,60 +297,65 @@
     const threadList = document.getElementById('threadList');
     const newThreadButton = document.getElementById('newThreadButton');
 
-    // --- State Variables (from your original code) ---
+    // --- State Variables ---
     let conversationHistory = [];
     let currentChatThreadId = localStorage.getItem('lastActiveThreadId') || 'default_chat';
     let userName = localStorage.getItem('userName') || null;
     let userPreferences = JSON.parse(localStorage.getItem('userPreferences') || '{}');
-    let aiTemperature = localStorage.getItem('aiTemperature') || "0.7"; // Default Gemini temperature
+    let aiTemperature = localStorage.getItem('aiTemperature') || "0.7";
     let initialFocusDone = false;
     const MAX_MESSAGES_DISPLAY = 100;
-    const MAX_CONTEXT_MESSAGES = 10; // Max messages (user + assistant turns) for history
+    const MAX_CONTEXT_MESSAGES = 10;
     let speechRecognition;
-    // let typingTimeout; // Not strictly needed with new streaming visual
 
     const AVAILABLE_COMMANDS = [
         { cmd: "/help", desc: "Show this help message." },
         { cmd: "/joke", desc: "Tell a joke (client-side)." },
-        // { cmd: "/fact", desc: "Tell a fun fact (placeholder)." }, // Gemini can do this
         { cmd: "/temp creative", desc: "Set AI to more creative (temp 0.9)." },
         { cmd: "/temp balanced", desc: "Set AI to balanced (temp 0.7)." },
         { cmd: "/temp precise", desc: "Set AI to more precise (temp 0.3)." },
         { cmd: "/reset", desc: "Reset current chat (clears messages)." },
-        // { cmd: "/weather <city>", desc: "Get weather (needs external API/tool)." },
-        // { cmd: "/news <topic>", desc: "Get news (needs external API/tool)." },
     ];
 
     // --- Gemini API Configuration ---
-    // !!! IMPORTANT: REPLACE WITH YOUR ACTUAL API KEY !!!
-    // !!! Ensure this key is RESTRICTED to your GitHub Pages domain in Google AI Studio !!!
-    const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY";
-    const MODEL_NAME = "gemini-1.5-flash-latest"; // Or "gemini-pro"
+    // #########################################################################
+    // ### IMPORTANT: REPLACE WITH YOUR ACTUAL, RESTRICTED GEMINI API KEY ###
+    // ###                                                                 ###
+    // ### Get your key from Google AI Studio (aistudio.google.com/app/apikey) ###
+    // ### RESTRICT IT to your GitHub Pages domain (e.g., your-user.github.io) ###
+    // #########################################################################
+    const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY"; // <-- FIX 2: REPLACE THIS!
+
+    const MODEL_NAME = "gemini-1.5-flash-latest";
 
     let genAI;
     let geminiModel;
-    let currentGeminiChatSession; // To store the chat session for multi-turn
+    let currentGeminiChatSession;
 
     if (GEMINI_API_KEY && GEMINI_API_KEY !== "YOUR_GEMINI_API_KEY") {
         try {
             genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
             geminiModel = genAI.getGenerativeModel({
                 model: MODEL_NAME,
-                // safetySettings: (configure as needed, see Gemini docs)
-                // generationConfig: (default temperature set per request)
+                // --- Optional: Adjust Safety Settings ---
+                // safetySettings: [
+                //   { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+                //   { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+                //   // Add more categories as needed
+                // ],
             });
-            // Initialize chat session when a thread is loaded or started
         } catch (error) {
             console.error("Error initializing Gemini SDK:", error);
-            addMessageToChat("Error initializing AI. Please check API Key and console.", "bot", false, generateMessageId());
+            // An error message will be added in initializeChat if geminiModel is not set
         }
-    } else {
-        console.warn("Gemini API Key not configured.");
-        // We'll add a message in initializeChat if the key is missing
     }
+    // No 'else' here; initializeChat will handle disabling inputs if key is missing.
 
     function startNewGeminiChatSession(historyForGemini = []) {
-        if (!geminiModel) return null;
+        if (!geminiModel) {
+            console.warn("Gemini model not initialized. Cannot start chat session.");
+            return null;
+        }
         try {
             return geminiModel.startChat({
                 history: historyForGemini,
@@ -366,29 +370,33 @@
         }
     }
 
-
-    // --- CORE FUNCTIONS (from your original code, with modifications) ---
     function initializeChat() {
         loadTheme();
         applyViewportHeight();
         loadChatThreads();
-        loadConversation(currentChatThreadId); // This will also init Gemini chat session
+        loadConversation(currentChatThreadId);
 
+        // This block correctly disables input if API key is missing.
+        // Once you add your key, this 'if' condition will be false, and inputs will remain enabled.
         if (!GEMINI_API_KEY || GEMINI_API_KEY === "YOUR_GEMINI_API_KEY") {
-             addMessageToChat("AI functionality disabled: API Key not configured. Please set your restricted API key in the script.", 'bot', false, generateMessageId());
-             sendButton.disabled = true;
-             userInput.disabled = true;
-        } else if (!geminiModel) {
-            addMessageToChat("AI functionality disabled: Error initializing AI model. Check console.", 'bot', false, generateMessageId());
+            addMessageToChat("AI functionality disabled: API Key not configured. Please replace 'YOUR_GEMINI_API_KEY' in the script with your restricted key from Google AI Studio.", 'bot', false, generateMessageId());
             sendButton.disabled = true;
             userInput.disabled = true;
-        } else if (!conversationHistory.length && !document.querySelector('.message.bot[id^="msg"]')) {
+        } else if (!geminiModel) { // If key is present but model failed to init
+            addMessageToChat("AI functionality disabled: Error initializing AI model. API Key might be invalid or there could be an issue with the Gemini SDK. Check console.", 'bot', false, generateMessageId());
+            sendButton.disabled = true;
+            userInput.disabled = true;
+        } else if (conversationHistory.length === 0 && !document.querySelector('.message.bot[id^="msg"]')) { // Check if greeting already exists more reliably
             const persona = personaSelect.value;
             const greeting = generateGreeting(persona);
             const greetingId = generateMessageId();
             addMessageToChat(greeting, 'bot', false, greetingId);
-            updateConversationHistory('assistant', greeting, greetingId);
+            updateConversationHistory('assistant', greeting, greetingId); // Ensure history is updated
         }
+        // To test UI without using Gemini yet (optional debug bypass):
+        // If you uncomment the lines below, remember to comment them back or add your API key.
+        // sendButton.disabled = false;
+        // userInput.disabled = false;
 
         displaySuggestedPrompts();
         if (!initialFocusDone) { userInput.focus(); initialFocusDone = true; }
@@ -396,7 +404,7 @@
         updatePersonaSelectBasedOnThread();
     }
 
-    function generateGreeting(persona) { /* ... (Keep your existing generateGreeting) ... */
+    function generateGreeting(persona) {
         const namePart = userName ? ` ${userName}` : '';
         switch(persona) {
             case 'pirate': return `Ahoy Matey${namePart}! What treasures be ye seekin' today? I be yer Gemini-powered pirate!`;
@@ -406,14 +414,13 @@
             default: return `${userName ? `Welcome back, ${userName}!` : 'Hello!'} I'm your ${persona} Gemini AI Assistant. How can I help?`;
         }
     }
-    function generateMessageId() { /* ... (Keep your existing generateMessageId) ... */
+    function generateMessageId() {
         return `msg_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     }
 
-    // --- New Gemini API Integration Function ---
     async function fetchAIResponseFromGemini(promptText, currentChatSession, persona, temperature) {
         if (!currentChatSession) {
-            console.error("Gemini chat session not initialized.");
+            console.error("Gemini chat session not initialized for fetch.");
             return "Error: AI chat session not ready. Please reload or check API key.";
         }
 
@@ -426,28 +433,27 @@
             const result = await currentChatSession.sendMessageStream(promptWithPersona, {
                 generationConfig: { temperature: parseFloat(temperature) }
             });
-            return result.stream; // This is an AsyncIterable<GenerateContentResponse>
+            return result.stream;
         } catch (error) {
             console.error('Gemini API Error:', error);
             let errorMessage = "Error communicating with Gemini API.";
             if (error.message) errorMessage += ` Details: ${error.message.substring(0,150)}`;
             if (error.toString().includes("API key not valid")) {
                 errorMessage = "Error: Invalid Gemini API Key. Please check your key and its restrictions in Google AI Studio.";
-            } else if (error.message && error.message.includes("429") || error.message && error.message.toLowerCase().includes("quota")) {
+            } else if (error.message && (error.message.includes("429") || error.message.toLowerCase().includes("quota"))) {
                  errorMessage = "Error: API Quota exceeded or rate limit hit. Please check your Google Cloud console or try again later.";
             } else if (error.message && error.message.toLowerCase().includes("safety")){
                 errorMessage = "Error: The response was blocked due to safety settings. Try rephrasing your prompt.";
             }
-            return errorMessage; // Return error message as string
+            return errorMessage;
         }
     }
 
-    // --- MODIFIED Streaming Response (Client-side handling for Gemini SDK stream) ---
     async function handleStreamedResponse(geminiStream, botMessageElement, botMessageId) {
-        if (!geminiStream || typeof geminiStream === 'string') { // Handles error strings from fetchAIResponseFromGemini
+        if (!geminiStream || typeof geminiStream === 'string') {
             const errorMessage = typeof geminiStream === 'string' ? geminiStream : "Error: Unable to stream response (null or invalid stream).";
             botMessageElement.innerHTML = DOMPurify.sanitize(typeof marked !== 'undefined' ? marked.parse(errorMessage) : errorMessage);
-            Prism.highlightAllUnder(botMessageElement);
+            if (typeof Prism !== 'undefined') Prism.highlightAllUnder(botMessageElement);
             updateConversationHistory('assistant', errorMessage, botMessageId);
             enableInputs();
             return;
@@ -456,8 +462,8 @@
         let fullText = '';
         userInput.disabled = true;
         sendButton.disabled = true;
-        let firstChunk = true; // To show cursor only on first part
-        const TYPING_DELAY_MS = 5; // Faster typing animation
+        let firstChunk = true;
+        const TYPING_DELAY_MS = 5;
 
         async function appendCharToElement(char) {
             fullText += char;
@@ -485,20 +491,20 @@
             botMessageElement.innerHTML = DOMPurify.sanitize(
                 (typeof marked !== 'undefined' ? marked.parse(fullText) : fullText)
             );
-            Prism.highlightAllUnder(botMessageElement);
+            if (typeof Prism !== 'undefined') Prism.highlightAllUnder(botMessageElement);
             updateConversationHistory('assistant', fullText, botMessageId);
-            saveConversation(currentChatThreadId); // Save after successful stream
+            saveConversation(currentChatThreadId);
             enableInputs();
             userInput.focus();
         }
     }
 
-    function enableInputs() { /* ... (Keep your existing enableInputs) ... */
+    function enableInputs() {
         userInput.disabled = false;
         sendButton.disabled = false;
     }
 
-    function addMessageToChat(text, sender, isLoading = false, messageId) { /* ... (Keep your existing addMessageToChat, ensure DOMPurify is used for bot messages) ... */
+    function addMessageToChat(text, sender, isLoading = false, messageId) {
         const messageElement = document.createElement('div');
         messageElement.classList.add('message', sender);
         messageElement.id = messageId;
@@ -511,10 +517,10 @@
         } else {
             if (sender === 'user') {
                 messageElement.textContent = text;
-            } else { // Bot message with Markdown
+            } else {
                 const htmlContent = typeof marked !== 'undefined' ? marked.parse(text) : text.replace(/\n/g, '<br>');
                 messageElement.innerHTML = DOMPurify.sanitize(htmlContent, { USE_PROFILES: { html: true } });
-                Prism.highlightAllUnder(messageElement);
+                if (typeof Prism !== 'undefined') Prism.highlightAllUnder(messageElement);
                 addMessageActions(messageElement, text, messageId);
                 addInfoTooltipsToMessage(messageElement, text);
             }
@@ -525,13 +531,13 @@
         scrollToBottom();
         if (!isLoading && sender === 'bot') {
             chatAppContainer.classList.remove('flash');
-            void chatAppContainer.offsetWidth; // Trigger reflow
+            void chatAppContainer.offsetWidth;
             chatAppContainer.classList.add('flash');
         }
         return messageElement;
     }
 
-    function addMessageActions(messageElement, originalText, messageId) { /* ... (Keep your existing addMessageActions) ... */
+    function addMessageActions(messageElement, originalText, messageId) {
         const actionsContainer = document.createElement('div');
         actionsContainer.className = 'message-actions';
 
@@ -549,7 +555,7 @@
         
         messageElement.appendChild(actionsContainer);
     }
-    function speakText(text) { /* ... (Keep your existing speakText, ensure DOMPurify is used if stripping HTML) ... */
+    function speakText(text) {
         if (!('speechSynthesis' in window)) {
             alert("Sorry, your browser doesn't support text-to-speech.");
             return;
@@ -560,7 +566,7 @@
         speechSynthesis.cancel(); 
         speechSynthesis.speak(utterance);
     }
-    function setupSpeechRecognition() { /* ... (Keep your existing setupSpeechRecognition) ... */
+    function setupSpeechRecognition() {
          if ('webkitSpeechRecognition' in window) {
             speechRecognition = new webkitSpeechRecognition();
             speechRecognition.continuous = false; 
@@ -587,14 +593,15 @@
                 micButton.classList.remove('recording');
                 micButton.textContent = '🎤';
                 userInput.placeholder = "Ask me anything or type /help...";
-                userInput.focus();
+                if (!userInput.disabled) userInput.focus();
             };
         } else {
             micButton.style.display = 'none'; 
             console.warn("Speech recognition not supported in this browser.");
         }
     }
-    micButton.addEventListener('click', () => { /* ... (Keep your existing micButton listener) ... */
+    micButton.addEventListener('click', () => {
+        if (userInput.disabled) return; // Don't allow mic if input is disabled
         if (speechRecognition) {
             try {
                 if (micButton.classList.contains('recording')) {
@@ -611,7 +618,7 @@
             alert("Speech recognition is not available.");
         }
     });
-    exportChatButton.addEventListener('click', () => { /* ... (Keep your existing exportChatButton listener) ... */
+    exportChatButton.addEventListener('click', () => {
         const chatData = {
             threadId: currentChatThreadId,
             persona: personaSelect.value,
@@ -628,7 +635,7 @@
         URL.revokeObjectURL(a.href);
     });
 
-    function loadChatThreads() { /* ... (Keep your existing loadChatThreads, ensure persona is part of thread object) ... */
+    function loadChatThreads() {
         const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
         threadList.innerHTML = ''; 
         if (Object.keys(threads).length === 0) {
@@ -652,17 +659,17 @@
             threadList.appendChild(li);
         });
     }
-    function switchChatThread(threadId) { /* ... (Keep your existing switchChatThread) ... */
+    function switchChatThread(threadId) {
         saveConversation(currentChatThreadId); 
         currentChatThreadId = threadId;
         localStorage.setItem('lastActiveThreadId', currentChatThreadId);
-        loadConversation(threadId); // This will re-initialize Gemini chat
+        loadConversation(threadId);
         document.querySelectorAll('#threadList button').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.threadId === threadId);
         });
         updatePersonaSelectBasedOnThread();
     }
-    newThreadButton.addEventListener('click', () => { /* ... (Keep your existing newThreadButton listener) ... */
+    newThreadButton.addEventListener('click', () => {
         const newThreadName = prompt("Enter name for new chat thread:", `Chat Session ${Object.keys(JSON.parse(localStorage.getItem('chatThreads') || '{}')).length + 1}`);
         if (newThreadName) {
             saveConversation(currentChatThreadId); 
@@ -677,14 +684,14 @@
             updatePersonaSelectBasedOnThread();
         }
     });
-    function updatePersonaSelectBasedOnThread() { /* ... (Keep your existing updatePersonaSelectBasedOnThread) ... */
+    function updatePersonaSelectBasedOnThread() {
         const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
         const currentThread = threads[currentChatThreadId];
         if (currentThread && currentThread.persona) {
             personaSelect.value = currentThread.persona;
         }
     }
-    personaSelect.addEventListener('change', () => { /* ... (Keep your existing personaSelect listener, it correctly updates thread data) ... */
+    personaSelect.addEventListener('change', () => {
         const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
         if (threads[currentChatThreadId]) {
             threads[currentChatThreadId].persona = personaSelect.value;
@@ -692,25 +699,28 @@
         }
         const newGreeting = generateGreeting(personaSelect.value);
         const msgId = generateMessageId();
-        addMessageToChat(`Switched to ${personaSelect.value} persona. ${newGreeting.split("!")[0]}!`, 'bot', false, msgId); // Shorter greeting
+        addMessageToChat(`Switched to ${personaSelect.value} persona. ${newGreeting.split("!")[0]}!`, 'bot', false, msgId);
         updateConversationHistory('assistant', `Switched to ${personaSelect.value} persona.`, msgId);
-        // Re-initialize chat session if persona change implies a major context shift or if system prompt is part of history
+        
         const formattedHistoryForGemini = conversationHistory
-            .filter(msg => msg.role === 'user' || msg.role === 'assistant') // Only user/assistant for history
-            .slice(-MAX_CONTEXT_MESSAGES * 2) // keep it reasonable
+            .filter(msg => msg.role === 'user' || msg.role === 'assistant')
+            .slice(-MAX_CONTEXT_MESSAGES * 2)
             .map(msg => ({
                 role: msg.role === 'assistant' ? 'model' : 'user',
                 parts: [{ text: msg.content }]
             }));
         currentGeminiChatSession = startNewGeminiChatSession(formattedHistoryForGemini);
-
     });
 
-    function saveConversation(threadId) { /* ... (Keep your existing saveConversation) ... */
+    function saveConversation(threadId) {
         if (!threadId) return;
         const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
         if (!threads[threadId]) threads[threadId] = { name: `Chat ${threadId.substring(0,5)}`, history: [], persona: personaSelect.value };
-        threads[threadId].history = conversationHistory;
+        
+        // Filter out temporary "Switched to persona..." messages from being saved if they are not desired in long-term history
+        const historyToSave = conversationHistory.filter(msg => !msg.content.startsWith("Switched to") || msg.content.includes(generateGreeting(personaSelect.value).split("!")[0]));
+
+        threads[threadId].history = historyToSave;
         threads[threadId].lastUpdated = Date.now();
         threads[threadId].persona = personaSelect.value; 
         localStorage.setItem('chatThreads', JSON.stringify(threads));
@@ -732,10 +742,9 @@
             personaSelect.value = 'helpful';
         }
 
-        // Initialize Gemini chat session with the loaded history
         const formattedHistoryForGemini = conversationHistory
             .filter(msg => msg.role === 'user' || msg.role === 'assistant')
-            .slice(-MAX_CONTEXT_MESSAGES * 2) // Max turns for history context
+            .slice(-MAX_CONTEXT_MESSAGES * 2) 
             .map(msg => ({
                 role: msg.role === 'assistant' ? 'model' : 'user',
                 parts: [{ text: msg.content }]
@@ -744,12 +753,11 @@
         scrollToBottom();
     }
 
-    // --- Utility, UI, and Command Functions (Keep your existing ones, adapt if needed) ---
-    function displaySuggestedPrompts() { /* ... (Keep your existing displaySuggestedPrompts) ... */
+    function displaySuggestedPrompts() {
         const suggestions = [
             "Tell me a fun fact.", "Explain quantum computing simply.", 
             "What's the weather like in Paris?", "Draft an email to my boss.",
-            "Suggest a recipe for dinner." // Removed /joke as Gemini can do it
+            "Suggest a recipe for dinner."
         ];
         suggestionsContainer.innerHTML = ''; 
         suggestions.forEach(text => {
@@ -757,17 +765,17 @@
             btn.textContent = text;
             btn.onclick = () => {
                 userInput.value = text;
-                handleSendMessage(); // This will now go to Gemini
+                handleSendMessage();
                 suggestionsContainer.style.display = 'none'; 
             };
             suggestionsContainer.appendChild(btn);
         });
     }
-    userInput.addEventListener('focus', () => { /* ... (Keep your existing userInput focus listener) ... */
-        if(conversationHistory.length <= 1 && userInput.value === '') suggestionsContainer.style.display = 'flex'; 
+    userInput.addEventListener('focus', () => {
+        if(conversationHistory.length <= 1 && userInput.value === '' && !userInput.disabled) suggestionsContainer.style.display = 'flex'; 
         commandsSuggestionContainer.style.display = 'none';
     });
-    userInput.addEventListener('blur', () => { /* ... (Keep your existing userInput blur listener) ... */
+    userInput.addEventListener('blur', () => {
         setTimeout(() => {
             if (!commandsSuggestionContainer.contains(document.activeElement)) { 
                  commandsSuggestionContainer.style.display = 'none';
@@ -777,23 +785,23 @@
             }
         }, 150);
     });
-    userInput.addEventListener('input', () => { /* ... (Keep your existing userInput input listener for commands) ... */
+    userInput.addEventListener('input', () => {
         const text = userInput.value;
-        if (text.startsWith('/') && text.length >=1) {
+        if (text.startsWith('/') && text.length >=1 && !userInput.disabled) {
             const searchTerm = text.substring(1).toLowerCase();
             const filteredCommands = AVAILABLE_COMMANDS.filter(cmdObj => cmdObj.cmd.substring(1).startsWith(searchTerm));
             displayCommandSuggestions(filteredCommands);
             suggestionsContainer.style.display = 'none';
         } else {
             commandsSuggestionContainer.style.display = 'none';
-            if (conversationHistory.length <= 1 && text === '') {
+            if (conversationHistory.length <= 1 && text === '' && !userInput.disabled) {
                 suggestionsContainer.style.display = 'flex';
             } else {
                 suggestionsContainer.style.display = 'none';
             }
         }
     });
-    function displayCommandSuggestions(commands) { /* ... (Keep your existing displayCommandSuggestions) ... */
+    function displayCommandSuggestions(commands) {
         commandsSuggestionContainer.innerHTML = '';
         if (commands.length > 0) {
             commands.forEach(cmdObj => {
@@ -802,7 +810,7 @@
                 btn.onclick = () => {
                     userInput.value = cmdObj.cmd + (cmdObj.cmd.includes('<') ? ' ' : ''); 
                     commandsSuggestionContainer.style.display = 'none';
-                    userInput.focus();
+                    if (!userInput.disabled) userInput.focus();
                     if (!cmdObj.cmd.includes('<')) { 
                         handleSendMessage();
                     }
@@ -814,7 +822,7 @@
             commandsSuggestionContainer.style.display = 'none';
         }
     }
-    function detectEmotion(text) { /* ... (Keep your existing detectEmotion) ... */
+    function detectEmotion(text) {
         const lowerText = text.toLowerCase();
         if (/\b(angry|furious|pissed off|annoyed|frustrated|hate)\b/i.test(lowerText)) return "angry";
         if (/\b(sad|upset|crying|depressed|miserable)\b/i.test(lowerText)) return "sad";
@@ -822,10 +830,10 @@
         if (/\b(confused|huh|what\?|don't understand)\b/i.test(lowerText)) return "confused";
         return "neutral";
     }
-    function handleEmotionalResponse(emotion, userMessage) { /* ... (Keep your existing handleEmotionalResponse) ... */
+    function handleEmotionalResponse(emotion, userMessage) {
         console.log(`User emotion detected: ${emotion} for message: "${userMessage}"`);
     }
-    function addInfoTooltipsToMessage(messageElement, text) { /* ... (Keep your existing addInfoTooltipsToMessage) ... */
+    function addInfoTooltipsToMessage(messageElement, text) {
         const knownFacts = { 
             "Paris": "The capital city of France, known for the Eiffel Tower.", 
             "GPT-4": "A large language model developed by OpenAI.",
@@ -841,26 +849,31 @@
         }
         messageElement.innerHTML = html;
     }
-    async function handleRephraseMessage(originalText, originalMessageId) { /* ... (Keep your existing handleRephraseMessage but call Gemini) ... */
+    async function handleRephraseMessage(originalText, originalMessageId) {
         const userPrompt = `(System Instruction: Your task is to rephrase the following text clearly and concisely, perhaps offering a slightly different perspective or wording, without adding new information. Do not include preambles like "Certainly, here's a rephrased version:" Just provide the rephrased text directly.)\n\nRephrase this: "${originalText}"`;
         const tempUserMsgId = generateMessageId();
-        addMessageToChat(`(Attempting to rephrase...)`, 'user', false, tempUserMsgId); // Temporary user message
+        addMessageToChat(`(Attempting to rephrase...)`, 'user', false, tempUserMsgId);
         
         const loadingIndicator = addMessageToChat('', 'bot', true, generateMessageId());
         sendButton.disabled = true;
         userInput.disabled = true;
 
-        // Use a new, temporary chat session for rephrasing to avoid polluting main history with this specific task
         let tempRephraseChat = null;
         if (geminiModel) {
-             tempRephraseChat = geminiModel.startChat({ history: [], generationConfig: { temperature: 0.5 } }); // Lower temp for more direct rephrase
+             tempRephraseChat = geminiModel.startChat({ history: [], generationConfig: { temperature: 0.5 } });
+        } else {
+            addMessageToChat("Rephrase feature unavailable: AI model not initialized.", "bot", false, generateMessageId());
+            loadingIndicator.remove();
+            document.getElementById(tempUserMsgId)?.remove();
+            enableInputs();
+            return;
         }
 
-        const geminiStream = await fetchAIResponseFromGemini(userPrompt, tempRephraseChat, "helpful", "0.5"); // Use helpful persona and specific temp
+        const geminiStream = await fetchAIResponseFromGemini(userPrompt, tempRephraseChat, "helpful", "0.5");
         loadingIndicator.remove();
-        document.getElementById(tempUserMsgId)?.remove(); // Remove the temporary user message
+        document.getElementById(tempUserMsgId)?.remove();
 
-        if (typeof geminiStream === 'string') { // Error
+        if (typeof geminiStream === 'string') {
             const errId = generateMessageId();
             addMessageToChat(geminiStream, 'bot', false, errId);
             updateConversationHistory('assistant', geminiStream, errId);
@@ -869,7 +882,7 @@
         }
 
         const rephraseMsgId = generateMessageId();
-        const rephrasedBotMsgElement = addMessageToChat('', 'bot', false, rephraseMsgId); // Shell for streaming
+        const rephrasedBotMsgElement = addMessageToChat('', 'bot', false, rephraseMsgId);
         rephrasedBotMsgElement.innerHTML = '▋';
 
         let rephrasedTextFull = '';
@@ -884,27 +897,25 @@
             rephrasedTextFull += "\n[Error during rephrase streaming]";
         } finally {
             rephrasedBotMsgElement.innerHTML = DOMPurify.sanitize(typeof marked !== 'undefined' ? marked.parse(rephrasedTextFull) : rephrasedTextFull);
-            Prism.highlightAllUnder(rephrasedBotMsgElement);
+            if (typeof Prism !== 'undefined') Prism.highlightAllUnder(rephrasedBotMsgElement);
             
-            // Update original or add new
             const originalMsgElement = document.getElementById(originalMessageId);
             if (originalMsgElement && !rephrasedTextFull.toLowerCase().startsWith("error:")) {
                 originalMsgElement.innerHTML = DOMPurify.sanitize(typeof marked !== 'undefined' ? marked.parse(`(Original): ${originalText}<hr>(Rephrased): ${rephrasedTextFull}`) : `(Original): ${originalText}<hr>(Rephrased): ${rephrasedTextFull}`);
-                Prism.highlightAllUnder(originalMsgElement);
+                if (typeof Prism !== 'undefined') Prism.highlightAllUnder(originalMsgElement);
                 const msgIndex = conversationHistory.findIndex(msg => msg.id === originalMessageId);
                 if (msgIndex !== -1) {
                     conversationHistory[msgIndex].content = `(Original): ${originalText}\n(Rephrased): ${rephrasedTextFull}`;
+                     saveConversation(currentChatThreadId); // Save change to original message
                 }
             } else { 
-                // If original not found, or error, it's already added as a new message by stream handler
-                // updateConversationHistory('assistant', `(Rephrased): ${rephrasedTextFull}`, rephraseMsgId); // Done by stream handler
+                 updateConversationHistory('assistant', `(Rephrased): ${rephrasedTextFull}`, rephraseMsgId);
+                 saveConversation(currentChatThreadId); // Save new rephrased message
             }
-            // Do not save rephrase system prompts to main history if it was a separate context call.
-            // The rephrased text itself is added to the display / original message.
             enableInputs();
         }
     }
-    function extractAndStoreUserPreferences(promptText) { /* ... (Keep your existing extractAndStoreUserPreferences) ... */
+    function extractAndStoreUserPreferences(promptText) {
         const lowerPrompt = promptText.toLowerCase();
         let nameFound = null;
         if (lowerPrompt.includes("my name is ")) {
@@ -912,7 +923,7 @@
         } else if (lowerPrompt.includes("call me ")) {
             nameFound = lowerPrompt.split("call me ")[1].split(/[\s,.!?]/)[0];
         }
-        if (nameFound && nameFound.length > 1 && nameFound.length < 20) { // Basic validation
+        if (nameFound && nameFound.length > 1 && nameFound.length < 20) {
             userName = nameFound.charAt(0).toUpperCase() + nameFound.slice(1);
             localStorage.setItem('userName', userName); 
             console.log("Username stored:", userName);
@@ -928,10 +939,9 @@
             const msgId = generateMessageId();
             addMessageToChat(`Nice! ${userPreferences.favoriteColor.charAt(0).toUpperCase() + userPreferences.favoriteColor.slice(1)} is a great color. I'll remember that.`, 'bot', false, msgId);
             updateConversationHistory('assistant', `Nice! ${userPreferences.favoriteColor.charAt(0).toUpperCase() + userPreferences.favoriteColor.slice(1)} is a great color. I'll remember that.`, msgId);
-
         }
     }
-    function suggestPersonaChange(messageText) { /* ... (Keep your existing suggestPersonaChange) ... */
+    function suggestPersonaChange(messageText) {
          const lowerText = messageText.toLowerCase();
         let newPersona = null;
         if (lowerText.includes("make it funny") || lowerText.includes("tell me a joke") || lowerText.includes("be sarcastic")) {
@@ -946,17 +956,17 @@
             
             const btn = suggestionMsg.querySelector('.persona-suggestion-btn');
             if (btn) {
-                btn.onclick = (e) => { // Use onclick for dynamically added elements if not using event delegation
+                btn.onclick = (e) => {
                     personaSelect.value = e.target.dataset.persona;
-                    personaSelect.dispatchEvent(new Event('change')); // Trigger change event
-                    e.target.closest('.message').remove(); // Remove suggestion message
+                    personaSelect.dispatchEvent(new Event('change'));
+                    e.target.closest('.message').remove();
                     const historyIndex = conversationHistory.findIndex(msg => msg.id === suggestionId);
                     if(historyIndex > -1) conversationHistory.splice(historyIndex, 1);
                 };
             }
         }
     }
-    function updateConversationHistory(role, content, id, replace = false) { /* ... (Keep your existing updateConversationHistory) ... */
+    function updateConversationHistory(role, content, id, replace = false) {
         if (replace) {
             const existingMsgIndex = conversationHistory.findIndex(msg => msg.id === id);
             if (existingMsgIndex !== -1) {
@@ -964,12 +974,11 @@
                 return;
             }
         }
-        if (conversationHistory.some(msg => msg.id === id)) return;
+        if (conversationHistory.some(msg => msg.id === id)) return; // Avoid duplicates if already added
         conversationHistory.push({ role, content, id });
     }
-    async function handleCommand(commandText) { /* ... (Keep your existing handleCommand, remove /joke if Gemini handles it) ... */
+    async function handleCommand(commandText) {
         const [command, ...args] = commandText.substring(1).toLowerCase().split(' ');
-        const fullArg = args.join(' ');
         let commandProcessed = true;
         let botResponse = "";
 
@@ -977,7 +986,7 @@
             case 'help':
                 botResponse = "Available commands:\n" + AVAILABLE_COMMANDS.map(c => `${c.cmd} - ${c.desc}`).join('\n');
                 break;
-            case 'joke': // Keep client-side joke or remove if you prefer Gemini's jokes
+            case 'joke':
                 const jokes = [
                     "Why don't scientists trust atoms? Because they make up everything!",
                     "Why did the scarecrow win an award? Because he was outstanding in his field!",
@@ -993,14 +1002,6 @@
                     else { botResponse = "Usage: /temp [creative|balanced|precise]"; break; }
                     localStorage.setItem('aiTemperature', aiTemperature);
                     botResponse = `AI temperature set to ${tempArg} (value: ${aiTemperature}).`;
-                    // Update currentGeminiChatSession's config if possible, or it will be picked up by next sendMessageStream call
-                    if(currentGeminiChatSession) {
-                        // Note: The SDK's startChat session has an initial config.
-                        // sendMessageStream can override it per call.
-                        // No direct method to update config of an *active* session object itself,
-                        // but passing it in sendMessageStream works.
-                    }
-
                 } else {
                     botResponse = `Current AI temperature is ${aiTemperature}. Use /temp [creative|balanced|precise] to change.`;
                 }
@@ -1013,10 +1014,9 @@
                 const greetingIdForReset = generateMessageId();
                 addMessageToChat(greetingForReset, 'bot', false, greetingIdForReset);
                 updateConversationHistory('assistant', greetingForReset, greetingIdForReset);
-                currentGeminiChatSession = startNewGeminiChatSession(); // Reset Gemini session
+                currentGeminiChatSession = startNewGeminiChatSession();
                 saveConversation(currentChatThreadId);
-                botResponse = "Chat reset."; // This won't show as chat is cleared.
-                break;
+                break; // No botResponse needed as chat is cleared.
             default:
                 commandProcessed = false; 
         }
@@ -1025,25 +1025,22 @@
             const botMessageId = generateMessageId();
             addMessageToChat(botResponse, 'bot', false, botMessageId);
             updateConversationHistory('assistant', botResponse, botMessageId);
-            // Do not save conversation for client-side commands like /help
-            // saveConversation(currentChatThreadId);
         }
         return commandProcessed;
     }
 
-    // --- Main Send Message Handler ---
     async function handleSendMessage(event) {
         if (event) event.preventDefault();
         const messageText = userInput.value.trim();
         if (messageText === '') return;
 
+        const userMessageId = generateMessageId(); // Generate ID before clearing input
+        addMessageToChat(messageText, 'user', false, userMessageId); // Add user message to UI first
+        updateConversationHistory('user', messageText, userMessageId); // Then update history
+
         userInput.value = ''; 
         suggestionsContainer.style.display = 'none';
         commandsSuggestionContainer.style.display = 'none';
-
-        const userMessageId = generateMessageId();
-        addMessageToChat(messageText, 'user', false, userMessageId);
-        updateConversationHistory('user', messageText, userMessageId);
 
         extractAndStoreUserPreferences(messageText);
         suggestPersonaChange(messageText);
@@ -1054,7 +1051,7 @@
             const commandProcessed = await handleCommand(messageText);
             if (commandProcessed) {
                 scrollToBottom();
-                userInput.focus();
+                if (!userInput.disabled) userInput.focus();
                 return;
             }
         }
@@ -1070,37 +1067,33 @@
         sendButton.disabled = true;
         userInput.disabled = true;
 
-        const useStreaming = true; // Always true for Gemini SDK stream method used
-
-        // Fetch AI response using Gemini
         const geminiStream = await fetchAIResponseFromGemini(messageText, currentGeminiChatSession, currentPersona, aiTemperature);
         loadingIndicator.remove();
 
-        if (typeof geminiStream === 'string') { // Error occurred (returned as string from fetchAIResponseFromGemini)
+        if (typeof geminiStream === 'string') {
             const botMessageId = generateMessageId();
             addMessageToChat(geminiStream, 'bot', false, botMessageId);
-            updateConversationHistory('assistant', geminiStream, botMessageId);
+            updateConversationHistory('assistant', geminiStream, botMessageId); // Also save errors to history
             enableInputs();
-        } else { // Is the Gemini SDK stream (AsyncIterable)
+             saveConversation(currentChatThreadId); // Save conversation even if there's an error from AI
+        } else { 
             const botMessageId = generateMessageId();
             const botMessageElement = addMessageToChat('', 'bot', false, botMessageId);
-            botMessageElement.innerHTML = '▋'; // Initial cursor
+            botMessageElement.innerHTML = '▋';
             await handleStreamedResponse(geminiStream, botMessageElement, botMessageId);
-            // History and inputs handled within handleStreamedResponse
+            // History, saving, and inputs re-enabled within handleStreamedResponse
         }
-        // saveConversation(currentChatThreadId); // Moved into handleStreamedResponse for successful streams
     }
 
-    // --- Utility Functions (Scroll, Prune DOM, Viewport Height, Theme) ---
-    function scrollToBottom() { /* ... (Keep your existing scrollToBottom) ... */
+    function scrollToBottom() {
         if(chatWindow) setTimeout(() => { chatWindow.scrollTop = chatWindow.scrollHeight; },0);
     }
-    function pruneOldMessagesDOM() { /* ... (Keep your existing pruneOldMessagesDOM) ... */
+    function pruneOldMessagesDOM() {
         while (chatWindow.children.length > MAX_MESSAGES_DISPLAY) {
             chatWindow.removeChild(chatWindow.firstChild);
         }
     }
-    function applyViewportHeight() { /* ... (Keep your existing applyViewportHeight) ... */
+    function applyViewportHeight() {
         const setHeight = () => {
             if(document.querySelector('.chat-area')) {
                  document.querySelector('.chat-area').style.height = window.innerHeight + 'px';
@@ -1109,27 +1102,25 @@
         setHeight();
         window.addEventListener('resize', setHeight);
     }
-    function loadTheme() { /* ... (Keep your existing loadTheme) ... */
+    function loadTheme() {
         const savedTheme = localStorage.getItem('theme');
         document.body.classList.toggle('dark-mode', savedTheme === 'dark');
         updateThemePreference();
     }
-    function updateThemePreference() { /* ... (Keep your existing updateThemePreference) ... */
+    function updateThemePreference() {
         const isDarkMode = document.body.classList.contains('dark-mode');
         if (themeToggleIcon) themeToggleIcon.textContent = isDarkMode ? '☀️' : '🌙';
         if (themeToggleText) themeToggleText.textContent = isDarkMode ? 'Light' : 'Dark';
         localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
     }
 
-    // --- EVENT LISTENERS ---
     chatForm.addEventListener('submit', handleSendMessage);
     themeToggleButton.addEventListener('click', () => {
         document.body.classList.toggle('dark-mode');
         updateThemePreference();
     });
 
-    // --- INITIALIZE ---
-    initializeChat(); // This will also try to initialize Gemini if API key is present
+    initializeChat();
     setupSpeechRecognition();
 
 });
