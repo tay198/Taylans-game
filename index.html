@@ -12,7 +12,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js" data-manual></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js" data-manual></script>
     <style>
-        /* ... (Your existing CSS styles remain unchanged) ... */
+        /* ... (Your existing CSS styles remain unchanged, new theme functionality will primarily use CSS variables) ... */
         :root {
             --body-bg-light: #f4f6f8; --body-bg-dark: #0d1117;
             --chat-bg-light: #ffffff; --chat-bg-dark: #161b22;
@@ -33,6 +33,8 @@
             --focus-ring-light: rgba(0,123,255,0.25); --focus-ring-dark: rgba(31,111,235,0.4);
             --suggestion-bg-light: #e0e0e0; --suggestion-bg-dark: #2a2a2a;
             --suggestion-text-light: #333; --suggestion-text-dark: #ccc;
+
+            /* Default vars that themes will override */
             --body-bg: var(--body-bg-light); --chat-bg: var(--chat-bg-light);
             --header-bg: var(--header-bg-light); --header-text: var(--header-text-light);
             --user-msg-bg: var(--user-msg-bg-light); --user-msg-text: var(--user-msg-text-light);
@@ -43,6 +45,7 @@
             --border-color: var(--border-color-light); --shadow: var(--shadow-light);
             --focus-ring: var(--focus-ring-light);
             --suggestion-bg: var(--suggestion-bg-light); --suggestion-text: var(--suggestion-text-light);
+            --custom-persona-accent-color: var(--header-bg); /* For custom persona header override */
         }
         body.dark-mode {
             --body-bg: var(--body-bg-dark); --chat-bg: var(--chat-bg-dark);
@@ -55,6 +58,7 @@
             --border-color: var(--border-color-dark); --shadow: var(--shadow-dark);
             --focus-ring: var(--focus-ring-dark);
             --suggestion-bg: var(--suggestion-bg-dark); --suggestion-text: var(--suggestion-text-dark);
+            --custom-persona-accent-color: var(--header-bg-dark);
         }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         html { height: 100%; }
@@ -116,17 +120,26 @@
             display: flex; justify-content: space-between; align-items: center;
             border-bottom: 1px solid var(--border-color); transition: all 0.3s; flex-shrink: 0;
         }
+        /* Custom persona accent will be applied via JS to background-color directly */
         .chat-header h2 { font-size: 1.1em; margin: 0; display: flex; flex-direction: column; align-items: flex-start; }
         .chat-header h2 .title-main { line-height: 1; }
         .chat-header h2 .title-subtitle { font-size: 0.65em; font-weight: normal; opacity: 0.85; margin-top: 2px; line-height: 1; }
         
-        .header-controls { display: flex; align-items: center; gap: 10px; }
-        .header-controls label { font-size: 0.8em; }
+        .header-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; } /* Added flex-wrap */
+        .header-controls label { font-size: 0.8em; margin-left: 5px; }
         .header-controls select, .header-controls button {
             padding: 5px 8px; border-radius: 5px; border: 1px solid var(--header-text);
             background-color: var(--header-bg); color: var(--header-text); font-size: 0.8em;
+            cursor: pointer;
         }
-        .header-controls button:hover { background-color: var(--header-text); color: var(--header-bg); }
+        .header-controls button:hover { opacity: 0.8; }
+        .header-controls button .text { margin-left: 4px; }
+        @media (max-width: 700px) { /* Hide text on smaller screens for header buttons */
+            .header-controls button .text { display: none; }
+            .header-controls label { margin-left: 2px; }
+            .header-controls { gap: 5px; }
+        }
+
 
         .chat-window {
             flex-grow: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;
@@ -193,12 +206,12 @@
             display: flex; padding: 10px 15px; border-top: 1px solid var(--border-color);
             background-color: var(--chat-bg); transition: all 0.3s; flex-shrink: 0; align-items: center;
         }
-        #micButton {
+        #micButton, #imageUploadButton { /* Combined for base style */
             padding: 8px 10px; margin-right: 8px; border-radius: 50%;
             background-color: transparent; border: 1px solid var(--input-border);
             color: var(--text-color); cursor: pointer; font-size: 1.1em;
         }
-        #micButton:hover { background-color: var(--bot-msg-bg); }
+        #micButton:hover, #imageUploadButton:hover { background-color: var(--bot-msg-bg); }
         #micButton.recording { background-color: #ff4d4dcc; color: white; }
 
         #userInput {
@@ -206,7 +219,7 @@
             font-size: 1em; background-color: var(--input-bg); color: var(--input-text); transition: all 0.3s;
             margin-right: 8px;
         }
-        #userInput:focus, #sendButton:focus, #theme-toggle:focus, #micButton:focus {
+        #userInput:focus, #sendButton:focus, #theme-toggle:focus, #micButton:focus, #imageUploadButton:focus {
             outline: none; border-color: var(--button-bg); box-shadow: 0 0 0 3px var(--focus-ring);
         }
         #sendButton {
@@ -228,6 +241,34 @@
             text-align: center; font-size: 10px; line-height: 14px;
             margin-left: 4px; cursor: help; user-select: none;
         }
+
+        /* Modal Styles */
+        .rps-modal, #customPersonaModal {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background-color: var(--chat-bg); color: var(--text-color);
+            padding: 25px; border-radius: 12px; box-shadow: var(--shadow-dark); /* Use darker shadow for modals */
+            z-index: 1001; border: 1px solid var(--border-color);
+            max-width: 90vw;
+        }
+        .rps-modal button, #customPersonaModal input, #customPersonaModal button {
+            padding: 10px 15px; cursor: pointer; border-radius: 5px;
+            border: 1px solid var(--input-border);
+            background-color: var(--input-bg); color: var(--input-text);
+            font-size: 0.95em;
+        }
+        .rps-modal button:hover, #customPersonaModal button:hover {
+            opacity:0.8;
+        }
+        #customPersonaModal {
+            width: 380px; display: flex; flex-direction: column; gap: 12px;
+        }
+        #customPersonaModal label { font-size: 0.9em; margin-bottom: -8px; }
+        #customPersonaModal input { width: 100%;}
+        #customPersonaModal h3 { text-align:center; margin-bottom:10px; color: var(--text-color);}
+        #customPersonaModal div { display:flex; justify-content: space-between; margin-top:15px; gap: 10px;}
+        #customPersonaModal div button { flex-grow: 1; }
+        #customPersonaModal button#savePersonaBtn { background-color: var(--button-bg); color: var(--button-text); }
+
 
         @media (min-width: 769px) { .threads-sidebar { display: flex; } }
         @media (max-width: 800px) { .chat-area { border-radius: 0; margin: 0; } }
@@ -268,7 +309,7 @@
             <div class="chat-window" id="chatWindow" role="log" aria-live="polite"></div>
 
             <form class="chat-input-form" id="chatForm">
-                <button type="button" id="micButton" aria-label="Use microphone">🎤</button>
+                 <button type="button" id="micButton" aria-label="Use microphone">🎤</button>
                 <input type="text" id="userInput" placeholder="Ask me anything or type /help..." autocomplete="off" aria-label="User message input" role="textbox">
                 <button type="submit" id="sendButton" aria-label="Send message">Send</button>
             </form>
@@ -305,8 +346,440 @@
         { cmd: "/help", desc: "Show this help message." },
         { cmd: "/joke", desc: "Tell a joke (client-side)." },
         { cmd: "/reset", desc: "Reset current chat (clears messages)." },
+        { cmd: "/play", desc: "Play Rock, Paper, Scissors." },
+        { cmd: "/roll", desc: "Roll a 6-sided die." },
+        { cmd: "/quote", desc: "Get an inspirational quote." },
+        { cmd: "/createpersona", desc: "Create a new custom persona." },
     ];
 
+    // === 🕹️ Mini Games ===
+    function handleMiniGames(command) {
+        if (command === '/play') {
+            const options = ['Rock', 'Paper', 'Scissors'];
+            const botChoice = options[Math.floor(Math.random() * options.length)];
+            
+            const RPSDrivenModal = document.createElement('div');
+            RPSDrivenModal.className = 'rps-modal';
+            RPSDrivenModal.innerHTML = `
+                <h4 style="margin-bottom: 15px; text-align: center;">Rock, Paper, or Scissors?</h4>
+                <div style="display: flex; justify-content: space-around; gap: 10px;">
+                    <button data-choice="rock">Rock</button>
+                    <button data-choice="paper">Paper</button>
+                    <button data-choice="scissors">Scissors</button>
+                </div>
+                <button id="rpsCancel" style="margin-top: 15px; display: block; margin-left: auto; margin-right: auto;">Cancel</button>
+            `;
+            document.body.appendChild(RPSDrivenModal);
+
+            const processRPS = (userChoice) => {
+                if (document.body.contains(RPSDrivenModal)) document.body.removeChild(RPSDrivenModal);
+                if (!userChoice) return;
+
+                const normalizedUser = userChoice.toLowerCase();
+                const normalizedBot = botChoice.toLowerCase();
+
+                let resultText = '';
+                if (normalizedUser === normalizedBot) resultText = "It's a tie!";
+                else if (
+                  (normalizedUser === 'rock' && normalizedBot === 'scissors') ||
+                  (normalizedUser === 'paper' && normalizedBot === 'rock') ||
+                  (normalizedUser === 'scissors' && normalizedBot === 'paper')
+                ) resultText = `I chose ${botChoice}. You win! 🎉`;
+                else resultText = `I chose ${botChoice}. You lose! 😝`;
+
+                const botMessageId = generateMessageId();
+                addMessageToChat(resultText, 'bot', false, botMessageId);
+                updateConversationHistory('assistant', resultText, botMessageId);
+                saveConversation(currentChatThreadId);
+            };
+
+            RPSDrivenModal.querySelectorAll('button[data-choice]').forEach(button => {
+                button.onclick = () => processRPS(button.dataset.choice);
+            });
+            RPSDrivenModal.querySelector('#rpsCancel').onclick = () => {
+                 if (document.body.contains(RPSDrivenModal)) document.body.removeChild(RPSDrivenModal);
+            };
+        }
+    }
+
+    // === 🎲 Dice Roller Command ===
+    function handleDiceRoll() {
+        const roll = Math.floor(Math.random() * 6) + 1;
+        const result = `🎲 You rolled a ${roll}!`;
+        const botMessageId = generateMessageId();
+        addMessageToChat(result, 'bot', false, botMessageId);
+        updateConversationHistory('assistant', result, botMessageId);
+        saveConversation(currentChatThreadId);
+    }
+
+    // === 💬 Quote Command ===
+    function handleQuoteCommand() {
+        const quotes = [
+            "Believe you can and you're halfway there. - Theodore Roosevelt",
+            "The only limit to our realization of tomorrow is our doubts of today. - Franklin D. Roosevelt",
+            "Do or do not. There is no try. – Yoda",
+            "The future belongs to those who believe in the beauty of their dreams. - Eleanor Roosevelt",
+            "Strive not to be a success, but rather to be of value. - Albert Einstein"
+        ];
+        const quote = quotes[Math.floor(Math.random() * quotes.length)];
+        const botMessageId = generateMessageId();
+        addMessageToChat(`📜 ${quote}`, 'bot', false, botMessageId);
+        updateConversationHistory('assistant', `📜 ${quote}`, botMessageId);
+        saveConversation(currentChatThreadId);
+    }
+
+    // === 🎶 Background Music Feature ===
+    const bgMusicAudio = new Audio('path/to/your/royalty-free-music-loop.mp3'); // IMPORTANT: Replace with your music file
+    bgMusicAudio.loop = true;
+    let isMusicPlaying = JSON.parse(localStorage.getItem('musicPlaying') || 'false');
+    let musicToggleButton;
+
+    function toggleBackgroundMusic() {
+        isMusicPlaying = !isMusicPlaying;
+        if (isMusicPlaying) {
+            bgMusicAudio.play().catch(e => console.error("Music play failed:", e));
+            if(musicToggleButton) musicToggleButton.innerHTML = '🔇 <span class="text">Mute</span>';
+            if(musicToggleButton) musicToggleButton.setAttribute('aria-label', 'Mute background music');
+        } else {
+            bgMusicAudio.pause();
+            if(musicToggleButton) musicToggleButton.innerHTML = '🎵 <span class="text">Music</span>';
+            if(musicToggleButton) musicToggleButton.setAttribute('aria-label', 'Play background music');
+        }
+        localStorage.setItem('musicPlaying', isMusicPlaying);
+    }
+
+    function setupMusicToggle() {
+        musicToggleButton = document.createElement('button');
+        musicToggleButton.id = 'music-toggle';
+        musicToggleButton.innerHTML = isMusicPlaying ? '🔇 <span class="text">Mute</span>' : '🎵 <span class="text">Music</span>';
+        musicToggleButton.setAttribute('aria-label', isMusicPlaying ? 'Mute background music' : 'Play background music');
+        
+        const controls = document.querySelector('.chat-header .header-controls');
+        const existingThemeToggle = document.getElementById('theme-toggle'); // Use theme-toggle as reference
+        if (controls && existingThemeToggle) {
+            controls.insertBefore(musicToggleButton, existingThemeToggle);
+        } else if (controls) { // Fallback if theme-toggle isn't there for some reason
+            controls.appendChild(musicToggleButton);
+        }
+        musicToggleButton.addEventListener('click', toggleBackgroundMusic);
+        if (isMusicPlaying) { // If was playing from localStorage, try to start it (might need user interaction)
+             bgMusicAudio.play().catch(e => console.warn("Initial music play failed, user interaction might be needed.", e));
+        }
+    }
+
+    // === 🎨 Theme Chooser Feature ===
+    let themeChooserSelect;
+    const themes = {
+        default: { name: "Default", isDarkDefault: false, vars: { /* Uses existing :root and body.dark-mode */ } },
+        vaporwave: {
+            name: "Vaporwave", isDarkDefault: true,
+            vars: {
+                '--body-bg': '#010122', '--chat-bg': '#050538',
+                '--header-bg-light': '#FF00FF', '--header-bg-dark': '#FF00FF', '--header-text-light': '#00FFFF', '--header-text-dark': '#00FFFF',
+                '--user-msg-bg-light': '#FF69B4', '--user-msg-bg-dark': '#FF69B4', '--user-msg-text-light': '#FFFFFF', '--user-msg-text-dark': '#FFFFFF',
+                '--bot-msg-bg-light': '#9400D3', '--bot-msg-bg-dark': '#9400D3', '--bot-msg-text-light': '#E0E0E0', '--bot-msg-text-dark': '#E0E0E0',
+                '--input-bg-light': '#010122', '--input-bg-dark': '#010122', '--input-text-light': '#00FFFF', '--input-text-dark': '#00FFFF',
+                '--input-border-light': '#FF00FF', '--input-border-dark': '#FF00FF', '--button-bg-light': '#00FFFF', '--button-bg-dark': '#00FFFF',
+                '--button-text-light': '#050538', '--button-text-dark': '#050538', '--text-color-light': '#E0E0E0', '--text-color-dark': '#E0E0E0',
+                '--border-color-light': '#FF00FF', '--border-color-dark': '#FF00FF', '--shadow-light': '0 2px 10px rgba(255,0,255,0.5)', '--shadow-dark': '0 2px 10px rgba(255,0,255,0.5)',
+                '--focus-ring-light': 'rgba(0,255,255,0.4)', '--focus-ring-dark': 'rgba(0,255,255,0.4)',
+                '--suggestion-bg-light': '#330033', '--suggestion-bg-dark': '#330033', '--suggestion-text-light': '#00FFFF', '--suggestion-text-dark': '#00FFFF',
+            }
+        },
+        space: {
+            name: "Outer Space", isDarkDefault: true,
+            vars: {
+                '--body-bg': '#0c0f18', '--chat-bg': '#151a2d',
+                '--header-bg-light': '#2a3b60', '--header-bg-dark': '#2a3b60', '--header-text-light': '#e0e7ff', '--header-text-dark': '#e0e7ff',
+                '--user-msg-bg-light': '#3f51b5', '--user-msg-bg-dark': '#3f51b5', '--user-msg-text-light': '#ffffff', '--user-msg-text-dark': '#ffffff',
+                '--bot-msg-bg-light': '#1e293b', '--bot-msg-bg-dark': '#1e293b', '--bot-msg-text-light': '#cbd5e1', '--bot-msg-text-dark': '#cbd5e1',
+                '--input-bg-light': '#0c0f18', '--input-bg-dark': '#0c0f18', '--input-text-light': '#e0e7ff', '--input-text-dark': '#e0e7ff',
+                '--input-border-light': '#2a3b60', '--input-border-dark': '#2a3b60', '--button-bg-light': '#5c6bc0', '--button-bg-dark': '#5c6bc0',
+                '--button-text-light': '#ffffff', '--button-text-dark': '#ffffff', '--text-color-light': '#cbd5e1', '--text-color-dark': '#cbd5e1',
+                '--border-color-light': '#2a3b60', '--border-color-dark': '#2a3b60', '--shadow-light': '0 3px 12px rgba(0,0,0,0.4)', '--shadow-dark': '0 3px 12px rgba(0,0,0,0.4)',
+                '--focus-ring-light': 'rgba(92,107,192,0.4)', '--focus-ring-dark': 'rgba(92,107,192,0.4)',
+                '--suggestion-bg-light': '#1c2541', '--suggestion-bg-dark': '#1c2541', '--suggestion-text-light': '#a7c5eb', '--suggestion-text-dark': '#a7c5eb',
+            }
+        },
+    };
+
+    function applyTheme(themeName) {
+        const selectedTheme = themes[themeName] || themes.default;
+        const rootStyle = document.documentElement.style;
+
+        // Set dark mode class based on theme preference
+        if (selectedTheme.isDarkDefault) {
+            document.body.classList.add('dark-mode');
+        } else {
+            document.body.classList.remove('dark-mode');
+        }
+        updateThemePreference(); // Update sun/moon icon from original script
+
+        // Clear any previously set theme variables to ensure clean slate
+        Object.keys(themes).forEach(thKey => {
+            if (themes[thKey].vars) {
+                Object.keys(themes[thKey].vars).forEach(varKey => rootStyle.removeProperty(varKey.replace(/-light|-dark$/, '')));
+            }
+        });
+        
+        // Apply new theme variables
+        if (selectedTheme.vars) {
+            for (const [key, value] of Object.entries(selectedTheme.vars)) {
+                 // Apply the correct variable based on current dark/light mode
+                const varSuffix = document.body.classList.contains('dark-mode') ? '-dark' : '-light';
+                const baseVarName = key.replace(varSuffix, ''); // e.g. --body-bg
+                rootStyle.setProperty(baseVarName, value); // This was simplified; themes now define the final var value directly.
+            }
+        }
+        
+        // Special handling for default theme: ensure it fully reverts to stylesheet
+        if (themeName === "default") {
+            // This will trigger the original loadTheme logic to use stylesheet vars
+            loadTheme(); // This re-reads localStorage for 'theme' (light/dark) and applies class
+        }
+
+        localStorage.setItem('selectedChatTheme', themeName);
+        if (themeChooserSelect) themeChooserSelect.value = themeName;
+        applyCustomPersonaAccent(); // Re-apply persona accent over the theme
+    }
+
+
+    function setupThemeChooser() {
+        const themeLabel = document.createElement('label');
+        themeLabel.htmlFor = 'themeChooserSelect';
+        themeLabel.textContent = 'Theme:';
+
+        themeChooserSelect = document.createElement('select');
+        themeChooserSelect.id = 'themeChooserSelect';
+
+        for (const [key, theme] of Object.entries(themes)) {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = theme.name;
+            themeChooserSelect.appendChild(option);
+        }
+
+        const controls = document.querySelector('.chat-header .header-controls');
+        const existingMusicToggle = document.getElementById('music-toggle');
+        if (controls && existingMusicToggle) {
+             controls.insertBefore(themeLabel, existingMusicToggle);
+             controls.insertBefore(themeChooserSelect, existingMusicToggle);
+        } else if (controls && personaSelect.nextSibling) { // Insert after persona select
+            controls.insertBefore(themeLabel, personaSelect.nextSibling);
+            controls.insertBefore(themeChooserSelect, themeLabel.nextSibling);
+        } else if (controls) {
+            controls.appendChild(themeLabel);
+            controls.appendChild(themeChooserSelect);
+        }
+        themeChooserSelect.addEventListener('change', (e) => applyTheme(e.target.value));
+        const savedTheme = localStorage.getItem('selectedChatTheme');
+        if (savedTheme) {
+            applyTheme(savedTheme); // Apply initially if a theme was saved
+        }
+    }
+
+    // === 👤 Custom Persona Creator ===
+    let customPersonas = JSON.parse(localStorage.getItem('customPersonas') || '{}');
+    let customPersonaModal;
+
+    function applyCustomPersonaAccent() {
+        const header = document.querySelector('.chat-header');
+        if (!header) return;
+
+        const currentPersonaValue = personaSelect.value;
+        const selectedThemeName = localStorage.getItem('selectedChatTheme') || 'default';
+        const themeIsDark = themes[selectedThemeName]?.isDarkDefault ?? document.body.classList.contains('dark-mode');
+
+        let baseHeaderBg = themeIsDark ? 'var(--header-bg-dark)' : 'var(--header-bg-light)'; // Default from :root
+        if (themes[selectedThemeName]?.vars) { // If theme has specific header color
+            const themeHeaderVar = themeIsDark ? themes[selectedThemeName].vars['--header-bg-dark'] : themes[selectedThemeName].vars['--header-bg-light'];
+            if (themeHeaderVar) baseHeaderBg = themeHeaderVar;
+        }
+        
+        if (customPersonas[currentPersonaValue] && customPersonas[currentPersonaValue].color) {
+            header.style.backgroundColor = customPersonas[currentPersonaValue].color;
+        } else {
+            header.style.backgroundColor = baseHeaderBg; // Revert to theme or default header color
+        }
+    }
+
+
+    function openCustomPersonaModal() {
+        if (customPersonaModal && document.body.contains(customPersonaModal)) customPersonaModal.remove();
+
+        customPersonaModal = document.createElement('div');
+        customPersonaModal.id = 'customPersonaModal';
+        customPersonaModal.innerHTML = `
+            <h3>Create Custom Persona</h3>
+            <label for="personaNameInput">Persona Name:</label>
+            <input type="text" id="personaNameInput">
+            <label for="personaGreetingInput">Greeting (e.g., "Greetings, master"):</label>
+            <input type="text" id="personaGreetingInput">
+            <label for="personaColorInput">Accent Color (e.g., #FF00FF or hotpink):</label>
+            <input type="text" id="personaColorInput" placeholder="Optional web color">
+            <label for="personaEmojiInput">Mood Emoji (e.g., 😎):</label>
+            <input type="text" id="personaEmojiInput" placeholder="Optional emoji">
+            <div>
+                <button id="savePersonaBtn">Save Persona</button>
+                <button id="cancelPersonaBtn">Cancel</button>
+            </div>
+        `;
+        document.body.appendChild(customPersonaModal);
+
+        document.getElementById('savePersonaBtn').onclick = () => {
+            const name = document.getElementById('personaNameInput').value.trim();
+            const greeting = document.getElementById('personaGreetingInput').value.trim();
+            const color = document.getElementById('personaColorInput').value.trim();
+            const emoji = document.getElementById('personaEmojiInput').value.trim();
+
+            if (name && greeting) {
+                saveCustomPersona(name, greeting, color, emoji);
+                if (customPersonaModal && document.body.contains(customPersonaModal)) customPersonaModal.remove();
+            } else {
+                alert("Persona Name and Greeting are required.");
+            }
+        };
+        document.getElementById('cancelPersonaBtn').onclick = () => {
+            if (customPersonaModal && document.body.contains(customPersonaModal)) customPersonaModal.remove();
+        };
+    }
+
+    function saveCustomPersona(name, greeting, color, emoji) {
+        const personaKey = name.toLowerCase().replace(/\s+/g, '_').replace(/[^\w-]/g, ''); // Sanitize key
+        customPersonas[personaKey] = { name, greeting, color, emoji };
+        localStorage.setItem('customPersonas', JSON.stringify(customPersonas));
+        loadCustomPersonasIntoSelect();
+        personaSelect.value = personaKey;
+        personaSelect.dispatchEvent(new Event('change'));
+        const msgId = generateMessageId();
+        addMessageToChat(`Custom persona "${name}" created and selected!`, 'bot', false, msgId);
+        updateConversationHistory('assistant', `Custom persona "${name}" created and selected!`, msgId);
+        saveConversation(currentChatThreadId); // Save immediately
+    }
+
+    function loadCustomPersonasIntoSelect() {
+        personaSelect.querySelectorAll('option.custom-persona').forEach(opt => opt.remove());
+        for (const key in customPersonas) {
+            const persona = customPersonas[key];
+            if (!personaSelect.querySelector(`option[value="${key}"]`)) {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = `${persona.name} ${persona.emoji || ''} (Custom)`;
+                option.className = 'custom-persona';
+                personaSelect.appendChild(option);
+            }
+        }
+    }
+
+    // === 🔊 Sound Effects Toggle ===
+    const sendMessageSound = new Audio('path/to/send-sound.mp3'); // IMPORTANT: Replace
+    const receiveMessageSound = new Audio('path/to/receive-sound.mp3'); // IMPORTANT: Replace
+    let soundEffectsEnabled = JSON.parse(localStorage.getItem('soundEffectsEnabled') || 'true');
+    let soundEffectsToggleButton;
+
+    function toggleSoundEffects() {
+        soundEffectsEnabled = !soundEffectsEnabled;
+        if(soundEffectsToggleButton) soundEffectsToggleButton.innerHTML = soundEffectsEnabled ? '🔊 <span class="text">SFX On</span>' : '🔈 <span class="text">SFX Off</span>';
+        if(soundEffectsToggleButton) soundEffectsToggleButton.setAttribute('aria-label', soundEffectsEnabled ? 'Disable sound effects' : 'Enable sound effects');
+        localStorage.setItem('soundEffectsEnabled', soundEffectsEnabled);
+    }
+
+    function playSendMessageSound() {
+        if (soundEffectsEnabled) sendMessageSound.play().catch(e => console.warn("Send sound play failed:", e));
+    }
+    function playReceiveMessageSound() {
+        if (soundEffectsEnabled) receiveMessageSound.play().catch(e => console.warn("Receive sound play failed:", e));
+    }
+
+    function setupSoundEffectsToggle() {
+        soundEffectsToggleButton = document.createElement('button');
+        soundEffectsToggleButton.id = 'sfx-toggle';
+        soundEffectsToggleButton.innerHTML = soundEffectsEnabled ? '🔊 <span class="text">SFX On</span>' : '🔈 <span class="text">SFX Off</span>';
+        soundEffectsToggleButton.setAttribute('aria-label', soundEffectsEnabled ? 'Disable sound effects' : 'Enable sound effects');
+
+        const controls = document.querySelector('.chat-header .header-controls');
+        const existingThemeToggle = document.getElementById('theme-toggle');
+        if (controls && existingThemeToggle) {
+            controls.insertBefore(soundEffectsToggleButton, existingThemeToggle);
+        } else if (controls && controls.lastElementChild) {
+            controls.insertBefore(soundEffectsToggleButton, controls.lastElementChild);
+        } else if (controls) {
+            controls.appendChild(soundEffectsToggleButton);
+        }
+        soundEffectsToggleButton.addEventListener('click', toggleSoundEffects);
+    }
+
+    // === 🖼️ Image Upload Feature ===
+    let imageUploadInput;
+    let imageUploadButton;
+
+    function setupImageUpload() {
+        imageUploadButton = document.createElement('button');
+        imageUploadButton.type = 'button';
+        imageUploadButton.id = 'imageUploadButton';
+        imageUploadButton.innerHTML = '🖼️';
+        imageUploadButton.title = 'Upload Image';
+
+        imageUploadInput = document.createElement('input');
+        imageUploadInput.type = 'file';
+        imageUploadInput.accept = 'image/*';
+        imageUploadInput.style.display = 'none';
+
+        imageUploadButton.addEventListener('click', () => imageUploadInput.click());
+        imageUploadInput.addEventListener('change', handleImageUpload);
+
+        const chatInputForm = document.getElementById('chatInputForm');
+        if (chatInputForm && micButton) {
+            chatInputForm.insertBefore(imageUploadButton, micButton);
+            chatInputForm.insertBefore(imageUploadInput, micButton); // Hidden
+        } else if (chatInputForm && chatInputForm.firstChild) {
+             chatInputForm.insertBefore(imageUploadButton, chatInputForm.firstChild);
+             chatInputForm.insertBefore(imageUploadInput, chatInputForm.firstChild);
+        }
+    }
+
+    function handleImageUpload(event) {
+        const file = event.target.files[0];
+        if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (e) => addImageMessageToChat(e.target.result, `User uploaded: ${file.name}`);
+            reader.readAsDataURL(file);
+        }
+        imageUploadInput.value = '';
+    }
+
+    function addImageMessageToChat(imageUrl, caption) {
+        const messageId = generateMessageId();
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message', 'user'); // Style as user message
+        messageElement.id = messageId;
+        messageElement.style.maxWidth = '60%';
+        messageElement.style.padding = '5px';
+
+        const img = document.createElement('img');
+        img.src = imageUrl;
+        img.alt = caption;
+        img.style.maxWidth = '100%';
+        img.style.maxHeight = '300px';
+        img.style.borderRadius = '10px';
+        img.style.display = 'block';
+
+        const captionElement = document.createElement('p');
+        captionElement.textContent = caption;
+        captionElement.style.fontSize = '0.8em';
+        captionElement.style.marginTop = '5px';
+        captionElement.style.textAlign = 'center';
+        captionElement.style.color = 'var(--user-msg-text)'; // Ensure caption color matches
+
+        messageElement.appendChild(img);
+        messageElement.appendChild(captionElement);
+        
+        chatWindow.appendChild(messageElement);
+        scrollToBottom();
+        // Not saved to history for simplicity
+    }
+
+    // --- Main Chat Logic (Original functions modified as needed) ---
     function fetchRuleBasedResponse(promptText, persona) {
         const lowerPrompt = promptText.toLowerCase();
         let response = "";
@@ -318,6 +791,12 @@
             sarcastic: "Wow, that's a real thinker. Or, you know, not. Try again, maybe with actual words this time? Or are you too good for /help?",
             pirate: "Arrr, that be a puzzle I can't solve, matey! Ask me somethin' else, or type /help, ye barnacle brain!"
         };
+        
+        if (customPersonas && customPersonas[persona]) {
+            // Custom personas use the 'helpful' default if no specific rule matches
+            // Their greeting is already handled by generateGreeting.
+            // You can add more specific logic for custom personas here if needed.
+        }
 
         // --- Common Greetings & Small Talk ---
         if (lowerPrompt === "hi" || lowerPrompt === "hello" || lowerPrompt.startsWith("hey there") || lowerPrompt.startsWith("heya") || lowerPrompt.startsWith("hiya")) {
@@ -483,7 +962,7 @@
         } else if (lowerPrompt.includes("call") && lowerPrompt.includes("mom") || lowerPrompt.includes("text someone")) {
             response = "I can't make calls or send texts. I'm just a chatbot!";
         } else if (lowerPrompt.includes("play music") || lowerPrompt.includes("play a song")) {
-            response = "I can't play music, but I can imagine your favorite tune is playing right now! 🎶";
+            response = "I can't play music, but I can imagine your favorite tune is playing right now! 🎶 Or you can use the music toggle in the header!";
         } else if (lowerPrompt.includes("open google") || lowerPrompt.includes("open youtube")) {
             response = "I can't open other websites or apps for you. You can do that in your browser though!";
         } else if (lowerPrompt.includes("hack nasa") || lowerPrompt.includes("hack the pentagon")) {
@@ -532,50 +1011,71 @@
             response = "As a rule-based system, I don't learn in real-time, but Taylan can always update my knowledge and rules!";
         }
          else if (lowerPrompt.includes("what can you do") || lowerPrompt.includes("capabilities") || lowerPrompt.includes("features")) {
-            response = "I can chat about various topics based on my programmed rules, tell jokes, share facts, tell you the time, and respond to commands like /help. What would you like to try?";
-             if (persona === "sarcastic") response = "My capabilities are truly astounding: I can recognize some of your words and spit out pre-written sentences. Don't get too excited.";
-             if (persona === "pirate") response = "This ol' pirate bot can spin ye a yarn, tell ye a fact, crack a joke, an' follow simple orders! Just give it a go, me hearty!";
+            response = "I can chat about various topics based on my programmed rules, tell jokes, share facts, tell you the time, and respond to commands like /help, /play, /roll, and /quote. You can also change my theme, toggle music, and more! What would you like to try?";
+             if (persona === "sarcastic") response = "My capabilities are truly astounding: I can recognize some of your words and spit out pre-written sentences. Don't get too excited. I can also play a riveting game of Rock, Paper, Scissors if you type /play. Thrilling.";
+             if (persona === "pirate") response = "This ol' pirate bot can spin ye a yarn, tell ye a fact, crack a joke, roll a die (/roll), an' follow simple orders! Just give it a go, me hearty!";
         }
-
-
         return response || defaultResponses[persona] || defaultResponses.helpful;
     }
-
+    
     document.addEventListener('DOMContentLoaded', () => {
         function initializeChat() {
-            loadTheme();
-            applyViewportHeight();
-            loadChatThreads(); // Defines currentChatThreadId
-
-            // --- For "chat disappears on refresh" ---
-            chatWindow.innerHTML = '';  // Clear the visual chat window first
-            conversationHistory = [];   // Start with a clean slate for the current session's history array
+            loadTheme(); // From original script, now also handles custom themes
+            // applyViewportHeight(); // If you have this function, keep it.
             
-            // Determine initial persona for the greeting
+            loadChatThreads(); 
+
+            loadCustomPersonasIntoSelect(); // Load custom personas into dropdown
+
+            chatWindow.innerHTML = '';
+            conversationHistory = [];
+            
             const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
             const currentThreadData = threads[currentChatThreadId];
+            
             const initialPersona = (currentThreadData && currentThreadData.persona) ? currentThreadData.persona : personaSelect.value;
-            personaSelect.value = initialPersona; // Sync dropdown
+            if (personaSelect.querySelector(`option[value="${initialPersona}"]`)) { // Ensure option exists
+                personaSelect.value = initialPersona;
+            } else { // Fallback if persona from storage no longer exists (e.g. custom deleted)
+                personaSelect.value = 'helpful'; 
+                if (threads[currentChatThreadId]) {
+                    threads[currentChatThreadId].persona = 'helpful'; // Correct in storage too
+                    localStorage.setItem('chatThreads', JSON.stringify(threads));
+                }
+            }
 
-            // Add a greeting to the now empty conversationHistory and display
+            // Apply saved theme first, then persona accent
+            const savedTheme = localStorage.getItem('selectedChatTheme');
+            if (savedTheme) {
+                applyTheme(savedTheme); // This calls applyCustomPersonaAccent at its end
+            } else {
+                applyCustomPersonaAccent(); // Apply accent if no specific theme saved (uses default light/dark)
+            }
+            
             const greeting = generateGreeting(initialPersona);
             const greetingId = generateMessageId();
             addMessageToChat(greeting, 'bot', false, greetingId);
             updateConversationHistory('assistant', greeting, greetingId);
-            // Note: We don't call saveConversation here to preserve stored history for the thread
-            // until the user sends a new message in this "refreshed" view.
-            // --- End "chat disappears on refresh" logic ---
-
+            
             sendButton.disabled = false;
             userInput.disabled = false;
 
             displaySuggestedPrompts();
             if (!initialFocusDone) { userInput.focus(); initialFocusDone = true; }
             setTimeout(scrollToBottom, 100);
-            // updatePersonaSelectBasedOnThread(); // Already handled by setting initialPersona
         }
 
         function generateGreeting(persona) {
+            if (customPersonas && customPersonas[persona]) {
+                const custom = customPersonas[persona];
+                const namePart = userName ? `, ${userName}` : '';
+                let finalGreeting = custom.greeting;
+                if (namePart && finalGreeting && !/[\s,.!?]$/.test(finalGreeting) && finalGreeting.length > 0) {
+                    finalGreeting += ",";
+                }
+                finalGreeting += `${namePart} ${custom.emoji || ''}`;
+                return finalGreeting.trim();
+            }
             const namePart = userName ? ` ${userName}` : '';
             switch(persona) {
                 case 'pirate': return `Ahoy Matey${namePart}! I be a rule-based pirate bot. What be on yer mind?`;
@@ -591,15 +1091,13 @@
         }
 
         async function displayBotResponse(text, botMessageElement, botMessageId) {
-            const thinkingTime = Math.max(300, Math.min(text.length * 10, 800)); // Slightly faster "thinking"
+            const thinkingTime = Math.max(300, Math.min(text.length * 10, 800));
 
             await new Promise(resolve => setTimeout(resolve, thinkingTime));
             
             if (!document.body.contains(botMessageElement)) {
-                console.warn("Bot message element (ID:", botMessageId, ") was removed before response could be displayed. This might happen if chat is reset rapidly.");
-                // Attempt to re-add if absolutely necessary, though this indicates a potential logic flaw elsewhere if frequent.
-                // For now, we'll let it fail gracefully for this specific message if element is gone.
-                enableInputs(); // Ensure inputs are re-enabled anyway
+                console.warn("Bot message element (ID:", botMessageId, ") was removed before response could be displayed.");
+                enableInputs();
                 userInput.focus();
                 return; 
             }
@@ -609,6 +1107,8 @@
             );
             if (typeof Prism !== 'undefined') Prism.highlightAllUnder(botMessageElement);
             addMessageActions(botMessageElement, text, botMessageId);
+            if (typeof playReceiveMessageSound === "function") playReceiveMessageSound();
+
 
             updateConversationHistory('assistant', text, botMessageId);
             saveConversation(currentChatThreadId);
@@ -633,12 +1133,12 @@
                 messageElement.setAttribute('aria-label', 'Bot is thinking');
             } else {
                 if (sender === 'user') {
-                    messageElement.textContent = text;
-                } else {
+                    messageElement.textContent = text; // User messages are plain text
+                } else { // Bot messages can be Markdown
                     const htmlContent = typeof marked !== 'undefined' ? marked.parse(text) : text.replace(/\n/g, '<br>');
                     messageElement.innerHTML = DOMPurify.sanitize(htmlContent, { USE_PROFILES: { html: true } });
                     if (typeof Prism !== 'undefined') Prism.highlightAllUnder(messageElement);
-                    addMessageActions(messageElement, text, messageId);
+                    addMessageActions(messageElement, text, messageId); // Pass original non-HTML text for TTS
                     addInfoTooltipsToMessage(messageElement, text);
                 }
             }
@@ -648,7 +1148,7 @@
             scrollToBottom();
             if (!isLoading && sender === 'bot') {
                 chatAppContainer.classList.remove('flash');
-                void chatAppContainer.offsetWidth;
+                void chatAppContainer.offsetWidth; // Trigger reflow
                 chatAppContainer.classList.add('flash');
             }
             return messageElement;
@@ -677,7 +1177,10 @@
                 alert("Sorry, your browser doesn't support text-to-speech.");
                 return;
             }
-            const plainText = DOMPurify.sanitize(text, { ALLOWED_TAGS: [] }).replace(/[*_`~#>|]/g, '');
+            // Basic cleanup for TTS from Markdown/HTML-like content
+            const plainText = text.replace(/<[^>]+>/g, ' ') // Strip HTML tags
+                                 .replace(/[*_`~#>|]/g, '')   // Strip Markdown chars
+                                 .replace(/\s+/g, ' ').trim(); // Normalize spaces
             const utterance = new SpeechSynthesisUtterance(plainText);
             utterance.lang = 'en-US'; 
             speechSynthesis.cancel(); 
@@ -761,7 +1264,7 @@
             }
             currentChatThreadId = localStorage.getItem('lastActiveThreadId') || Object.keys(threads)[0];
             if (!threads[currentChatThreadId]) { 
-                currentChatThreadId = Object.keys(threads)[0];
+                currentChatThreadId = Object.keys(threads)[0]; // Fallback if stored ID is invalid
                 localStorage.setItem('lastActiveThreadId', currentChatThreadId);
             }
             
@@ -777,14 +1280,15 @@
             });
         }
         function switchChatThread(threadId) {
-            saveConversation(currentChatThreadId); // Save current thread before switching
+            saveConversation(currentChatThreadId); 
             currentChatThreadId = threadId;
             localStorage.setItem('lastActiveThreadId', currentChatThreadId);
-            loadConversation(threadId); // Load the history for the new thread
+            loadConversation(threadId); 
             document.querySelectorAll('#threadList button').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.threadId === threadId);
             });
             updatePersonaSelectBasedOnThread();
+            applyCustomPersonaAccent(); // Also apply accent on thread switch
         }
         newThreadButton.addEventListener('click', () => {
             const newThreadName = prompt("Enter name for new chat thread:", `Chat Session ${Object.keys(JSON.parse(localStorage.getItem('chatThreads') || '{}')).length + 1}`);
@@ -795,51 +1299,64 @@
                 threads[newThreadId] = { name: newThreadName, lastUpdated: Date.now(), history: [], persona: personaSelect.value };
                 localStorage.setItem('chatThreads', JSON.stringify(threads));
                 
-                // Switch to the new thread
                 currentChatThreadId = newThreadId;
                 localStorage.setItem('lastActiveThreadId', currentChatThreadId);
-                loadChatThreads(); // Refresh sidebar
-                loadConversation(newThreadId); // Load the new empty thread (will show greeting)
+                loadChatThreads(); 
+                loadConversation(newThreadId); 
                 updatePersonaSelectBasedOnThread();
+                applyCustomPersonaAccent();
             }
         });
         function updatePersonaSelectBasedOnThread() {
             const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
             const currentThread = threads[currentChatThreadId];
-            if (currentThread && currentThread.persona) {
+            if (currentThread && currentThread.persona && personaSelect.querySelector(`option[value="${currentThread.persona}"]`)) {
                 personaSelect.value = currentThread.persona;
+            } else if (currentThread) { // Persona in thread data doesn't exist in select (e.g. deleted custom)
+                personaSelect.value = 'helpful'; // Default
+                currentThread.persona = 'helpful';
+                localStorage.setItem('chatThreads', JSON.stringify(threads));
             }
+            // Apply theme and accent again after persona potentially changes
+            const savedTheme = localStorage.getItem('selectedChatTheme');
+            if (savedTheme) applyTheme(savedTheme); else applyCustomPersonaAccent();
         }
+        
         personaSelect.addEventListener('change', () => {
             const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
             if (threads[currentChatThreadId]) {
                 threads[currentChatThreadId].persona = personaSelect.value;
                 localStorage.setItem('chatThreads', JSON.stringify(threads));
             }
-            const newGreeting = generateGreeting(personaSelect.value);
+            const newGreetingBase = generateGreeting(personaSelect.value).split("!")[0].split(",")[0]; // Get a core part of greeting
             const msgId = generateMessageId();
+
+            const nowStr = Date.now().toString().substring(0,8);
             // Avoid adding too many "Switched to persona" if user clicks rapidly
-            if (!conversationHistory.some(msg => msg.content.startsWith("Switched to") && msg.id.includes(Date.now().toString().substring(0,8)) ) ){
-                 addMessageToChat(`Switched to ${personaSelect.value} persona. ${newGreeting.split("!")[0]}!`, 'bot', false, msgId);
-                 updateConversationHistory('assistant', `Switched to ${personaSelect.value} persona.`, msgId);
+             if (!conversationHistory.some(msg => msg.content.startsWith("Switched to") && msg.role === 'assistant' && msg.id.includes(nowStr) ) ){
+                 const switchMsgContent = `Switched to ${personaSelect.options[personaSelect.selectedIndex].text.replace(' (Custom)','')} persona. ${newGreetingBase}!`;
+                 addMessageToChat(switchMsgContent, 'bot', false, msgId);
+                 updateConversationHistory('assistant', switchMsgContent, msgId);
+                 saveConversation(currentChatThreadId);
             }
+            // Apply theme and accent for new persona
+             const savedTheme = localStorage.getItem('selectedChatTheme');
+            if (savedTheme) applyTheme(savedTheme); else applyCustomPersonaAccent();
         });
+
 
         function saveConversation(threadId) {
             if (!threadId) return;
             const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
-            if (!threads[threadId]) { // Should not happen if initialized correctly
+            if (!threads[threadId]) { 
                 threads[threadId] = { name: `Chat ${threadId.substring(0,5)}`, history: [], persona: personaSelect.value };
             }
             
-            // Filter out temporary "Switched to persona..." messages from being saved
             const historyToSave = conversationHistory.filter(msg => {
-                const isSwitchMsg = msg.content.startsWith("Switched to") && msg.role === 'bot';
-                // Check if it's a greeting that happens to contain "Switched to" - less likely but good to be safe
-                const isAlsoGreeting = msg.content.includes(generateGreeting(personaSelect.value).split("!")[0]);
-                return !isSwitchMsg || (isSwitchMsg && isAlsoGreeting && conversationHistory.length === 1); // Keep if it's the only message (initial greeting)
+                const isSwitchMsg = msg.content.startsWith("Switched to") && msg.role === 'assistant';
+                const isAlsoGreeting = msg.content.includes(generateGreeting(personaSelect.value).split("!")[0].split(",")[0]);
+                return !isSwitchMsg || (isSwitchMsg && isAlsoGreeting && conversationHistory.length === 1);
             });
-
 
             threads[threadId].history = historyToSave;
             threads[threadId].lastUpdated = Date.now();
@@ -848,27 +1365,31 @@
         }
 
         function loadConversation(threadId) {
-            // This function is called when switching threads.
-            // For the initial page load, initializeChat handles the "fresh start".
             if (!threadId) threadId = 'default_chat';
-            currentChatThreadId = threadId; // Ensure this is set correctly
+            currentChatThreadId = threadId; 
             const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
             const thread = threads[threadId];
 
             chatWindow.innerHTML = '';
             if (thread && thread.history && thread.history.length > 0) {
                 conversationHistory = thread.history;
-                personaSelect.value = thread.persona || 'helpful';
-                conversationHistory.forEach(msg => addMessageToChat(msg.content, msg.role, false, msg.id || generateMessageId()));
+                if (thread.persona && personaSelect.querySelector(`option[value="${thread.persona}"]`)) {
+                    personaSelect.value = thread.persona;
+                } else {
+                    personaSelect.value = 'helpful'; // Default if stored persona invalid
+                }
+                conversationHistory.forEach(msg => addMessageToChat(msg.content, msg.role === 'user' ? 'user' : 'assistant', false, msg.id || generateMessageId()));
             } else {
-                // If loading an empty thread (or new one), start with a greeting
                 conversationHistory = [];
-                personaSelect.value = (thread && thread.persona) ? thread.persona : 'helpful'; // Use thread's persona or default
+                personaSelect.value = (thread && thread.persona && personaSelect.querySelector(`option[value="${thread.persona}"]`)) ? thread.persona : 'helpful';
                 const greeting = generateGreeting(personaSelect.value);
                 const greetingId = generateMessageId();
                 addMessageToChat(greeting, 'bot', false, greetingId);
                 updateConversationHistory('assistant', greeting, greetingId);
             }
+             // Apply theme and accent for loaded thread
+            const savedTheme = localStorage.getItem('selectedChatTheme');
+            if (savedTheme) applyTheme(savedTheme); else applyCustomPersonaAccent();
             scrollToBottom();
         }
 
@@ -939,7 +1460,7 @@
                 commandsSuggestionContainer.style.display = 'none';
             }
         }
-        function detectEmotion(text) {
+        function detectEmotion(text) { // Basic emotion detection
             const lowerText = text.toLowerCase();
             if (/\b(angry|furious|pissed off|annoyed|frustrated|hate)\b/i.test(lowerText)) return "angry";
             if (/\b(sad|upset|crying|depressed|miserable)\b/i.test(lowerText)) return "sad";
@@ -949,11 +1470,13 @@
         }
         function handleEmotionalResponse(emotion, userMessage) {
             console.log(`User emotion detected: ${emotion} for message: "${userMessage}"`);
+            // Future: Could subtly change bot's response style or offer specific support.
         }
         function addInfoTooltipsToMessage(messageElement, text) {
             const knownFacts = { 
                 "Paris": "The capital city of France, known for the Eiffel Tower.", 
                 "AI": "Artificial Intelligence - simulation of human intelligence in machines."
+                // Add more facts here
             };
             let html = messageElement.innerHTML;
             for (const fact in knownFacts) {
@@ -967,7 +1490,7 @@
 
         async function handleRephraseMessage(originalText, originalMessageId) {
             const botMessageId = generateMessageId();
-            addMessageToChat("I can't truly rephrase messages in this simplified mode, but I can repeat it with a twist! ... Or can I?", 'bot', false, botMessageId);
+            addMessageToChat("I can't truly rephrase messages in this simplified mode, but I can repeat it with a twist!... Or maybe try asking in a different way?", 'bot', false, botMessageId);
             updateConversationHistory('assistant', "I can't truly rephrase messages in this simplified mode.", botMessageId);
             saveConversation(currentChatThreadId);
         }
@@ -976,17 +1499,17 @@
             const lowerPrompt = promptText.toLowerCase();
             let nameFound = null;
             if (lowerPrompt.includes("my name is ")) {
-                nameFound = lowerPrompt.split("my name is ")[1].split(/[\s,.!?]/)[0];
+                nameFound = promptText.substring(lowerPrompt.indexOf("my name is ") + 11).split(/[\s,.!?]/)[0];
             } else if (lowerPrompt.includes("call me ")) {
-                nameFound = lowerPrompt.split("call me ")[1].split(/[\s,.!?]/)[0];
+                nameFound = promptText.substring(lowerPrompt.indexOf("call me ") + 8).split(/[\s,.!?]/)[0];
             }
             if (nameFound && nameFound.length > 1 && nameFound.length < 20) {
                 userName = nameFound.charAt(0).toUpperCase() + nameFound.slice(1);
                 localStorage.setItem('userName', userName); 
-                console.log("Username stored:", userName);
                 const msgId = generateMessageId();
                 addMessageToChat(`Got it, I'll call you ${userName}!`, 'bot', false, msgId);
                 updateConversationHistory('assistant',`Got it, I'll call you ${userName}!`, msgId);
+                saveConversation(currentChatThreadId);
             }
 
             const colorMatch = lowerPrompt.match(/my favorite colou?r is (\w+)/);
@@ -995,44 +1518,64 @@
                 localStorage.setItem('userPreferences', JSON.stringify(userPreferences));
                 const msgId = generateMessageId();
                 addMessageToChat(`Nice! ${userPreferences.favoriteColor.charAt(0).toUpperCase() + userPreferences.favoriteColor.slice(1)} is a great color. I'll try to remember that.`, 'bot', false, msgId);
-                updateConversationHistory('assistant', `Nice! ${userPreferences.favoriteColor.charAt(0).toUpperCase() + userPreferences.favoriteColor.slice(1)} is a great color. I'll try to remember that.`, msgId);
+                updateConversationHistory('assistant', `Nice! ${userPreferences.favoriteColor.charAt(0).toUpperCase() + userPreferences.favoriteColor.slice(1)} is a great color.`, msgId);
+                saveConversation(currentChatThreadId);
             }
         }
         function suggestPersonaChange(messageText) {
              const lowerText = messageText.toLowerCase();
-            let newPersona = null;
+            let newPersonaKey = null;
             if (lowerText.includes("make it funny") || lowerText.includes("be sarcastic")) {
-                newPersona = "sarcastic";
-            } else if (lowerText.includes("be serious") || lowerText.includes("professional")) {
-                newPersona = "professional";
+                newPersonaKey = "sarcastic";
+            } else if (lowerText.includes("be serious") || lowerText.includes("be professional")) {
+                newPersonaKey = "professional";
+            } else if (lowerText.includes("be friendly") || lowerText.includes("act friendly")) {
+                newPersonaKey = "friendly";
+            } else if (lowerText.includes("talk like a pirate")) {
+                newPersonaKey = "pirate";
             }
 
-            if (newPersona && personaSelect.value !== newPersona) {
+
+            if (newPersonaKey && personaSelect.value !== newPersonaKey && personaSelect.querySelector(`option[value="${newPersonaKey}"]`)) {
+                const newPersonaName = personaSelect.querySelector(`option[value="${newPersonaKey}"]`).textContent.replace(' (Custom)', '');
                 const suggestionId = generateMessageId();
-                const suggestionMsg = addMessageToChat(`I can switch to my ${newPersona} persona for that if you'd like. <button data-persona="${newPersona}" class="persona-suggestion-btn" style="padding: 3px 6px; margin-left: 5px; cursor: pointer; border-radius: 5px; border: 1px solid var(--button-bg); background: var(--suggestion-bg); color: var(--suggestion-text);">Switch to ${newPersona}</button>`, 'bot', false, suggestionId);
+                const suggestionMsgHTML = `I can switch to my ${newPersonaName} persona for that if you'd like. <button data-persona="${newPersonaKey}" class="persona-suggestion-btn" style="padding: 3px 6px; margin-left: 5px; cursor: pointer; border-radius: 5px; border: 1px solid var(--button-bg); background: var(--suggestion-bg); color: var(--suggestion-text);">Switch to ${newPersonaName}</button>`;
+                const suggestionMsgElement = addMessageToChat(suggestionMsgHTML, 'bot', false, suggestionId);
                 
-                const btn = suggestionMsg.querySelector('.persona-suggestion-btn');
+                const btn = suggestionMsgElement.querySelector('.persona-suggestion-btn');
                 if (btn) {
                     btn.onclick = (e) => {
                         personaSelect.value = e.target.dataset.persona;
-                        personaSelect.dispatchEvent(new Event('change'));
-                        e.target.closest('.message').remove();
+                        personaSelect.dispatchEvent(new Event('change')); // This will trigger persona switch logic including message
+                        suggestionMsgElement.remove(); // Remove the suggestion message
                         const historyIndex = conversationHistory.findIndex(msg => msg.id === suggestionId);
                         if(historyIndex > -1) conversationHistory.splice(historyIndex, 1);
+                        saveConversation(currentChatThreadId);
                     };
                 }
+                updateConversationHistory('assistant', DOMPurify.sanitize(suggestionMsgHTML, {ALLOWED_TAGS: []}), suggestionId); // Save text content of suggestion
+                saveConversation(currentChatThreadId);
             }
         }
         function updateConversationHistory(role, content, id, replace = false) {
+            const message = { role, content, id };
             if (replace) {
                 const existingMsgIndex = conversationHistory.findIndex(msg => msg.id === id);
                 if (existingMsgIndex !== -1) {
-                    conversationHistory[existingMsgIndex] = { role, content, id };
+                    conversationHistory[existingMsgIndex] = message;
                     return;
                 }
             }
-            if (conversationHistory.some(msg => msg.id === id)) return;
-            conversationHistory.push({ role, content, id });
+            // Prevent duplicate by ID, but allow if content is different (e.g. bot correcting itself)
+            const existingMsg = conversationHistory.find(msg => msg.id === id);
+            if (existingMsg && existingMsg.content === content) return;
+            if (existingMsg && existingMsg.content !== content) { // Replace if ID same but content changed
+                 const existingMsgIndex = conversationHistory.findIndex(msg => msg.id === id);
+                 conversationHistory[existingMsgIndex] = message;
+                 return;
+            }
+
+            conversationHistory.push(message);
         }
         async function handleCommand(commandText) {
             const [command, ...args] = commandText.substring(1).toLowerCase().split(' ');
@@ -1051,28 +1594,42 @@
                     botResponse = jokes[Math.floor(Math.random() * jokes.length)];
                     break;
                 case 'reset':
-                    chatWindow.innerHTML = ''; // Visually clear
-                    conversationHistory = []; // Clear in-memory history for current session
+                    chatWindow.innerHTML = ''; 
+                    conversationHistory = []; 
                     
-                    // Set up greeting for the reset thread
                     const currentPersonaForReset = personaSelect.value;
                     const greetingForReset = generateGreeting(currentPersonaForReset);
                     const greetingIdForReset = generateMessageId();
                     addMessageToChat(greetingForReset, 'bot', false, greetingIdForReset);
                     updateConversationHistory('assistant', greetingForReset, greetingIdForReset);
                     
-                    // Overwrite the specific reset thread in localStorage with the new empty (greeting-only) history
                     saveConversation(currentChatThreadId); 
-                    break; 
+                    break;
+                case 'play':
+                    handleMiniGames('/play');
+                    // commandProcessed = true; // Mini-game handles its own messaging
+                    break;
+                case 'roll':
+                    handleDiceRoll();
+                    // commandProcessed = true; // Dice roll handles its own messaging
+                    break;
+                case 'quote':
+                    handleQuoteCommand();
+                    // commandProcessed = true; // Quote handles its own messaging
+                    break;
+                case 'createpersona':
+                    openCustomPersonaModal();
+                    // commandProcessed = true; // Modal handles interaction
+                    break;  
                 default:
                     commandProcessed = false; 
             }
 
-            if (commandProcessed && botResponse) { // For commands that have an immediate response
+            if (commandProcessed && botResponse) { 
                 const botMessageId = generateMessageId();
                 addMessageToChat(botResponse, 'bot', false, botMessageId);
                 updateConversationHistory('assistant', botResponse, botMessageId);
-                saveConversation(currentChatThreadId); // Save after command response
+                saveConversation(currentChatThreadId); 
             }
             return commandProcessed;
         }
@@ -1085,19 +1642,26 @@
             const userMessageId = generateMessageId();
             addMessageToChat(messageText, 'user', false, userMessageId);
             updateConversationHistory('user', messageText, userMessageId);
+            if (typeof playSendMessageSound === "function") playSendMessageSound();
+
 
             userInput.value = ''; 
             suggestionsContainer.style.display = 'none';
             commandsSuggestionContainer.style.display = 'none';
 
             extractAndStoreUserPreferences(messageText);
-            suggestPersonaChange(messageText);
+            suggestPersonaChange(messageText); // Suggest persona change based on user input
             const userEmotion = detectEmotion(messageText);
             handleEmotionalResponse(userEmotion, messageText);
 
             if (messageText.startsWith('/')) {
                 const commandProcessed = await handleCommand(messageText);
                 if (commandProcessed) {
+                    // For commands that send their own messages or open modals,
+                    // we might not need further action here.
+                    // If the command directly returns a response, it's handled in handleCommand.
+                    // If it's like /reset, it also handles its UI.
+                    saveConversation(currentChatThreadId); // Ensure state is saved after command
                     scrollToBottom();
                     if (!userInput.disabled) userInput.focus();
                     return;
@@ -1106,7 +1670,7 @@
             
             const currentPersona = personaSelect.value;
             const botMessageId = generateMessageId();
-            const botMessageElement = addMessageToChat('', 'bot', true, botMessageId); // isLoading = true
+            const botMessageElement = addMessageToChat('', 'bot', true, botMessageId); 
             
             sendButton.disabled = true;
             userInput.disabled = true;
@@ -1117,7 +1681,7 @@
             botMessageElement.innerHTML = ''; 
 
             await displayBotResponse(botResponseText, botMessageElement, botMessageId);
-            // Note: saveConversation is called within displayBotResponse after successful display
+            // saveConversation is called within displayBotResponse
         }
 
         function scrollToBottom() {
@@ -1128,7 +1692,7 @@
                 chatWindow.removeChild(chatWindow.firstChild);
             }
         }
-        function applyViewportHeight() {
+        function applyViewportHeight() { // Make sure this is defined if you use it
             const setHeight = () => {
                 if(document.querySelector('.chat-area')) {
                      document.querySelector('.chat-area').style.height = window.innerHeight + 'px';
@@ -1137,28 +1701,29 @@
             setHeight();
             window.addEventListener('resize', setHeight);
         }
-        function loadTheme() {
-            const savedTheme = localStorage.getItem('theme');
-            document.body.classList.toggle('dark-mode', savedTheme === 'dark');
-            updateThemePreference();
+        function loadTheme() { // Modified to interact with custom themes
+            const savedSelectedTheme = localStorage.getItem('selectedChatTheme');
+            if (savedSelectedTheme && themes[savedSelectedTheme]) {
+                applyTheme(savedSelectedTheme);
+            } else {
+                // Fallback to original light/dark toggle if no specific theme is set
+                const savedThemePreference = localStorage.getItem('theme'); // 'light' or 'dark'
+                document.body.classList.toggle('dark-mode', savedThemePreference === 'dark');
+                updateThemePreference(); // Updates icon
+            }
         }
-        function updateThemePreference() {
+        function updateThemePreference() { // Original function, now mostly for icon
             const isDarkMode = document.body.classList.contains('dark-mode');
             if (themeToggleIcon) themeToggleIcon.textContent = isDarkMode ? '☀️' : '🌙';
             if (themeToggleText) themeToggleText.textContent = isDarkMode ? 'Light' : 'Dark';
-            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light'); // Store base light/dark preference
         }
 
         chatForm.addEventListener('submit', handleSendMessage);
         themeToggleButton.addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            updateThemePreference();
-        });
-
-        // --- INITIALIZE ---
-        initializeChat();
-        setupSpeechRecognition();
-    });
-</script>
-</body>
-</html>
+            // This button now cycles: Current Theme (if dark) -> Light -> Dark -> Current Theme (if light)
+            const currentSelectedTheme = localStorage.getItem('selectedChatTheme');
+            if (currentSelectedTheme && currentSelectedTheme !== 'default') {
+                // If on a custom theme, toggle its dark mode state or revert to default light/dark cycle
+                const themeIsCurrentlyDark = document.body.classList.contains('dark-mode');
+                if (themeIsCurrentlyDark) { // currently
