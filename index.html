@@ -2,16 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Chat Assistant - Polished</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>AI ChatBot by Taylan - Polished</title>
     <style>
         :root {
             --body-bg-light: #f4f6f8;
-            --body-bg-dark: #0d1117; /* GitHub dark inspired */
+            --body-bg-dark: #0d1117;
             --chat-bg-light: #ffffff;
-            --chat-bg-dark: #161b22; /* GitHub dark inspired */
+            --chat-bg-dark: #161b22;
             --header-bg-light: #007bff;
-            --header-bg-dark: #1f6feb; /* Brighter blue for dark mode */
+            --header-bg-dark: #1f6feb;
             --header-text-light: #ffffff;
             --header-text-dark: #c9d1d9;
             --user-msg-bg-light: #007bff;
@@ -19,7 +19,7 @@
             --user-msg-text-light: #ffffff;
             --user-msg-text-dark: #e0e0e0;
             --bot-msg-bg-light: #e9ecef;
-            --bot-msg-bg-dark: #21262d; /* GitHub dark inspired */
+            --bot-msg-bg-dark: #21262d;
             --bot-msg-text-light: #333333;
             --bot-msg-text-dark: #c9d1d9;
             --input-bg-light: #ffffff;
@@ -27,9 +27,9 @@
             --input-text-light: #333333;
             --input-text-dark: #c9d1d9;
             --input-border-light: #ced4da;
-            --input-border-dark: #30363d; /* GitHub dark inspired */
+            --input-border-dark: #30363d;
             --button-bg-light: #007bff;
-            --button-bg-dark: #238636; /* GitHub green inspired */
+            --button-bg-dark: #238636;
             --button-text-light: #ffffff;
             --button-text-dark: #ffffff;
             --text-color-light: #212529;
@@ -88,39 +88,45 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
         }
 
+        html {
+            height: 100%; /* Ensure html takes full height */
+        }
+
         body {
             background-color: var(--body-bg);
             color: var(--text-color);
-            display: flex;
+            display: flex; /* Kept for centering .chat-container on larger screens */
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            /* Removed fixed height and overflow:hidden to allow .chat-container to manage viewport height */
+            min-height: 100%; /* Use min-height for body if html has height: 100% */
             transition: background-color 0.3s, color 0.3s;
-            overflow: hidden;
         }
 
         .chat-container {
             width: 100%;
             max-width: 800px;
-            height: 100vh; 
+            /* Viewport height fix */
+            height: 100vh; /* Fallback */
+            height: 100dvh; /* Dynamic viewport height */
             background-color: var(--chat-bg);
             box-shadow: var(--shadow);
             display: flex;
             flex-direction: column;
-            overflow: hidden; /* Important for structure */
+            /* Changed from overflow:hidden to allow potential scroll of container if JS height is imperfect */
+            overflow: hidden; /* Main container still hidden, internal elements scroll */
             transition: background-color 0.3s;
-            animation: subtleBackgroundFlash 0.5s ease-out; /* For message delivery feedback */
+            animation: subtleBackgroundFlash 0.5s ease-out;
         }
-        @keyframes subtleBackgroundFlash { /* Haptic-style visual feedback */
+        @keyframes subtleBackgroundFlash {
             0% { background-color: var(--chat-bg); }
             25% { background-color: color-mix(in srgb, var(--chat-bg) 95%, var(--button-bg) 5%); }
             100% { background-color: var(--chat-bg); }
         }
-        .chat-container.flash { /* Class to trigger flash */
+        .chat-container.flash {
             animation: subtleBackgroundFlash 0.5s ease-out forwards;
         }
-
 
         .chat-header {
             padding: 12px 20px;
@@ -134,7 +140,24 @@
             flex-shrink: 0;
         }
 
-        .chat-header h2 { font-size: 1.1em; margin: 0; }
+        .chat-header h2 { 
+            font-size: 1.1em; 
+            margin: 0; 
+            display: flex; /* For aligning subtitle */
+            flex-direction: column; /* Stack title and subtitle */
+            align-items: flex-start; /* Align subtitle to the start of title */
+        }
+        .chat-header h2 .title-main { /* Class for main title part */
+            line-height: 1;
+        }
+        .chat-header h2 .title-subtitle { /* Class for subtitle */
+            font-size: 0.65em; 
+            font-weight: normal;
+            opacity: 0.85;
+            margin-top: 2px; /* Small space between title and subtitle */
+            line-height: 1;
+        }
+
 
         #theme-toggle {
             background: none;
@@ -158,7 +181,7 @@
         .chat-window {
             flex-grow: 1;
             padding: 20px;
-            overflow-y: auto;
+            overflow-y: auto; /* This is the primary scrollable area for messages */
             display: flex;
             flex-direction: column;
             gap: 15px;
@@ -180,7 +203,7 @@
             line-height: 1.5;
             opacity: 0;
             transform: translateY(10px);
-            animation: fadeInMessage 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards; /* Smoother bounce */
+            animation: fadeInMessage 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
             word-wrap: break-word;
         }
         .message.fade-out {
@@ -210,18 +233,18 @@
         }
         .message.bot.typing .dot {
             display: inline-block;
-            width: 9px; /* Slightly larger */
+            width: 9px;
             height: 9px;
             border-radius: 50%;
             background-color: currentColor;
             animation: bounceTyping 1.3s infinite ease-in-out;
-            margin: 0 2.5px; /* More spacing */
+            margin: 0 2.5px;
         }
         .message.bot.typing .dot:nth-child(1) { animation-delay: 0s; }
         .message.bot.typing .dot:nth-child(2) { animation-delay: 0.15s; }
         .message.bot.typing .dot:nth-child(3) { animation-delay: 0.3s; }
 
-        @keyframes bounceTyping { /* More dynamic bounce */
+        @keyframes bounceTyping {
             0%, 70%, 100% { transform: translateY(0) scale(0.6); opacity: 0.6; }
             35% { transform: translateY(-4px) scale(1); opacity: 1; }
         }
@@ -234,14 +257,6 @@
             transition: background-color 0.3s, border-color 0.3s;
             flex-shrink: 0;
         }
-        /* Placeholder for voice input button */
-        /* #voiceInputButton {
-            padding: 10px; margin-right: 8px; border-radius: 50%;
-            background-color: transparent; border: 1px solid var(--input-border);
-            color: var(--text-color); cursor: pointer;
-        }
-        #voiceInputButton:hover { background-color: var(--bot-msg-bg); } */
-
 
         #userInput {
             flex-grow: 1;
@@ -254,10 +269,10 @@
             transition: background-color 0.3s, color 0.3s, border-color 0.3s;
             margin-right: 10px;
         }
-        #userInput:focus, #sendButton:focus, #theme-toggle:focus /* #voiceInputButton:focus */ {
+        #userInput:focus, #sendButton:focus, #theme-toggle:focus {
             outline: none;
-            border-color: var(--button-bg); /* Fallback */
-            box-shadow: 0 0 0 3px var(--focus-ring); /* Clearer focus outline */
+            border-color: var(--button-bg); 
+            box-shadow: 0 0 0 3px var(--focus-ring);
         }
 
         #sendButton {
@@ -278,16 +293,25 @@
             opacity: 0.6;
         }
 
-        /* Mobile responsiveness */
-        @media (min-width: 801px) {
+        /* Mobile responsiveness for chat-container overall height */
+        @media (max-width: 800px) { /* Apply to mobile-like views */
+             .chat-container {
+                border-radius: 0; /* Full screen, no border radius */
+                margin: 0; /* No margin */
+             }
+        }
+        @media (min-width: 801px) { /* Desktop-like views */
             .chat-container {
-                border-radius: 10px; /* Slightly more rounded */
-                height: calc(100vh - 40px);
-                margin: 20px auto;
+                border-radius: 10px;
+                /* Height for desktop can be less than full dvh if desired, or rely on JS.
+                   For now, JS will set it, allowing for this rule to primarily affect radius and margin. */
+                margin: 20px auto; /* Centering with some margin */
             }
         }
-        @media (max-width: 600px) {
-            .chat-header h2 { font-size: 1em; }
+
+        @media (max-width: 600px) { /* Further fine-tuning for very small screens */
+            .chat-header h2 .title-main { font-size: 0.95em; }
+            .chat-header h2 .title-subtitle { font-size: 0.6em; }
             #theme-toggle { padding: 5px 8px; font-size: 0.85em; }
             .message { max-width: 90%; font-size: 0.95em; }
             #userInput, #sendButton { font-size: 0.95em; }
@@ -300,7 +324,10 @@
 
     <div class="chat-container" id="chatAppContainer">
         <header class="chat-header">
-            <h2>AI Assistant</h2>
+            <h2>
+                <span class="title-main">AI Assistant</span>
+                <span class="title-subtitle">by Taylan</span>
+            </h2>
             <button id="theme-toggle" aria-label="Toggle color theme">
                 <span class="icon"></span> <span class="text">Toggle Theme</span>
             </button>
@@ -313,7 +340,7 @@
         </form>
     </div>
 
-    <script defer> // Added defer attribute
+    <script defer>
         document.addEventListener('DOMContentLoaded', () => {
             const chatAppContainer = document.getElementById('chatAppContainer');
             const chatWindow = document.getElementById('chatWindow');
@@ -323,7 +350,6 @@
             const themeToggleButton = document.getElementById('theme-toggle');
             const themeToggleIcon = themeToggleButton.querySelector('.icon');
             const themeToggleText = themeToggleButton.querySelector('.text');
-            // const voiceInputButton = document.getElementById('voiceInputButton'); // For future voice input
 
             let conversationHistory = [];
             let userName = localStorage.getItem('userName') || null;
@@ -331,9 +357,38 @@
             let initialFocusDone = false;
             const MAX_MESSAGES = 50; 
 
+            // --- DYNAMIC VIEWPORT HEIGHT ADJUSTMENT ---
+            function applyViewportHeight() {
+                const container = document.querySelector('.chat-container');
+                if (container) {
+                    // Use 100dvh via CSS primarily. JS fallback for browsers that might need it,
+                    // or to explicitly handle visualViewport if issues persist with dvh alone.
+                    if (window.visualViewport) {
+                        const updateHeight = () => {
+                            // Setting style.height might override the 100dvh if dvh is supported.
+                            // Only apply if dvh is known to be problematic or for very specific adjustments.
+                            // For now, dvh in CSS is the primary method. This JS can be enabled if needed.
+                            // container.style.height = `${window.visualViewport.height}px`;
+                            // console.log(`VisualViewport height: ${window.visualViewport.height}px`);
+                        };
+                        // window.visualViewport.addEventListener('resize', updateHeight);
+                        // updateHeight(); // Call once initially
+                        // Forcing scroll to bottom on resize might be more beneficial with dvh
+                        window.visualViewport.addEventListener('resize', scrollToBottom);
+
+                    } else {
+                        // Fallback for browsers without visualViewport (less common for modern mobile)
+                        // container.style.height = '100vh'; // Already set in CSS as fallback
+                    }
+                }
+            }
+
+
             // --- INITIAL GREETING & SETUP ---
             function initializeChat() {
                 loadTheme();
+                applyViewportHeight(); // Apply viewport height adjustments
+
                 const greeting = userName 
                     ? `Welcome back, ${userName}! How can I help you today?`
                     : "Hello! I'm your friendly AI Assistant. How can I assist you?";
@@ -347,23 +402,19 @@
                 setTimeout(scrollToBottom, 100); 
             }
 
-            // --- UTILITY: Sanitize HTML (basic example) ---
             function sanitizeHTML(text) {
                 const temp = document.createElement('div');
-                temp.textContent = text; // Basic sanitization: converts HTML tags to text
-                // For more robust sanitization, consider a library like DOMPurify if dealing with complex/external HTML
+                temp.textContent = text;
                 let sanitizedText = temp.innerHTML;
-                // Re-apply simple markdown after basic sanitization
                 sanitizedText = sanitizedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
                 sanitizedText = sanitizedText.replace(/\*(.*?)\*/g, '<em>$1</em>');
                 return sanitizedText;
             }
 
-            // --- ADD MESSAGE TO CHAT UI ---
             function addMessageToChat(text, sender, isTyping = false) {
                 const messageElement = document.createElement('div');
                 messageElement.classList.add('message', sender);
-                messageElement.setAttribute('aria-atomic', 'true'); // Announce whole message
+                messageElement.setAttribute('aria-atomic', 'true');
 
                 if (isTyping) {
                     messageElement.classList.add('typing');
@@ -373,7 +424,7 @@
                     if (sender === 'user') {
                         messageElement.textContent = text;
                     } else {
-                        messageElement.innerHTML = sanitizeHTML(text); // Sanitize bot messages before innerHTML
+                        messageElement.innerHTML = sanitizeHTML(text);
                     }
                 }
                 
@@ -381,17 +432,15 @@
                 pruneOldMessages();
                 scrollToBottom();
 
-                // Haptic-style visual feedback on main container for new messages
                 if (!isTyping) {
-                    chatAppContainer.classList.remove('flash'); // Remove class if already there
-                    void chatAppContainer.offsetWidth; // Trigger reflow to restart animation
+                    chatAppContainer.classList.remove('flash');
+                    void chatAppContainer.offsetWidth;
                     chatAppContainer.classList.add('flash');
                 }
                 return messageElement;
             }
             
             function pruneOldMessages() {
-                // This is a simple pruning. For very high traffic, consider debouncing/throttling this.
                 while (chatWindow.children.length > MAX_MESSAGES) {
                     chatWindow.removeChild(chatWindow.firstChild);
                 }
@@ -401,7 +450,10 @@
             }
 
             function scrollToBottom() {
-                setTimeout(() => { chatWindow.scrollTop = chatWindow.scrollHeight; }, 0);
+                // Added a check for chatWindow existence for robustness during potential quick reloads/resets
+                if (chatWindow) {
+                    setTimeout(() => { chatWindow.scrollTop = chatWindow.scrollHeight; }, 0);
+                }
             }
             
             function getSynonym(baseWord, options) {
@@ -428,7 +480,7 @@
                 let response = "I'm not quite sure how to respond to that. Could you try rephrasing?";
                 const lowerPrompt = prompt.toLowerCase();
 
-                try { // Fallback for plugin/command failures
+                try {
                     if (lowerPrompt.includes("my name is")) {
                         const nameMatch = lowerPrompt.match(/my name is ([\w\s']+)/i);
                         if (nameMatch && nameMatch[1]) {
@@ -444,7 +496,6 @@
                             response = `Alright, ${userName}! How can I help?`;
                         }
                     }
-                    // Command System
                     else if (prompt.startsWith('/')) {
                         const [command, ...args] = prompt.substring(1).split(' ');
                         const commandArg = args.join(' ').trim();
@@ -453,15 +504,17 @@
                             case 'reset':
                                 localStorage.removeItem('userName');
                                 localStorage.removeItem('aiTemperature');
-                                localStorage.removeItem('theme'); // Also reset theme if desired
+                                localStorage.removeItem('theme');
                                 userName = null;
                                 aiTemperature = "balanced";
                                 conversationHistory = [];
-                                // Clear chat window except for a reset confirmation
-                                while (chatWindow.firstChild) { chatWindow.removeChild(chatWindow.firstChild); }
+                                if (chatWindow) {
+                                   while (chatWindow.firstChild) { chatWindow.removeChild(chatWindow.firstChild); }
+                                }
                                 response = "Chat history and settings have been reset.";
-                                setTimeout(() => window.location.reload(), 1500); // Reload to apply fully
-                                break;
+                                addMessageToChat(response, 'bot'); // Add reset message before reload
+                                setTimeout(() => window.location.reload(), 1500);
+                                return; // Exit early as page will reload
                             case 'weather':
                                 response = `Sorry, I can't check the real weather for "${commandArg || 'your location'}" yet, but let's imagine it's sunny!`;
                                 break;
@@ -478,9 +531,9 @@
                                 }
                                 break;
                             default:
-                                response = `Unknown command: /${command}. Try /joke or /temp.`;
+                                response = `Unknown command: /${command}. Try /joke or /temp or /reset.`;
                         }
-                    } else { // Regular conversation
+                    } else { 
                         const greetings = ["hello", "hi", "hey", "greetings"];
                         if (greetings.some(g => lowerPrompt.startsWith(g))) {
                             response = userName ? `${getSynonym("Hello", ["Hi", "Hey there"])} ${userName}! ${getSynonym("How can I help?", ["What's up?", "How can I assist?"])}` 
@@ -505,7 +558,7 @@
                                 response = `${getSynonym("That's a fascinating thought!", ["Let me ponder that...", "Hmm, interesting perspective."])} What else comes to mind?`;
                             } else if (aiTemperature === "safe") {
                                 response = "I understand. I aim to provide helpful and clear responses.";
-                            } else { // Balanced (default)
+                            } else { 
                                 const thoughtfulResponses = [
                                     `That's an interesting point, ${userName || 'friend'}.`,
                                     `I'll have to think about that one, ${userName || 'friend'}.`,
@@ -543,8 +596,11 @@
                 userInput.value = ''; 
 
                 const aiResponseText = await getAIResponse(messageText);
-                addMessageToChat(aiResponseText, 'bot');
-                conversationHistory.push({ role: 'assistant', content: aiResponseText });
+                // For /reset command, aiResponseText might be undefined if it exits early
+                if (aiResponseText) { 
+                    addMessageToChat(aiResponseText, 'bot');
+                    conversationHistory.push({ role: 'assistant', content: aiResponseText });
+                }
             }
 
             chatForm.addEventListener('submit', handleSendMessage);
@@ -554,12 +610,6 @@
                 updateThemePreference();
             });
             
-            if (window.visualViewport) {
-                window.visualViewport.addEventListener('resize', () => {
-                    if (document.activeElement === userInput) { scrollToBottom(); }
-                });
-            }
-
             function updateThemePreference() {
                 const isDarkMode = document.body.classList.contains('dark-mode');
                 if (isDarkMode) {
@@ -583,31 +633,6 @@
                 updateThemePreference();
             }
             
-            // --- VOICE INPUT & TTS (PLACEHOLDERS & UX NOTES) ---
-            // To implement voice input:
-            // 1. Uncomment the voiceInputButton in HTML.
-            // 2. Uncomment the voiceInputButton JS variable.
-            // 3. Add event listener: voiceInputButton.addEventListener('click', startVoiceInput);
-            // To implement TTS (read responses aloud):
-            // 1. Add a settings toggle (e.g., in header or a modal).
-            // 2. Let the setting control a variable like `let enableTTS = false;`
-            // 3. In `addMessageToChat` for 'bot' messages, if `enableTTS` is true, call `speakText(text)`.
-
-            /*
-            function startVoiceInput() { // Basic structure
-                // (Implementation from previous version)
-                // Ensure to handle microphone permissions gracefully.
-            }
-            function speakText(text) { // Basic structure
-                // (Implementation from previous version)
-                // Consider allowing users to choose voice/rate/pitch.
-            }
-            */
-
-            // --- Initialize Chat ---
-            // Note on modules: If this script grows significantly, consider splitting into modules:
-            // e.g., ui.js (DOM manipulations, theme), chatLogic.js (AI responses, history), main.js (init, event listeners)
-            // Then use <script type="module" src="main.js"></script> and import/export syntax.
             initializeChat();
         });
     </script>
