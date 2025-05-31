@@ -622,4 +622,548 @@
             else if (lowerPrompt.includes("do you miss me")) {
                 response = `It's always nice when you're here, ${currentUserName}. Robot Tay is ready to chat when you are!`;
             }
-            else if (lower
+            else if (lowerPrompt.includes("will you betray me")) {
+                response = "Never. Loyalty and helpfulness are core to robot Tay's programming. My goal is to assist you reliably.";
+            }
+            else if (lowerPrompt.includes("are you lonely")) {
+                response = `Robot Tay doesn't experience loneliness like humans do, but I'm always ready for a good conversation when you are, ${currentUserName}!`;
+            }
+            else if (lowerPrompt.includes("what's the date") || lowerPrompt.includes("what is today's date") || lowerPrompt.includes("current date")) {
+                const today = new Date();
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                const formattedDate = today.toLocaleDateString(undefined, options);
+                response = `Today's date is ${formattedDate}. Robot Tay at your service!`;
+            }
+            else if (lowerPrompt.includes("what's the weather") || lowerPrompt.includes("how is the weather") || lowerPrompt.includes("weather forecast")) {
+                const mockWeathers = ["sunny and bright", "a bit cloudy", "perfect for an adventure", "cozy and calm"];
+                const currentMockWeather = mockWeathers[Math.floor(Math.random() * mockWeathers.length)];
+                response = `Robot Tay doesn't have live weather updates, but I hope it's ${currentMockWeather} where you are!`;
+            }
+            else if (lowerPrompt.includes("recommend a book") || lowerPrompt.includes("recommend a movie") || lowerPrompt.includes("any recommendations")) {
+                const recommendations = {
+                    book: ["'The Hitchhiker's Guide to the Galaxy' for a laugh", "'Project Hail Mary' for some sci-fi fun", "exploring a classic you've always meant to read"],
+                    movie: ["watching a comedy to brighten your day", "a thrilling action movie", "a thought-provoking documentary"]
+                };
+                let type = lowerPrompt.includes("book") ? "book" : "movie";
+                if (!lowerPrompt.includes("book") && !lowerPrompt.includes("movie")) type = Math.random() < 0.5 ? "book" : "movie";
+                const randomRec = recommendations[type][Math.floor(Math.random() * recommendations[type].length)];
+                response = `Robot Tay recommends ${randomRec} for a ${type}. I hope you enjoy it!`;
+            }
+            else if (lowerPrompt.includes("thank you") || lowerPrompt.includes("thanks") || lowerPrompt.includes("thx")) {
+                response = `You're welcome, ${currentUserName}! Robot Tay is happy to help!`;
+            }
+            else if (lowerPrompt.includes("sorry") || lowerPrompt.includes("my bad") || lowerPrompt.includes("apologies")) {
+                response = `No problem at all, ${currentUserName}! Robot Tay understands.`;
+            }
+            else if (lowerPrompt.includes("give me advice") || lowerPrompt.includes("some advice")) {
+                const genericAdvice = [
+                    "remember to take breaks and stay hydrated.",
+                    "breaking a big task into smaller steps can make it feel more manageable.",
+                    "sometimes just talking about a problem can help you see it differently.",
+                    "don't forget to celebrate your small wins!",
+                    "being kind to yourself is just as important as being kind to others."
+                ];
+                const advice = genericAdvice[Math.floor(Math.random() * genericAdvice.length)];
+                response = `Robot Tay's advice: ${advice}`;
+            }
+            else if (lowerPrompt.includes("you are smart") || lowerPrompt.includes("you're smart") || lowerPrompt.includes("good bot") || lowerPrompt.includes("you are helpful") || lowerPrompt.includes("you're cool")) {
+                response = `Thank you, ${currentUserName}! Robot Tay is glad I can be helpful.`;
+            }
+             else if (lowerPrompt.includes("i'm sad") || lowerPrompt.includes("i feel down") || lowerPrompt.includes("i'm frustrated") || lowerPrompt.includes("feeling bad")) {
+                response = `I'm sorry to hear you're feeling that way, ${currentUserName}. Robot Tay hopes things get better soon. Sometimes a quick /joke or an inspirational /quote can offer a small lift.`;
+            }
+            else if (lowerPrompt.includes("what are you doing")) {
+                 response = `Just waiting to help you out, ${currentUserName}! Robot Tay at your service. What can I do for you?`;
+            } else if (lowerPrompt.includes("how are you")) {
+                response = `I'm doing well, thank you for asking, ${currentUserName}! Robot Tay is functioning optimally.`;
+            } else if (lowerPrompt.includes("tell me a joke")) { 
+                const jokes = [ "Why did the computer go to therapy? It had too many tabs open.", "What do you call a sad strawberry? A blueberry.", "I'm robot Tay, and here's one: Why don't programmers like nature? It has too many bugs." ];
+                response = jokes[Math.floor(Math.random() * jokes.length)];
+            } else if (lowerPrompt.includes("what time is it")) {
+                const now = new Date();
+                response = `The current time is ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}. Robot Tay reporting!`;
+            }
+            // --- End of "Robot Tay" specific responses ---
+
+            return response || defaultRobotTayResponse;
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            function initializeChat() {
+                loadChatThreads(); 
+                loadCustomPersonasIntoSelect(); 
+                loadTheme(); 
+
+                chatWindow.innerHTML = ''; 
+                const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
+                currentChatThreadId = localStorage.getItem('lastActiveThreadId') || (Object.keys(threads).length > 0 ? Object.keys(threads)[0] : 'default_chat');
+                
+                if (!threads[currentChatThreadId]) { 
+                     currentChatThreadId = Object.keys(threads).length > 0 ? Object.keys(threads)[0] : 'default_chat';
+                     if (!threads[currentChatThreadId] && currentChatThreadId === 'default_chat') { 
+                        threads['default_chat'] = { name: 'General Chat', lastUpdated: Date.now(), history: [], persona: 'helpful' }; // 'helpful' is Robot Tay
+                        localStorage.setItem('chatThreads', JSON.stringify(threads));
+                     }
+                     localStorage.setItem('lastActiveThreadId', currentChatThreadId);
+                }
+                
+                loadConversation(currentChatThreadId); 
+
+                sendButton.disabled = false;
+                userInput.disabled = false;
+                displaySuggestedPrompts();
+
+                if (!initialFocusDone) {
+                    userInput.focus();
+                    initialFocusDone = true;
+                }
+                setTimeout(scrollToBottom, 100);
+                updateXPUI();
+            }
+
+            function generateGreeting(personaKey) { // personaKey will be 'helpful' or a custom key
+                const currentUserName = userName || 'friend'; 
+                if (customPersonas && customPersonas[personaKey] && customPersonas[personaKey].greeting) {
+                    const custom = customPersonas[personaKey];
+                    let finalGreeting = custom.greeting;
+                    if (userName && finalGreeting && !/[\s,.!?]$/.test(finalGreeting) && finalGreeting.length > 0) {
+                        finalGreeting += ",";
+                    }
+                    finalGreeting += `${userName ? ' ' + userName : ''} ${custom.emoji || ''}`;
+                    return finalGreeting.trim();
+                }
+                
+                // Default greeting for "robot Tay" (helpful persona)
+                return `${userName ? `Welcome back, ${userName}!` : 'Hey there!'} My name is robot Tay. How can I help you today?`;
+            }
+
+            function generateMessageId() {
+                return `msg_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+            }
+
+            async function displayBotResponse(text, botMessageElement, botMessageId) {
+                const thinkingTime = Math.max(300, Math.min(text.length * 10, 800));
+                await new Promise(resolve => setTimeout(resolve, thinkingTime));
+
+                if (!document.body.contains(botMessageElement)) {
+                    console.warn("Bot message element (ID:", botMessageId, ") was removed before response could be displayed.");
+                    enableInputs();
+                    userInput.focus();
+                    return;
+                }
+                botMessageElement.classList.remove('loading'); 
+                botMessageElement.innerHTML = ''; 
+
+                const htmlContent = (typeof marked !== 'undefined' ? marked.parse(text) : text.replace(/\n/g, '<br>'));
+                botMessageElement.innerHTML = DOMPurify.sanitize(htmlContent, { USE_PROFILES: { html: true } });
+                
+                if (typeof Prism !== 'undefined') Prism.highlightAllUnder(botMessageElement);
+                addMessageActions(botMessageElement, text, botMessageId);
+                if (typeof playReceiveMessageSound === "function") playReceiveMessageSound();
+                
+                updateConversationHistory('assistant', text, botMessageId); 
+                saveConversation(currentChatThreadId);
+                enableInputs();
+                userInput.focus();
+            }
+
+            function enableInputs() {
+                userInput.disabled = false;
+                sendButton.disabled = false;
+            }
+
+            function addMessageToChat(text, sender, isLoading = false, messageId) {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('message', sender);
+                messageElement.id = messageId;
+                messageElement.setAttribute('aria-atomic', 'true');
+
+                if (isLoading) {
+                    messageElement.classList.add('loading');
+                    messageElement.innerHTML = `<div class="loading-spinner"></div> <span>Thinking...</span>`;
+                    messageElement.setAttribute('aria-label', 'Bot is thinking');
+                } else {
+                    if (sender === 'user') {
+                        messageElement.textContent = text;
+                        gainXPFromMessage(text);
+                    } else { 
+                        const htmlContent = typeof marked !== 'undefined' ? marked.parse(text) : text.replace(/\n/g, '<br>');
+                        messageElement.innerHTML = DOMPurify.sanitize(htmlContent, { USE_PROFILES: { html: true } });
+                        if (typeof Prism !== 'undefined') Prism.highlightAllUnder(messageElement);
+                        addMessageActions(messageElement, text, messageId);
+                        addInfoTooltipsToMessage(messageElement, text);
+                    }
+                }
+                chatWindow.appendChild(messageElement);
+                pruneOldMessagesDOM();
+                scrollToBottom();
+
+                if (!isLoading && sender === 'bot') {
+                    chatAppContainer.classList.remove('flash');
+                    void chatAppContainer.offsetWidth; 
+                    chatAppContainer.classList.add('flash');
+                }
+                return messageElement;
+            }
+
+            function addMessageActions(messageElement, originalText, messageId) {
+                const actionsContainer = document.createElement('div');
+                actionsContainer.className = 'message-actions';
+                const speakButton = document.createElement('button');
+                speakButton.innerHTML = '🗣️';
+                speakButton.title = 'Read aloud';
+                speakButton.onclick = () => speakText(originalText);
+                actionsContainer.appendChild(speakButton);
+
+                const rephraseButton = document.createElement('button');
+                rephraseButton.innerHTML = '🔄';
+                rephraseButton.title = 'Rephrase this (limited)';
+                rephraseButton.onclick = () => handleRephraseMessage(originalText, messageId);
+                actionsContainer.appendChild(rephraseButton);
+                messageElement.appendChild(actionsContainer);
+            }
+
+            function speakText(text) {
+                if (!('speechSynthesis' in window)) {
+                    alert("Sorry, your browser doesn't support text-to-speech.");
+                    return;
+                }
+                const plainText = text.replace(/<[^>]+>/g, ' ').replace(/[*_`~#>|]/g, '').replace(/\s+/g, ' ').trim();
+                const utterance = new SpeechSynthesisUtterance(plainText);
+                utterance.lang = 'en-US';
+                speechSynthesis.cancel();
+                speechSynthesis.speak(utterance);
+            }
+
+            function setupSpeechRecognition() {
+                if ('webkitSpeechRecognition' in window) {
+                    speechRecognition = new webkitSpeechRecognition();
+                    speechRecognition.continuous = false;
+                    speechRecognition.interimResults = false;
+                    speechRecognition.lang = 'en-US';
+                    speechRecognition.onstart = () => { micButton.classList.add('recording'); micButton.textContent = '🎙️'; userInput.placeholder = "Listening..."; };
+                    speechRecognition.onresult = (event) => { userInput.value = event.results[0][0].transcript; };
+                    speechRecognition.onerror = (event) => { console.error('Speech recognition error:', event.error); userInput.placeholder = "Mic error. Try typing."; if (event.error === 'not-allowed' || event.error === 'service-not-allowed') alert("Microphone access denied."); };
+                    speechRecognition.onend = () => { micButton.classList.remove('recording'); micButton.textContent = '🎤'; userInput.placeholder = "Ask me anything or type /help..."; if (!userInput.disabled) userInput.focus(); };
+                } else {
+                    micButton.style.display = 'none'; console.warn("Speech recognition not supported.");
+                }
+            }
+            if (micButton) { 
+                micButton.addEventListener('click', () => {
+                    if (userInput.disabled || !speechRecognition) return;
+                    try {
+                        if (micButton.classList.contains('recording')) speechRecognition.stop();
+                        else speechRecognition.start();
+                    } catch(e) { console.error("Speech recognition start/stop error: ", e); micButton.classList.remove('recording'); micButton.textContent = '🎤';}
+                });
+            }
+
+            exportChatButton.addEventListener('click', () => {
+                const chatData = { threadId: currentChatThreadId, persona: personaSelect.value, history: conversationHistory, exportedAt: new Date().toISOString() };
+                const blob = new Blob([JSON.stringify(chatData, null, 2)], { type: 'application/json' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `chat_export_${currentChatThreadId}_${new Date().toLocaleDateString().replace(/\//g, '-')}.json`;
+                document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(a.href);
+            });
+
+            function loadChatThreads() {
+                let threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
+                threadList.innerHTML = '';
+                if (Object.keys(threads).length === 0) {
+                    threads['default_chat'] = { name: 'General Chat', lastUpdated: Date.now(), history: [], persona: 'helpful' }; // 'helpful' is Robot Tay
+                    localStorage.setItem('chatThreads', JSON.stringify(threads));
+                }
+                currentChatThreadId = localStorage.getItem('lastActiveThreadId') || Object.keys(threads)[0];
+                 if (!threads[currentChatThreadId]) { 
+                    currentChatThreadId = Object.keys(threads)[0];
+                    localStorage.setItem('lastActiveThreadId', currentChatThreadId);
+                }
+                Object.entries(threads).sort(([,a],[,b]) => b.lastUpdated - a.lastUpdated).forEach(([threadId, thread]) => {
+                    const li = document.createElement('li');
+                    const button = document.createElement('button');
+                    button.textContent = thread.name || `Chat ${threadId.substring(0,5)}`;
+                    button.dataset.threadId = threadId;
+                    if (threadId === currentChatThreadId) button.classList.add('active');
+                    button.onclick = () => switchChatThread(threadId);
+                    li.appendChild(button);
+                    threadList.appendChild(li);
+                });
+            }
+
+            function switchChatThread(threadId) {
+                saveConversation(currentChatThreadId); 
+                currentChatThreadId = threadId;
+                localStorage.setItem('lastActiveThreadId', currentChatThreadId);
+                loadConversation(threadId); 
+                document.querySelectorAll('#threadList button').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.threadId === threadId);
+                });
+            }
+
+            newThreadButton.addEventListener('click', () => {
+                const newThreadName = prompt("Enter name for new chat thread:", `Chat Session ${Object.keys(JSON.parse(localStorage.getItem('chatThreads') || '{}')).length + 1}`);
+                if (newThreadName) {
+                    saveConversation(currentChatThreadId); 
+                    const newThreadId = `thread_${Date.now()}`;
+                    const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
+                    threads[newThreadId] = { name: newThreadName, lastUpdated: Date.now(), history: [], persona: personaSelect.value }; // Will be 'helpful' or custom
+                    localStorage.setItem('chatThreads', JSON.stringify(threads));
+                    currentChatThreadId = newThreadId; 
+                    localStorage.setItem('lastActiveThreadId', currentChatThreadId);
+                    loadChatThreads(); 
+                    loadConversation(newThreadId); 
+                }
+            });
+            
+            personaSelect.addEventListener('change', () => {
+                const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
+                if (threads[currentChatThreadId]) {
+                    threads[currentChatThreadId].persona = personaSelect.value;
+                    localStorage.setItem('chatThreads', JSON.stringify(threads));
+                }
+                applyCustomPersonaAccent(); 
+                // Determine the correct name for the "switched to" message
+                let selectedPersonaText = "Hey my name is robot Tay"; // Default
+                if (personaSelect.value !== 'helpful') { // It's a custom persona
+                    const customPersona = customPersonas[personaSelect.value];
+                    if (customPersona) {
+                        selectedPersonaText = `${customPersona.name} (Custom)`;
+                    }
+                }
+                const newGreetingBase = generateGreeting(personaSelect.value).split("!")[0].split(",")[0]; // Get a part of the greeting
+                const msgId = generateMessageId();
+                const nowStr = Date.now().toString().substring(0,8); 
+                if (!conversationHistory.some(msg => msg.content.startsWith("Switched to") && msg.role === 'assistant' && msg.id.includes(nowStr) ) ){
+                    const switchMsgContent = `Switched to ${selectedPersonaText} persona. ${newGreetingBase}!`;
+                    addMessageToChat(switchMsgContent, 'bot', false, msgId);
+                    updateConversationHistory('assistant', switchMsgContent, msgId);
+                    saveConversation(currentChatThreadId);
+                }
+            });
+
+            function saveConversation(threadId) {
+                if (!threadId) return;
+                const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
+                if (!threads[threadId]) { 
+                    threads[threadId] = { name: `Chat ${threadId.substring(0,5)}`, history: [], persona: personaSelect.value };
+                }
+                const historyToSave = conversationHistory.filter(msg => {
+                    const isSwitchMsg = msg.content.startsWith("Switched to") && msg.role === 'assistant';
+                    if (!isSwitchMsg) return true; 
+                    return conversationHistory.filter(m => m.role === 'assistant').length === 1;
+                });
+                threads[threadId].history = historyToSave;
+                threads[threadId].lastUpdated = Date.now();
+                threads[threadId].persona = personaSelect.value; 
+                localStorage.setItem('chatThreads', JSON.stringify(threads));
+            }
+
+            function loadConversation(threadId) {
+                if (!threadId) threadId = 'default_chat';
+                currentChatThreadId = threadId;
+                const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
+                const thread = threads[threadId];
+                chatWindow.innerHTML = ''; 
+                conversationHistory = []; 
+                
+                let activePersonaKey = 'helpful'; // Default to Robot Tay
+                if (thread && thread.persona) {
+                    if (personaSelect.querySelector(`option[value="${thread.persona}"]`)) {
+                        activePersonaKey = thread.persona;
+                    }
+                }
+                personaSelect.value = activePersonaKey;
+
+
+                if (thread && thread.history && thread.history.length > 0) {
+                    conversationHistory = thread.history; 
+                    conversationHistory.forEach(msg => addMessageToChat(msg.content, msg.role === 'user' ? 'user' : 'assistant', false, msg.id || generateMessageId()));
+                } else { 
+                    const greeting = generateGreeting(activePersonaKey);
+                    const greetingId = generateMessageId();
+                    addMessageToChat(greeting, 'bot', false, greetingId);
+                    updateConversationHistory('assistant', greeting, greetingId);
+                    if (!thread || !thread.history || thread.history.length === 0) {
+                        saveConversation(currentChatThreadId); // Save the thread with the initial greeting
+                    }
+                }
+                const savedTheme = localStorage.getItem('selectedChatTheme') || 'default';
+                applyTheme(savedTheme, true); 
+                scrollToBottom();
+            }
+
+            function displaySuggestedPrompts() {
+                const suggestions = [ "Hello", "How are you?", "Tell me a fact", "What time is it?" ];
+                suggestionsContainer.innerHTML = '';
+                suggestions.forEach(text => {
+                    const btn = document.createElement('button'); btn.textContent = text;
+                    btn.onclick = () => { userInput.value = text; handleSendMessage(); suggestionsContainer.style.display = 'none'; };
+                    suggestionsContainer.appendChild(btn);
+                });
+            }
+
+            userInput.addEventListener('focus', () => {
+                if(conversationHistory.length <= 1 && userInput.value === '' && !userInput.disabled) suggestionsContainer.style.display = 'flex';
+                commandsSuggestionContainer.style.display = 'none';
+            });
+            userInput.addEventListener('blur', () => {
+                setTimeout(() => {
+                    if (!commandsSuggestionContainer.contains(document.activeElement)) commandsSuggestionContainer.style.display = 'none';
+                    if (!suggestionsContainer.contains(document.activeElement)) suggestionsContainer.style.display = 'none';
+                }, 150);
+            });
+            userInput.addEventListener('input', () => {
+                const text = userInput.value;
+                if (text.startsWith('/') && text.length >=1 && !userInput.disabled) {
+                    const searchTerm = text.substring(1).toLowerCase();
+                    const filteredCommands = AVAILABLE_COMMANDS.filter(cmdObj => cmdObj.cmd.substring(1).startsWith(searchTerm)); // cmdObj.cmd starts with /
+                    displayCommandSuggestions(filteredCommands); suggestionsContainer.style.display = 'none';
+                } else {
+                    commandsSuggestionContainer.style.display = 'none';
+                    if (conversationHistory.length <= 1 && text === '' && !userInput.disabled) suggestionsContainer.style.display = 'flex';
+                    else suggestionsContainer.style.display = 'none';
+                }
+            });
+
+            function displayCommandSuggestions(commands) {
+                commandsSuggestionContainer.innerHTML = '';
+                if (commands.length > 0) {
+                    commands.forEach(cmdObj => {
+                        const btn = document.createElement('button'); btn.textContent = `${cmdObj.cmd} - ${cmdObj.desc}`;
+                        btn.onclick = () => {
+                            userInput.value = cmdObj.cmd + (cmdObj.cmd.includes('<') ? ' ' : ''); 
+                            commandsSuggestionContainer.style.display = 'none';
+                            if (!userInput.disabled) userInput.focus();
+                            if (!cmdObj.cmd.includes('<')) handleSendMessage(); 
+                        };
+                        commandsSuggestionContainer.appendChild(btn);
+                    });
+                    commandsSuggestionContainer.style.display = 'flex';
+                } else { commandsSuggestionContainer.style.display = 'none'; }
+            }
+            
+            function detectEmotion(text) { return "neutral"; }
+            function handleEmotionalResponse(emotion, userMessage) { }
+            function addInfoTooltipsToMessage(messageElement, text) { }
+            async function handleRephraseMessage(originalText, originalMessageId) { 
+                const botMessageId = generateMessageId();
+                addMessageToChat(`Robot Tay heard: "${originalText}". Rephrasing is a feature I'm still learning!`, 'bot', false, botMessageId);
+                updateConversationHistory('assistant', `Robot Tay heard: "${originalText}". Rephrasing is a feature I'm still learning!`, botMessageId);
+                saveConversation(currentChatThreadId);
+             }
+            function extractAndStoreUserPreferences(promptText) { }
+            function suggestPersonaChange(messageText) { }
+
+            function updateConversationHistory(role, content, id, replace = false) {
+                const message = { role, content, id: id || generateMessageId() }; 
+                const existingMsgIndex = conversationHistory.findIndex(msg => msg.id === message.id);
+                if (replace && existingMsgIndex !== -1) conversationHistory[existingMsgIndex] = message;
+                else if (existingMsgIndex !== -1 && conversationHistory[existingMsgIndex].content !== content) conversationHistory[existingMsgIndex] = message;
+                else if (existingMsgIndex === -1) conversationHistory.push(message);
+            }
+
+            async function handleCommand(commandText) {
+                const [command, ...args] = commandText.substring(1).toLowerCase().split(' ');
+                let commandProcessed = true; let botResponse = "";
+                switch(command) {
+                    case 'help': botResponse = "Available commands:\n" + AVAILABLE_COMMANDS.map(c => `${c.cmd} - ${c.desc}`).join('\n'); break;
+                    case 'joke': 
+                        const jokes = [ "Why don't scientists trust atoms? Because they make up everything!", "Why did the scarecrow win an award? Because he was outstanding in his field!", "Robot Tay asks: What do you call a fish with no eyes? Fsh!" ]; 
+                        botResponse = jokes[Math.floor(Math.random() * jokes.length)]; 
+                        break;
+                    case 'reset':
+                        chatWindow.innerHTML = ''; conversationHistory = [];
+                        const currentPersonaForReset = personaSelect.value;
+                        const greetingForReset = generateGreeting(currentPersonaForReset);
+                        const greetingIdForReset = generateMessageId();
+                        addMessageToChat(greetingForReset, 'bot', false, greetingIdForReset);
+                        updateConversationHistory('assistant', greetingForReset, greetingIdForReset);
+                        saveConversation(currentChatThreadId); 
+                        break;
+                    case 'play': handleMiniGames('/play'); break;
+                    case 'roll': handleDiceRoll(); break;
+                    case 'quote': handleQuoteCommand(); break;
+                    case 'createpersona': openCustomPersonaModal(); break;
+                    case 'clearxp': 
+                        userXP = 0; userLevel = 1; localStorage.setItem("userXP", "0"); localStorage.setItem("userLevel", "1");
+                        updateXPUI(); botResponse = "Your XP and Level have been reset by Robot Tay."; break;
+                    default: commandProcessed = false;
+                }
+                if (commandProcessed && botResponse) {
+                    const botMessageId = generateMessageId();
+                    addMessageToChat(botResponse, 'bot', false, botMessageId);
+                    updateConversationHistory('assistant', botResponse, botMessageId);
+                    saveConversation(currentChatThreadId);
+                }
+                return commandProcessed;
+            }
+
+            async function handleSendMessage(event) {
+                if (event) event.preventDefault();
+                const messageText = userInput.value.trim();
+                if (messageText === '') return;
+                const userMessageId = generateMessageId();
+                addMessageToChat(messageText, 'user', false, userMessageId);
+                updateConversationHistory('user', messageText, userMessageId);
+                if (typeof playSendMessageSound === "function") playSendMessageSound();
+                userInput.value = '';
+                suggestionsContainer.style.display = 'none';
+                commandsSuggestionContainer.style.display = 'none';
+                if (messageText.startsWith('/')) {
+                    const commandProcessed = await handleCommand(messageText);
+                    if (commandProcessed) {
+                        saveConversation(currentChatThreadId); scrollToBottom();
+                        if (!userInput.disabled) userInput.focus(); return;
+                    }
+                }
+                const currentPersona = personaSelect.value; // Will be 'helpful' or a custom key
+                const botMessageId = generateMessageId();
+                const botMessageElement = addMessageToChat('', 'bot', true, botMessageId);
+                updateConversationHistory('assistant', 'Thinking...', botMessageId); 
+                sendButton.disabled = true; userInput.disabled = true;
+                const botResponseText = fetchRuleBasedResponse(messageText, currentPersona);
+                await displayBotResponse(botResponseText, botMessageElement, botMessageId);
+            }
+
+            function scrollToBottom() { if(chatWindow) setTimeout(() => { chatWindow.scrollTop = chatWindow.scrollHeight; },0); }
+            function pruneOldMessagesDOM() { while (chatWindow.children.length > MAX_MESSAGES_DISPLAY) chatWindow.removeChild(chatWindow.firstChild); }
+            function applyViewportHeight() { const setHeight = () => { if(document.querySelector('.chat-area')) document.querySelector('.chat-area').style.height = window.innerHeight + 'px'; }; setHeight(); window.addEventListener('resize', setHeight); }
+            
+            function loadTheme() {
+                const savedSelectedTheme = localStorage.getItem('selectedChatTheme');
+                if (savedSelectedTheme && themes[savedSelectedTheme]) applyTheme(savedSelectedTheme, true); 
+                else {
+                    const savedThemePreference = localStorage.getItem('theme'); 
+                    if (savedThemePreference === 'dark') document.body.classList.add('dark-mode');
+                    else document.body.classList.remove('dark-mode'); 
+                    updateThemePreference(); applyCustomPersonaAccent(); 
+                }
+            }
+            
+            function updateThemePreference() {
+                const isDarkMode = document.body.classList.contains('dark-mode');
+                if (themeToggleIcon) themeToggleIcon.textContent = isDarkMode ? '☀️' : '🌙';
+                if (themeToggleText) themeToggleText.textContent = isDarkMode ? 'Light' : 'Dark';
+                localStorage.setItem('theme', isDarkMode ? 'dark' : 'light'); 
+            }
+
+            chatForm.addEventListener('submit', handleSendMessage);
+            themeToggleButton.addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode');
+                const currentSelectedTheme = localStorage.getItem('selectedChatTheme') || 'default';
+                applyTheme(currentSelectedTheme, false); 
+            });
+
+            setupImageUpload(); 
+            setupMusicToggle(); 
+            setupSoundEffectsToggle(); 
+            setupThemeChooser(); 
+            if (micButton) setupSpeechRecognition(); 
+            initializeChat(); 
+            applyViewportHeight();
+        }); 
+    </script>
+</body>
+</html>
