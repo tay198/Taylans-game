@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Evidence Lockdown: Rhythm Scan</title>
+  <title>Evidence Lockdown: Rhythm Scan V3</title>
   <style>
     body, html {
       margin: 0;
       padding: 0;
       overflow: hidden;
-      background-color: #0A0A0A;
+      /* background-color is now dynamic */
       color: #E0E0E0;
       display: flex;
       justify-content: center;
@@ -19,8 +19,8 @@
     }
     canvas {
       display: block;
-      background-color: #181818;
-      box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+      /* background-color for canvas itself is drawn in JS */
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.4); /* Enhanced glow */
     }
   </style>
 </head>
@@ -31,41 +31,89 @@
     const ctx = canvas.getContext('2d');
     let screenWidth, screenHeight;
     let gameRunning = false;
+    let gamePaused = false; // For Freeze power-up
     let animationFrameId;
 
-    const BEATS_PER_MINUTE = 90;
-    const BEAT_INTERVAL = 60000 / BEATS_PER_MINUTE;
+    // --- Difficulty Settings ---
+    const difficulties = {
+        Easy:   { BPM: 75, SCANNER_SPEED_MS: 0.10, SPAWN_CHANCE: 0.55, ITEM_DURATION_BEATS: 4.5, SCORE_SPEED_FACTOR: 0.000005 },
+        Normal: { BPM: 90, SCANNER_SPEED_MS: 0.13, SPAWN_CHANCE: 0.65, ITEM_DURATION_BEATS: 4.0, SCORE_SPEED_FACTOR: 0.000007 },
+        Hard:   { BPM: 110,SCANNER_SPEED_MS: 0.16, SPAWN_CHANCE: 0.75, ITEM_DURATION_BEATS: 3.5, SCORE_SPEED_FACTOR: 0.00001 }
+    };
+    let currentDifficultySetting = difficulties.Normal; // Default
+    let difficultySelection = ['Normal', 'Easy', 'Hard'];
+    let selectedDifficultyIndex = 0; // Index for cycling through difficulties
+
+    let currentBeatInterval = 60000 / currentDifficultySetting.BPM;
     let lastBeatTime = 0;
     let beatCount = 0;
 
-    const SCANNER_COLOR = 'rgba(0, 255, 255, 0.7)';
+    const SCANNER_COLOR_BASE = 'rgba(0, 255, 255, 0.7)';
+    let scannerColor = SCANNER_COLOR_BASE;
     const SCANNER_WIDTH = 8;
     let scannerX = 0;
-    const SCANNER_SPEED_PIXELS_PER_MS = 0.15;
+    let baseScannerSpeedMs = currentDifficultySetting.SCANNER_SPEED_MS;
+    let currentScannerSpeedMs = baseScannerSpeedMs;
     let scannerDirection = 1;
-      let items = [];
-    const ITEM_RADIUS = 15;
-    const EVIDENCE_COLOR = 'rgba(0, 255, 0, 0.8)';
+    const MAX_SCANNER_SPEED_INCREASE_FACTOR = 1.5; // Max speed increase from score
+
+    let items = [];
+    const ITEM_RADIUS_BASE = 18;
+    const EVIDENCE_BASE_COLOR = 'rgba(0, 255, 0, 0.8)';
     const DISTRACTOR_COLOR = 'rgba(255, 165, 0, 0.8)';
-    const ITEM_SPAWN_CHANCE_PER_BEAT = 0.6;
-    const DISTRACTOR_SPAWN_CHANCE = 0.3;
-    const ITEM_ACTIVE_DURATION_MS = BEAT_INTERVAL * 3.5;
-    const PERFECT_TAP_WINDOW_MS = BEAT_INTERVAL / 3;
+    const POWERUP_COLOR = 'rgba(255, 0, 255, 0.9)';
+    const POWERUP_FREEZE_COLOR = 'rgba(100, 150, 255, 0.9)'; // Light blue for freeze
+    const FRAGMENT_COLOR = 'rgba(100, 200, 255, 0.8)';
+
+    let currentItemSpawnChance = currentDifficultySetting.SPAWN_CHANCE;
+    const DISTRACTOR_SPAWN_CHANCE = 0.25;
+    const FRAGMENTED_EVIDENCE_SPAWN_CHANCE = 0.15;
+    const POWERUP_SPAWN_CHANCE = 0.08; // General powerup spawn
+    const POWERUP_TYPE_CHANCE = { focus: 0.5, freeze: 0.5 }; // Chance for each powerup type
+
+    let currentItemActiveDurationMs = currentBeatInterval * currentDifficultySetting.ITEM_DURATION_BEATS;
+    const PERFECT_TAP_WINDOW_MS_BASE = currentBeatInterval / 2.8; // Will be adjusted by difficulty implicitly via beatInterval
 
     let score = 0;
-    let highScore = localStorage.getItem('evidenceLockdownHighScore') || 0;
+    let highScore = localStorage.getItem('evidenceLockdownHighScoreV3') || 0;
     let combo = 0;
     const SCORE_PER_EVIDENCE = 100;
+    const SCORE_PER_FRAGMENT = 75;
+    const FRAGMENT_SET_COMPLETION_BONUS = 150;
     const COMBO_MULTIPLIER_BONUS = 10;
+    const MAX_COMBO_FOR_METER = 15; // For combo bar visualization
+    const HIGH_COMBO_THRESHOLD = 7; // For scanner glow
+
     const PENALTY_FOR_DISTRACTOR = -150;
     const PENALTY_FOR_MISS = -50;
 
     let tapFeedback = [];
+    let particles = []; // For particle explosions
     let lives = 3;
     const INITIAL_LIVES = 3;
 
+    let evidenceCollectedCount = 0;
+    let fragmentsCollectedCount = 0;
+    let fragmentedSetsCompletedCount = 0;
+    let distractorsHitCount = 0;
+    let evidenceMissedCount = 0; // Counts each evidence/fragment item that expires
+    let totalEvidenceOpportunities = 0; // Total non-distractor, non-powerup items spawned
+    let powerUpsCollectedCount = 0;
+
+    let focusModeActive = false;
+    let focusModeEndTime = 0;
+    const FOCUS_MODE_DURATION_MS = 7000;
+    const FOCUS_MODE_SPEED_MULTIPLIER = 0.6;
+
+    let freezeModeActive = false; // Freeze Power-up
+    let freezeModeEndTime = 0;
+    const FREEZE_MODE_DURATION_MS = 3500; // 3.5 seconds
+
+    const evidenceTypes = ['key', 'phone', 'footprint', 'document', 'sample'];
+    let backgroundHue = 200; // Starting hue for background (blue-ish)
+
     function getRandom(min, max) { return Math.random() * (max - min) + min; }
-    function lerp(start, end, amt) { return (1 - amt) * start + amt * end; }
+    function getRandomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
     function resizeCanvas() {
       screenWidth = window.innerWidth;
@@ -73,157 +121,306 @@
       canvas.width = screenWidth;
       canvas.height = screenHeight;
       scannerX = SCANNER_WIDTH / 2;
-      draw();
+      if (!gameRunning) drawStartScreen(); // Redraw start screen with difficulty
+      else draw(); // Redraw game
     }
 
+    function cycleDifficulty() {
+        selectedDifficultyIndex = (selectedDifficultyIndex + 1) % difficultySelection.length;
+        currentDifficultySetting = difficulties[difficultySelection[selectedDifficultyIndex]];
+        // Update game params based on new difficulty (will be fully applied in startGame)
+        baseScannerSpeedMs = currentDifficultySetting.SCANNER_SPEED_MS;
+        currentBeatInterval = 60000 / currentDifficultySetting.BPM;
+        currentItemSpawnChance = currentDifficultySetting.SPAWN_CHANCE;
+        currentItemActiveDurationMs = currentBeatInterval * currentDifficultySetting.ITEM_DURATION_BEATS;
+
+        if (!gameRunning) drawStartScreen();
+    }
+    
     function handleTap(event) {
       if (event) event.preventDefault();
-      if (!gameRunning) {
-        startGame();
+      if (!gameRunning && !gamePaused) { // If on start screen
+        if(event.offsetY > screenHeight * 0.6 && event.offsetY < screenHeight * 0.7){ // Tapped difficulty changer
+            cycleDifficulty();
+            return;
+        }
+        startGame(); // Tapped elsewhere to start
         return;
       }
+      if (gamePaused && !freezeModeActive) return; // Game truly paused, not freeze mode
 
       const tapTime = performance.now();
-      let itemHit = false;
+      let itemHitProcessed = false;
 
       for (let i = items.length - 1; i >= 0; i--) {
+        if (itemHitProcessed) break;
         const item = items[i];
-        const distanceToScanner = Math.abs(item.x - scannerX);
+        const effectiveTapWindow = focusModeActive ? (currentBeatInterval / 2.8) * 1.5 : (currentBeatInterval / 2.8);
 
-        if (distanceToScanner < item.radius + SCANNER_WIDTH &&
-          Math.abs(tapTime - item.spawnTime - (ITEM_ACTIVE_DURATION_MS / 2)) < PERFECT_TAP_WINDOW_MS * 2) {
-          
-          if (scannerX >= item.x - item.radius && scannerX <= item.x + item.radius &&
-              tapTime >= item.spawnTime && tapTime <= item.spawnTime + ITEM_ACTIVE_DURATION_MS) {
-            
-            if (item.type === 'evidence') {
-              score += SCORE_PER_EVIDENCE + (combo * COMBO_MULTIPLIER_BONUS);
-              combo++;
-              addTapFeedback(item.x, item.y, `+${SCORE_PER_EVIDENCE + ((combo - 1) * COMBO_MULTIPLIER_BONUS)}`, EVIDENCE_COLOR, tapTime);
-              
-              const timingAccuracy = Math.abs(tapTime - (item.spawnTime + BEAT_INTERVAL));
-              if (timingAccuracy < PERFECT_TAP_WINDOW_MS / 2) {
-                score += 50;
-                addTapFeedback(item.x, item.y - 20, `Perfect! +50`, SCANNER_COLOR, tapTime);
-              }
-            } else {
-              score += PENALTY_FOR_DISTRACTOR;
-              combo = 0;
-              lives--;
-              addTapFeedback(item.x, item.y, `${PENALTY_FOR_DISTRACTOR}`, DISTRACTOR_COLOR, tapTime);
+        if (Math.abs(item.x - scannerX) < item.radius + SCANNER_WIDTH + 10 &&
+            tapTime >= item.spawnTime && tapTime <= item.spawnTime + currentItemActiveDurationMs) {
+            if (scannerX >= item.x - item.radius && scannerX <= item.x + item.radius) {
+                itemHitProcessed = true;
+                let pointsEarnedThisTap = 0;
+
+                if (item.type === 'evidence') {
+                    pointsEarnedThisTap = SCORE_PER_EVIDENCE + (combo * COMBO_MULTIPLIER_BONUS);
+                    score += pointsEarnedThisTap;
+                    combo++;
+                    evidenceCollectedCount++;
+                    createParticleExplosion(item.x, item.y, EVIDENCE_BASE_COLOR);
+                } else if (item.type === 'fragment') {
+                    pointsEarnedThisTap = SCORE_PER_FRAGMENT;
+                    score += pointsEarnedThisTap;
+                    fragmentsCollectedCount++;
+                    createParticleExplosion(item.x, item.y, FRAGMENT_COLOR);
+                    const parent = items.find(p => p.id === item.parentId && p.type === 'fragment_parent');
+                    if (parent) {
+                        parent.fragmentsCollected++;
+                        if (parent.fragmentsCollected >= parent.totalFragments) {
+                            let bonusPoints = FRAGMENT_SET_COMPLETION_BONUS;
+                            score += bonusPoints;
+                            pointsEarnedThisTap += bonusPoints; // Add to floating score
+                            fragmentedSetsCompletedCount++;
+                            addTapFeedback(parent.x, parent.y, `Set! +${bonusPoints}`, EVIDENCE_BASE_COLOR, tapTime, true);
+                            items = items.filter(it => it.id !== parent.id && it.parentId !== parent.id);
+                        }
+                    }
+                } else if (item.type === 'powerup_focus') {
+                    activateFocusMode(tapTime);
+                    powerUpsCollectedCount++;
+                    pointsEarnedThisTap = 0; // Or give some points
+                    createParticleExplosion(item.x, item.y, POWERUP_COLOR);
+                } else if (item.type === 'powerup_freeze') {
+                    activateFreezeMode(tapTime);
+                    powerUpsCollectedCount++;
+                    pointsEarnedThisTap = 0;
+                    createParticleExplosion(item.x, item.y, POWERUP_FREEZE_COLOR);
+                } else if (item.type === 'distractor') {
+                    score = Math.max(0, score + PENALTY_FOR_DISTRACTOR);
+                    combo = 0;
+                    lives--;
+                    distractorsHitCount++;
+                    pointsEarnedThisTap = PENALTY_FOR_DISTRACTOR;
+                    createParticleExplosion(item.x, item.y, DISTRACTOR_COLOR, true); // Different explosion for error
+                }
+                addTapFeedback(item.x, item.y, (pointsEarnedThisTap > 0 ? `+${pointsEarnedThisTap}`: `${pointsEarnedThisTap}`), item.color || item.type === 'evidence' ? EVIDENCE_BASE_COLOR : DISTRACTOR_COLOR, tapTime);
+                items.splice(i, 1);
+                break;
             }
-
-            items.splice(i, 1);
-            itemHit = true;
-            break;
-          }
         }
       }
-
-      if (!itemHit) {
-        // Optionally show miss feedback here
-      }
-
       if (lives <= 0) gameOver();
     }
 
-    function addTapFeedback(x, y, text, color, time) {
-      tapFeedback.push({ x, y, text, color, spawnTime: time, alpha: 1 });
+    function activateFocusMode(currentTime) {
+        focusModeActive = true;
+        freezeModeActive = false; // Cannot be both
+        focusModeEndTime = currentTime + FOCUS_MODE_DURATION_MS;
+    }
+    function deactivateFocusMode() { focusModeActive = false; }
+
+    function activateFreezeMode(currentTime) {
+        freezeModeActive = true;
+        focusModeActive = false; // Cannot be both
+        freezeModeEndTime = currentTime + FREEZE_MODE_DURATION_MS;
+        gamePaused = true; // Use gamePaused to stop updates
+    }
+    function deactivateFreezeMode() {
+        freezeModeActive = false;
+        gamePaused = false;
+        lastBeatTime = performance.now(); // Reset beat timer to avoid burst spawns
+        lastTime = performance.now(); // Reset deltaTime calc
     }
 
+    function addTapFeedback(x, y, text, color, time, isBonus = false) {
+      tapFeedback.push({ x, y, text, color, spawnTime: time, alpha: 1, scale: isBonus ? 1.3 : 1 });
+    }
+    
+    let itemIdCounter = 0;
     function spawnItem(currentTime) {
-      if (Math.random() > ITEM_SPAWN_CHANCE_PER_BEAT) return;
+      if (Math.random() > currentItemSpawnChance) return;
+      const spawnRoll = Math.random();
+      let itemTypeToSpawn, itemIconType;
 
-      const type = Math.random() < DISTRACTOR_SPAWN_CHANCE ? 'distractor' : 'evidence';
-      const x = getRandom(ITEM_RADIUS * 2, screenWidth - ITEM_RADIUS * 2);
-      const y = getRandom(ITEM_RADIUS * 2, screenHeight - ITEM_RADIUS * 2);
-
-      for (const existingItem of items) {
-        const dist = Math.hypot(existingItem.x - x, existingItem.y - y);
-        if (dist < ITEM_RADIUS * 4) return;
+      if (spawnRoll < POWERUP_SPAWN_CHANCE) {
+        itemTypeToSpawn = Math.random() < POWERUP_TYPE_CHANCE.focus ? 'powerup_focus' : 'powerup_freeze';
+        itemIconType = itemTypeToSpawn === 'powerup_focus' ? 'powerup_focus_icon' : 'powerup_freeze_icon';
+      } else if (spawnRoll < POWERUP_SPAWN_CHANCE + FRAGMENTED_EVIDENCE_SPAWN_CHANCE) {
+        itemTypeToSpawn = 'fragment_parent';
+      } else {
+        itemTypeToSpawn = Math.random() < DISTRACTOR_SPAWN_CHANCE ? 'distractor' : 'evidence';
+        if(itemTypeToSpawn === 'evidence') itemIconType = evidenceTypes[getRandomInt(0, evidenceTypes.length - 1)];
+        else itemIconType = 'distractor_icon';
       }
+      
+      const x = getRandom(ITEM_RADIUS_BASE * 2.5, screenWidth - ITEM_RADIUS_BASE * 2.5);
+      const y = getRandom(ITEM_RADIUS_BASE * 2.5, screenHeight - ITEM_RADIUS_BASE * 2.5);
+      for (const existingItem of items) {
+        if (Math.hypot(existingItem.x - x, existingItem.y - y) < ITEM_RADIUS_BASE * 5) return;
+      }
+      itemIdCounter++;
 
-      items.push({
-        x, y,
-        radius: ITEM_RADIUS,
-        type,
-        color: type === 'evidence' ? EVIDENCE_COLOR : DISTRACTOR_COLOR,
-        spawnTime: currentTime,
-        alpha: 0
-      });
+      if (itemTypeToSpawn === 'fragment_parent') {
+        totalEvidenceOpportunities++; // Parent counts as one opportunity
+        const numFragments = getRandomInt(2, 3);
+        items.push({ id: itemIdCounter, type: 'fragment_parent', x, y, totalFragments: numFragments, fragmentsCollected: 0, spawnTime: currentTime, alpha: 0, radius: ITEM_RADIUS_BASE * 0.5 });
+        const parentId = itemIdCounter;
+        for (let i = 0; i < numFragments; i++) {
+            itemIdCounter++;
+            const angle = (i / numFragments) * Math.PI * 2 + getRandom(-0.2, 0.2);
+            items.push({ id: itemIdCounter, parentId: parentId, type: 'fragment', x: x + Math.cos(angle) * ITEM_RADIUS_BASE * 2.5, y: y + Math.sin(angle) * ITEM_RADIUS_BASE * 2, radius: ITEM_RADIUS_BASE * 0.8, color: FRAGMENT_COLOR, iconType: evidenceTypes[getRandomInt(0, evidenceTypes.length-1)], spawnTime: currentTime + i * (currentBeatInterval / (numFragments * 1.5)), alpha: 0 });
+        }
+      } else {
+        if(itemTypeToSpawn === 'evidence') totalEvidenceOpportunities++;
+        items.push({ id: itemIdCounter, x, y, radius: ITEM_RADIUS_BASE, type: itemTypeToSpawn, color: itemTypeToSpawn === 'evidence' ? EVIDENCE_BASE_COLOR : (itemTypeToSpawn === 'powerup_focus' ? POWERUP_COLOR : (itemTypeToSpawn === 'powerup_freeze' ? POWERUP_FREEZE_COLOR : DISTRACTOR_COLOR)), iconType: itemIconType, spawnTime: currentTime, alpha: 0 });
+      }
     }
-      function updateItems(currentTime, deltaTime) {
+
+    function updateItems(currentTime, deltaTime) {
+      if (gamePaused && !freezeModeActive) return; // Don't update if paused by non-freeze mechanism
+      
       for (let i = items.length - 1; i >= 0; i--) {
         const item = items[i];
-
-        if (item.alpha < 1) {
-          item.alpha += (deltaTime / (BEAT_INTERVAL / 2));
-          if (item.alpha > 1) item.alpha = 1;
+        if (item.alpha < 1 && currentTime >= item.spawnTime) {
+          item.alpha += (deltaTime / (currentBeatInterval / 2.5)));
+          item.alpha = Math.min(1, item.alpha);
         }
-
-        if (currentTime > item.spawnTime + ITEM_ACTIVE_DURATION_MS) {
-          if (item.type === 'evidence') {
-            score += PENALTY_FOR_MISS;
-            combo = 0;
-            lives--;
+        
+        const itemLifetime = currentItemActiveDurationMs + (item.type === 'fragment' ? currentBeatInterval : 0);
+        if (item.type !== 'fragment_parent' && currentTime > item.spawnTime + itemLifetime) {
+          if (item.type === 'evidence' || item.type === 'fragment') {
+            score = Math.max(0, score + PENALTY_FOR_MISS); combo = 0; evidenceMissedCount++;
             addTapFeedback(item.x, item.y, 'Missed!', DISTRACTOR_COLOR, currentTime);
           }
           items.splice(i, 1);
         }
       }
-
-      if (lives <= 0 && gameRunning) {
-        gameOver();
-      }
+      if (lives <= 0 && gameRunning) gameOver();
     }
 
     function updateScanner(deltaTime) {
-      scannerX += SCANNER_SPEED_PIXELS_PER_MS * deltaTime * scannerDirection;
+      if (gamePaused) return; // Also stop scanner during freeze
+      
+      // Gradual speed up with score
+      let scoreFactor = score * currentDifficultySetting.SCORE_SPEED_FACTOR;
+      let dynamicSpeedMs = baseScannerSpeedMs * (1 + Math.min(scoreFactor, MAX_SCANNER_SPEED_INCREASE_FACTOR -1));
+      currentScannerSpeedMs = focusModeActive ? dynamicSpeedMs * FOCUS_MODE_SPEED_MULTIPLIER : dynamicSpeedMs;
+      
+      scannerX += currentScannerSpeedMs * deltaTime * scannerDirection;
+      if (scannerX > screenWidth) scannerDirection = -1;
+      else if (scannerX < 0) scannerDirection = 1;
+      scannerX = Math.max(0, Math.min(screenWidth, scannerX));
+    }
 
-      if (scannerX - SCANNER_WIDTH / 2 > screenWidth) {
-        scannerX = screenWidth - SCANNER_WIDTH / 2;
-        scannerDirection = -1;
-      } else if (scannerX + SCANNER_WIDTH / 2 < 0) {
-        scannerX = SCANNER_WIDTH / 2;
-        scannerDirection = 1;
-      }
+    function createParticleExplosion(x, y, color, isError = false) {
+        const count = isError ? 15 : 25;
+        const baseSpeed = isError ? 2 : 3;
+        for(let i=0; i < count; i++) {
+            particles.push({
+                x, y,
+                vx: getRandom(-baseSpeed, baseSpeed),
+                vy: getRandom(-baseSpeed, baseSpeed),
+                radius: getRandom(isError ? 3 : 2, isError ? 5 : 4),
+                color: color.replace(/, [0-9\.]+\)/, `, ${getRandom(0.5, 1)})`), // Random alpha for particles
+                lifespan: getRandom(300, 600), // ms
+                spawnTime: performance.now(),
+                alpha: 1
+            });
+        }
+    }
+    function updateParticles(deltaTime) {
+        for(let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            p.x += p.vx * (deltaTime/16); // Adjust speed based on typical frame time
+            p.y += p.vy * (deltaTime/16);
+            p.alpha = Math.max(0, 1 - (performance.now() - p.spawnTime) / p.lifespan);
+            p.vy += 0.05; //gravity
+            if(p.alpha <= 0) particles.splice(i,1);
+        }
+    }
+    function drawParticles() {
+        particles.forEach(p => {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.radius * p.alpha, 0, Math.PI * 2);
+            ctx.fillStyle = p.color.replace(/, [0-9\.]+\)/, `, ${p.alpha * 0.8})`);
+            ctx.fill();
+        });
+    }
+
+    function drawIcon(type, x, y, radius, alpha) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.globalAlpha = alpha;
+        const iconColor = EVIDENCE_BASE_COLOR.replace(/, [0-9\.]+\)/, `, ${alpha})`);
+        ctx.lineWidth = 2; ctx.strokeStyle = iconColor; ctx.fillStyle = iconColor;
+
+        switch (type) {
+            case 'key': ctx.beginPath(); ctx.arc(0, -radius*0.4, radius*0.3, 0, Math.PI*2); ctx.moveTo(0,-radius*0.1); ctx.lineTo(0,radius*0.6); ctx.lineTo(radius*0.2,radius*0.6); ctx.moveTo(0,radius*0.3); ctx.lineTo(radius*0.2,radius*0.3); ctx.stroke(); break;
+            case 'phone': ctx.strokeRect(-radius*0.5,-radius*0.7,radius,radius*1.4); ctx.fillRect(-radius*0.3,-radius*0.55,radius*0.6,radius*0.15); ctx.beginPath(); ctx.arc(0,radius*0.4,radius*0.1,0,Math.PI*2); ctx.fill(); break;
+            case 'footprint': ctx.beginPath(); ctx.ellipse(0,0,radius*0.5,radius*0.8,0,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.ellipse(0,-radius*0.6,radius*0.4,radius*0.3,Math.PI*0.1,0,Math.PI*2); ctx.fill(); break;
+            case 'document': ctx.strokeRect(-radius*0.6,-radius*0.7,radius*1.2,radius*1.4); for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(-radius*0.45,-radius*0.4+i*radius*0.3);ctx.lineTo(radius*0.45,-radius*0.4+i*radius*0.3);ctx.stroke();} break;
+            case 'sample': ctx.beginPath();ctx.moveTo(-radius*0.3,-radius*0.6);ctx.lineTo(-radius*0.3,radius*0.4);ctx.quadraticCurveTo(-radius*0.3,radius*0.7,0,radius*0.7);ctx.quadraticCurveTo(radius*0.3,radius*0.7,radius*0.3,radius*0.4);ctx.lineTo(radius*0.3,-radius*0.6);ctx.closePath();ctx.stroke();ctx.fillRect(-radius*0.2,-radius*0.1,radius*0.4,radius*0.5); break;
+            case 'powerup_focus_icon': ctx.strokeStyle = POWERUP_COLOR.replace(/, [0-9\.]+\)/, `, ${alpha})`); ctx.fillStyle = POWERUP_COLOR.replace(/, [0-9\.]+\)/, `, ${alpha*0.5})`); ctx.beginPath(); ctx.arc(0,0,radius,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.arc(0,0,radius*0.5,0,Math.PI*2); ctx.lineWidth=1.5; ctx.stroke(); break;
+            case 'powerup_freeze_icon': ctx.strokeStyle = POWERUP_FREEZE_COLOR.replace(/, [0-9\.]+\)/, `, ${alpha})`); ctx.fillStyle = POWERUP_FREEZE_COLOR.replace(/, [0-9\.]+\)/, `, ${alpha*0.5})`); ctx.beginPath(); for(let i=0;i<6;i++){ ctx.moveTo(0,0); ctx.lineTo(Math.cos(i*Math.PI/3)*radius, Math.sin(i*Math.PI/3)*radius); ctx.moveTo(Math.cos(i*Math.PI/3+Math.PI/6)*radius*0.5, Math.sin(i*Math.PI/3+Math.PI/6)*radius*0.5); ctx.lineTo(Math.cos(i*Math.PI/3-Math.PI/6)*radius*0.5, Math.sin(i*Math.PI/3-Math.PI/6)*radius*0.5); } ctx.stroke(); break; // Snowflake
+            case 'distractor_icon': ctx.fillStyle = DISTRACTOR_COLOR.replace(/, [0-9\.]+\)/, `, ${alpha*0.8})`); ctx.beginPath(); ctx.arc(0,0,radius,0,Math.PI*2); ctx.fill(); ctx.strokeStyle='rgba(50,0,0,'+alpha+')';ctx.lineWidth=3; ctx.moveTo(-radius*0.5,-radius*0.5);ctx.lineTo(radius*0.5,radius*0.5); ctx.moveTo(radius*0.5,-radius*0.5);ctx.lineTo(-radius*0.5,radius*0.5); ctx.stroke(); break;
+            default: if(type === 'fragment'){ctx.fillStyle = FRAGMENT_COLOR.replace(/, [0-9\.]+\)/, `, ${alpha*0.7})`); ctx.strokeStyle=FRAGMENT_COLOR.replace(/, [0-9\.]+\)/, `, ${alpha})`);} ctx.beginPath(); ctx.arc(0,0,radius,0,Math.PI*2); ctx.fill(); if(type==='fragment') ctx.stroke(); break;
+        }
+        ctx.restore();
     }
 
     function drawBackground() {
-      ctx.fillStyle = '#181818';
+      backgroundHue = (backgroundHue + 0.05) % 360; // Slowly shift hue
+      document.body.style.backgroundColor = `hsl(${backgroundHue}, 30%, 5%)`; // Page BG
+      ctx.fillStyle = `hsl(${backgroundHue}, 30%, 10%)`; // Canvas BG
       ctx.fillRect(0, 0, screenWidth, screenHeight);
+      if(focusModeActive) ctx.fillStyle = 'rgba(70, 0, 70, 0.15)';
+      else if(freezeModeActive) ctx.fillStyle = 'rgba(0, 70, 70, 0.25)'; // Blue tint for freeze
+      if(focusModeActive || freezeModeActive) ctx.fillRect(0,0, screenWidth, screenHeight);
     }
 
     function drawScanner() {
-      ctx.fillStyle = SCANNER_COLOR;
+      let baseColor = SCANNER_COLOR_BASE;
+      let glowWidthMultiplier = 2;
+      if (combo >= HIGH_COMBO_THRESHOLD) {
+        baseColor = `rgba(255, 255, 0, 0.8)`; // Yellow glow for high combo
+        glowWidthMultiplier = 3.5;
+      }
+      if (focusModeActive) baseColor = `rgba(255, 0, 255, 0.8)`;
+      else if (freezeModeActive) baseColor = `rgba(150, 200, 255, 0.8)`;
+      
+      ctx.fillStyle = baseColor;
       ctx.fillRect(scannerX - SCANNER_WIDTH / 2, 0, SCANNER_WIDTH, screenHeight);
 
       const timeSinceLastBeat = performance.now() - lastBeatTime;
-      const pulseProgress = Math.min(1, timeSinceLastBeat / BEAT_INTERVAL);
-      const pulseAlpha = Math.sin(pulseProgress * Math.PI) * 0.3;
-
-      ctx.fillStyle = `rgba(0, 255, 255, ${pulseAlpha})`;
-      ctx.fillRect(scannerX - SCANNER_WIDTH * 2, 0, SCANNER_WIDTH * 4, screenHeight);
+      const pulseProgress = gamePaused ? 0 : Math.min(1, timeSinceLastBeat / currentBeatInterval);
+      const pulseAlpha = Math.sin(pulseProgress * Math.PI) * (focusModeActive ? 0.5 : 0.3);
+      const pulseColorRGB = combo >= HIGH_COMBO_THRESHOLD ? '255,255,0' : (focusModeActive ? '255,0,255' : (freezeModeActive ? '150,200,255' : '0,255,255'));
+      
+      ctx.fillStyle = `rgba(${pulseColorRGB}, ${pulseAlpha})`;
+      ctx.fillRect(scannerX - SCANNER_WIDTH * glowWidthMultiplier, 0, SCANNER_WIDTH * glowWidthMultiplier * 2, screenHeight);
     }
-
+    
     function drawItems(currentTime) {
-      items.forEach(item => {
-        const age = currentTime - item.spawnTime;
-        const pulsate = Math.sin(age / (BEAT_INTERVAL / 2) * Math.PI) * 0.2 + 0.8;
-        const currentRadius = item.radius * pulsate * item.alpha;
+        items.forEach(item => {
+            if (item.type === 'fragment_parent') return;
+            
+            // Shrinking effect
+            const timeToExpire = (item.spawnTime + currentItemActiveDurationMs) - currentTime;
+            let scaleFactor = 1;
+            if (timeToExpire < currentItemActiveDurationMs && timeToExpire > 0) {
+                scaleFactor = Math.max(0.3, timeToExpire / currentItemActiveDurationMs); // Shrink to 30%
+            } else if (timeToExpire <= 0) {
+                scaleFactor = 0.3; // Keep it at min size if somehow drawn past expiry
+            }
 
-        ctx.beginPath();
-        ctx.arc(item.x, item.y, currentRadius, 0, Math.PI * 2);
-        ctx.fillStyle = item.color.replace(/, [0-9.]+\)/, `, ${item.alpha * (item.type === 'evidence' ? 0.8 : 0.6)})`);
-        ctx.fill();
+            const pulsate = gamePaused ? 0.85 : Math.sin((currentTime - item.spawnTime) / (currentBeatInterval / 2.5) * Math.PI) * 0.15 + 0.85;
+            const currentRadius = item.radius * pulsate * item.alpha * scaleFactor;
+            if(currentRadius < 1) return;
 
-        const timeToPerfect = item.spawnTime + BEAT_INTERVAL - currentTime;
-        if (item.type === 'evidence' && timeToPerfect > 0 && timeToPerfect < PERFECT_TAP_WINDOW_MS * 1.5) {
-          ctx.strokeStyle = `rgba(255, 255, 0, ${0.5 * item.alpha * (1 - timeToPerfect / (PERFECT_TAP_WINDOW_MS * 1.5))})`;
-          ctx.lineWidth = 3;
-          ctx.stroke();
-        }
-      });
+            if (item.iconType) drawIcon(item.iconType, item.x, item.y, currentRadius, item.alpha);
+            else drawIcon(item.type, item.x, item.y, currentRadius, item.alpha);
+        });
     }
 
     function drawUI() {
@@ -231,14 +428,36 @@
       const fontSize = Math.max(18, screenWidth * 0.025);
       ctx.font = `${fontSize}px 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`;
       ctx.textAlign = 'left';
-      ctx.fillText(`Score: ${score}`, 20, fontSize * 1.5);
-      ctx.fillText(`Lives: ${lives}`, 20, fontSize * 3);
+      ctx.fillText(`Score: ${score}`, 20, fontSize*1.5);
+      ctx.fillText(`Lives: ${lives}`, 20, fontSize*3);
+
+      // Combo Meter Bar
+      const comboBarWidth = screenWidth * 0.25;
+      const comboBarHeight = fontSize * 0.8;
+      const comboBarX = 20;
+      const comboBarY = fontSize * 4.2;
+      ctx.strokeStyle = '#E0E0E0'; ctx.lineWidth = 1;
+      ctx.strokeRect(comboBarX, comboBarY, comboBarWidth, comboBarHeight);
+      const comboProgress = Math.min(1, combo / MAX_COMBO_FOR_METER);
+      ctx.fillStyle = combo >= HIGH_COMBO_THRESHOLD ? 'rgba(255,255,0,0.7)' : SCANNER_COLOR_BASE;
+      ctx.fillRect(comboBarX + 1, comboBarY + 1, comboProgress * (comboBarWidth-2), comboBarHeight-2);
+
 
       ctx.textAlign = 'right';
-      ctx.fillText(`High Score: ${highScore}`, screenWidth - 20, fontSize * 1.5);
+      ctx.fillStyle = '#E0E0E0';
+      ctx.fillText(`High Score: ${highScore}`, screenWidth-20, fontSize*1.5);
       if (combo > 1) {
-        ctx.fillStyle = SCANNER_COLOR;
-        ctx.fillText(`Combo: x${combo}`, screenWidth - 20, fontSize * 3);
+        ctx.fillStyle = (combo >= HIGH_COMBO_THRESHOLD || focusModeActive || freezeModeActive) ? (focusModeActive ? POWERUP_COLOR : (freezeModeActive ? POWERUP_FREEZE_COLOR : 'yellow')) : SCANNER_COLOR_BASE;
+        ctx.fillText(`Combo: x${combo}`, screenWidth-20, fontSize*3);
+      }
+      let bottomTextY = fontSize * 4.5;
+      if (focusModeActive) { /* ... focus mode text ... */ }
+      else if (freezeModeActive) {
+          ctx.fillStyle = POWERUP_FREEZE_COLOR; ctx.textAlign = 'center';
+          ctx.fillText(`FROZEN!`, screenWidth/2, bottomTextY);
+          const timeLeft = Math.max(0, (freezeModeEndTime - performance.now()) / 1000).toFixed(1);
+          ctx.font = `${fontSize*0.8}px 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`;
+          ctx.fillText(`${timeLeft}s`, screenWidth/2, bottomTextY + fontSize);
       }
     }
 
@@ -246,62 +465,143 @@
       for (let i = tapFeedback.length - 1; i >= 0; i--) {
         const fb = tapFeedback[i];
         const age = currentTime - fb.spawnTime;
-        const fadeDuration = 800;
-
-        if (age > fadeDuration) {
-          tapFeedback.splice(i, 1);
-          continue;
-        }
-
+        const fadeDuration = 900;
+        if (age > fadeDuration) { tapFeedback.splice(i, 1); continue; }
         fb.alpha = 1 - (age / fadeDuration);
-        const yPos = fb.y - (age / 20);
+        const yPos = fb.y - (age / 12); // Float up even faster
+        const currentScale = fb.scale * (1 + (age/fadeDuration)*0.3); // Scale up as it fades
 
-        ctx.font = `bold ${Math.max(16, screenWidth * 0.02)}px Arial`;
-        ctx.fillStyle = fb.color.replace(/, [0-9.]+\)/, `, ${fb.alpha})`);
+        ctx.save();
+        ctx.translate(fb.x, yPos);
+        ctx.scale(currentScale, currentScale);
+        ctx.font = `bold ${Math.max(18, screenWidth*0.022)}px Arial`;
+        ctx.fillStyle = fb.color.replace(/, [0-9\.]+\)/, `, ${fb.alpha})`);
         ctx.textAlign = 'center';
-        ctx.fillText(fb.text, fb.x, yPos);
+        ctx.fillText(fb.text, 0, 0);
+        ctx.restore();
       }
     }
-      function drawMessages(mainText, subText1, subText2 = "") {
-      ctx.fillStyle = 'rgba(10, 10, 10, 0.75)';
-      ctx.fillRect(0, 0, screenWidth, screenHeight);
+    
+    function drawStartScreen() {
+        drawBackground(); // Draw dynamic background
+        ctx.fillStyle = '#E0E0E0';
+        ctx.textAlign = 'center';
+        const titleFontSize = Math.max(32, screenWidth * 0.07);
+        const subFontSize = Math.max(20, screenWidth * 0.035);
+        const difficultyFontSize = Math.max(18, screenWidth * 0.03);
 
-      ctx.fillStyle = '#E0E0E0';
-      ctx.textAlign = 'center';
+        let yPos = screenHeight * 0.3;
+        ctx.font = `bold ${titleFontSize}px 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`;
+        ctx.fillText("Evidence Lockdown V3", screenWidth / 2, yPos);
+        yPos += titleFontSize * 1.2;
 
-      const mainFontSize = Math.max(30, screenWidth * 0.06);
-      const subFontSize = Math.max(18, screenWidth * 0.035);
+        ctx.font = `${subFontSize}px 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`;
+        ctx.fillText("Tap Screen to Start Scan", screenWidth / 2, yPos);
+        yPos += subFontSize * 1.5;
+        ctx.fillText(`High Score: ${highScore}`, screenWidth / 2, yPos);
+        yPos += subFontSize * 2;
 
-      ctx.font = `bold ${mainFontSize}px 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`;
-      ctx.fillText(mainText, screenWidth / 2, screenHeight / 2 - mainFontSize * 0.8);
+        ctx.font = `bold ${difficultyFontSize}px 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`;
+        ctx.fillText(`Difficulty: ${difficultySelection[selectedDifficultyIndex]}`, screenWidth / 2, yPos);
+        yPos += difficultyFontSize * 0.8;
+        ctx.font = `${difficultyFontSize * 0.8}px 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`;
+        ctx.fillText("(Tap here to change)", screenWidth / 2, yPos);
 
-      ctx.font = `${subFontSize}px 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`;
-      ctx.fillText(subText1, screenWidth / 2, screenHeight / 2 + subFontSize);
-      if (subText2) {
-        ctx.fillText(subText2, screenWidth / 2, screenHeight / 2 + subFontSize * 2.5);
-      }
     }
+
+    function drawEndGameReport() {
+        // ... (End of Shift Report from V2, with Accuracy % added)
+        ctx.fillStyle = 'rgba(10, 10, 10, 0.85)';
+        ctx.fillRect(0, 0, screenWidth, screenHeight);
+        ctx.fillStyle = '#E0E0E0';
+        ctx.textAlign = 'center';
+
+        const titleFontSize = Math.max(32, screenWidth * 0.065);
+        // ... other font sizes
+        let yPos = screenHeight * 0.15; // Adjusted starting Y
+
+        ctx.font = `bold ${titleFontSize}px 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`;
+        ctx.fillText("End of Shift Report", screenWidth / 2, yPos);
+        yPos += titleFontSize * 1.5;
+        // ... Score and High Score ...
+        ctx.font = `bold ${Math.max(20, screenWidth * 0.035)}px 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`;
+        ctx.fillText(`Final Score: ${score}`, screenWidth / 2, yPos);
+        yPos += Math.max(20, screenWidth * 0.035) * 1.2;
+        // ...
+        // Accuracy Calculation
+        // totalEvidenceOpportunities tracks non-distractor, non-powerup spawn attempts (parents count as 1).
+        // evidenceCollectedCount + fragmentedSetsCompletedCount is successful evidence gathering.
+        let accuracy = 0;
+        const successfulScans = evidenceCollectedCount + fragmentedSetsCompletedCount;
+        const totalPossibleScans = totalEvidenceOpportunities; // Each evidence or fragment parent is an opportunity
+        if (totalPossibleScans > 0) {
+            accuracy = (successfulScans / totalPossibleScans) * 100;
+        }
+        
+        yPos += Math.max(16, screenWidth * 0.03) * 1.5; // Space before accuracy
+        ctx.font = `bold ${Math.max(18, screenWidth * 0.032)}px 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`;
+        ctx.fillText(`Scan Accuracy: ${accuracy.toFixed(1)}%`, screenWidth / 2, yPos);
+        yPos += Math.max(18, screenWidth * 0.032) * 2;
+
+
+        // ... Rest of the report details (evidence scanned, contaminations etc.)
+        ctx.textAlign = 'left';
+        const col1X = screenWidth * 0.15; // Adjusted for more space
+        const col2X = screenWidth * 0.55;
+        const detailFontSize = Math.max(16, screenWidth * 0.028);
+        ctx.font = `${detailFontSize}px 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`;
+
+        let reportY = yPos;
+        ctx.fillText(`Evidence Scanned: ${evidenceCollectedCount}`, col1X, reportY); 
+        reportY += detailFontSize * 1.5;
+        ctx.fillText(`Fragment Sets: ${fragmentedSetsCompletedCount}`, col1X, reportY);
+        reportY += detailFontSize * 1.5;
+        ctx.fillText(`Power-Ups Used: ${powerUpsCollectedCount}`, col1X, reportY);
+
+        reportY = yPos; // Reset Y for second column
+        ctx.fillText(`Contaminations: ${distractorsHitCount}`, col2X, reportY);
+        reportY += detailFontSize * 1.5;
+        ctx.fillText(`Missed Opportunities: ${evidenceMissedCount}`, col2X, reportY); // Missed evidence/fragments
+        // ...
+
+        yPos = Math.max(yPos, reportY) + detailFontSize * 2.5;
+        ctx.textAlign = 'center';
+        ctx.font = `${Math.max(18, screenWidth * 0.032)}px 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`;
+        ctx.fillText("Tap Screen to Restart", screenWidth / 2, screenHeight * 0.9);
+    }
+
 
     let lastTime = 0;
     function gameLoop(currentTime) {
-      if (!gameRunning) {
-        if (lives <= 0) drawMessages("Game Over!", `Final Score: ${score}`, "Tap to Restart");
+      if (!gameRunning && !freezeModeActive) { // If game over screen or start screen
+        if (lives <= 0) drawEndGameReport();
+        else if(!gameRunning && items.length === 0) drawStartScreen(); // Ensure start screen is shown if not game over
         return;
       }
       animationFrameId = requestAnimationFrame(gameLoop);
 
       const deltaTime = currentTime - lastTime;
+      if(deltaTime > 100 && !freezeModeActive) { // Safety for tab inactivity, ignore if frozen
+          lastTime = currentTime; return;
+      }
       lastTime = currentTime;
 
-      if (currentTime - lastBeatTime >= BEAT_INTERVAL) {
-        lastBeatTime = currentTime - ((currentTime - lastBeatTime) % BEAT_INTERVAL);
-        beatCount++;
-        spawnItem(currentTime);
-      }
+      if (focusModeActive && currentTime >= focusModeEndTime) deactivateFocusMode();
+      if (freezeModeActive && currentTime >= freezeModeEndTime) deactivateFreezeMode();
 
-      updateScanner(deltaTime);
-      updateItems(currentTime, deltaTime);
+      if (!gamePaused) { // Only update these if game is not paused by freeze
+        if (currentTime - lastBeatTime >= currentBeatInterval) {
+            lastBeatTime = currentTime - ((currentTime - lastBeatTime) % currentBeatInterval);
+            beatCount++;
+            if (gameRunning) spawnItem(currentTime);
+        }
+        updateScanner(deltaTime);
+        updateItems(currentTime, deltaTime);
+      }
+      updateParticles(deltaTime); // Particles update even if game is "frozen" for effect
+
       draw();
+      drawParticles();
       drawTapFeedback(currentTime);
     }
 
@@ -314,17 +614,22 @@
     }
 
     function startGame() {
-      score = 0;
-      combo = 0;
-      lives = INITIAL_LIVES;
-      items = [];
-      tapFeedback = [];
-      beatCount = 0;
+      // Apply difficulty settings
+      baseScannerSpeedMs = currentDifficultySetting.SCANNER_SPEED_MS;
+      currentScannerSpeedMs = baseScannerSpeedMs; // Reset dynamic speed
+      currentBeatInterval = 60000 / currentDifficultySetting.BPM;
+      currentItemSpawnChance = currentDifficultySetting.SPAWN_CHANCE;
+      currentItemActiveDurationMs = currentBeatInterval * currentDifficultySetting.ITEM_DURATION_BEATS;
 
-      scannerX = SCANNER_WIDTH / 2;
-      scannerDirection = 1;
-      lastBeatTime = performance.now();
-      lastTime = performance.now();
+      score = 0; combo = 0; lives = INITIAL_LIVES;
+      items = []; tapFeedback = []; particles = []; beatCount = 0; itemIdCounter = 0;
+      evidenceCollectedCount = 0; fragmentsCollectedCount = 0; fragmentedSetsCompletedCount = 0;
+      distractorsHitCount = 0; evidenceMissedCount = 0; powerUpsCollectedCount = 0; totalEvidenceOpportunities = 0;
+
+      deactivateFocusMode(); deactivateFreezeMode(); gamePaused = false;
+
+      scannerX = SCANNER_WIDTH / 2; scannerDirection = 1;
+      lastBeatTime = performance.now(); lastTime = performance.now();
       gameRunning = true;
 
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
@@ -332,25 +637,24 @@
     }
 
     function gameOver() {
-      gameRunning = false;
+      gameRunning = false; gamePaused = false;
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
-      if (score > highScore) {
-        highScore = score;
-        localStorage.setItem('evidenceLockdownHighScore', highScore);
+      if (score > parseInt(localStorage.getItem('evidenceLockdownHighScoreV3') || 0) ) {
+          localStorage.setItem('evidenceLockdownHighScoreV3', score);
+          highScore = score;
       }
-      draw();
-      drawMessages("Game Over!", `Final Score: ${score}`, "Tap to Restart");
+      drawEndGameReport();
     }
 
     function init() {
       resizeCanvas();
       window.addEventListener('resize', resizeCanvas);
-      canvas.addEventListener('mousedown', handleTap);
-      canvas.addEventListener('touchstart', handleTap, { passive: false });
-      drawMessages("Evidence Lockdown", "Tap Screen to Start Scan", `High Score: ${highScore}`);
+      canvas.addEventListener('mousedown', handleTap); // Tap/Click
+      canvas.addEventListener('touchstart', handleTap, { passive: false }); // Touch
+      
+      highScore = parseInt(localStorage.getItem('evidenceLockdownHighScoreV3') || 0);
+      drawStartScreen(); // Initial draw of start screen with difficulty
     }
 
     init();
-  </script>
-</body>
-</html>
+  </script></body></html>
