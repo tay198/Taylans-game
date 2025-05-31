@@ -309,7 +309,7 @@
             <div class="chat-window" id="chatWindow" role="log" aria-live="polite"></div>
 
             <form class="chat-input-form" id="chatForm">
-                 <button type="button" id="micButton" aria-label="Use microphone">🎤</button>
+                 <button type="button" id="micButton" aria-label="Use microphone">ðŸŽ¤</button>
                 <input type="text" id="userInput" placeholder="Ask me anything or type /help..." autocomplete="off" aria-label="User message input" role="textbox">
                 <button type="submit" id="sendButton" aria-label="Send message">Send</button>
             </form>
@@ -352,7 +352,7 @@
         { cmd: "/createpersona", desc: "Create a new custom persona." },
     ];
 
-    // === 🕹️ Mini Games ===
+    // === ðŸ•¹ï¸ Mini Games ===
     function handleMiniGames(command) {
         if (command === '/play') {
             const options = ['Rock', 'Paper', 'Scissors'];
@@ -384,8 +384,8 @@
                   (normalizedUser === 'rock' && normalizedBot === 'scissors') ||
                   (normalizedUser === 'paper' && normalizedBot === 'rock') ||
                   (normalizedUser === 'scissors' && normalizedBot === 'paper')
-                ) resultText = `I chose ${botChoice}. You win! 🎉`;
-                else resultText = `I chose ${botChoice}. You lose! 😝`;
+                ) resultText = `I chose ${botChoice}. You win! ðŸŽ‰`;
+                else resultText = `I chose ${botChoice}. You lose! ðŸ˜`;
 
                 const botMessageId = generateMessageId();
                 addMessageToChat(resultText, 'bot', false, botMessageId);
@@ -402,33 +402,33 @@
         }
     }
 
-    // === 🎲 Dice Roller Command ===
+    // === ðŸŽ² Dice Roller Command ===
     function handleDiceRoll() {
         const roll = Math.floor(Math.random() * 6) + 1;
-        const result = `🎲 You rolled a ${roll}!`;
+        const result = `ðŸŽ² You rolled a ${roll}!`;
         const botMessageId = generateMessageId();
         addMessageToChat(result, 'bot', false, botMessageId);
         updateConversationHistory('assistant', result, botMessageId);
         saveConversation(currentChatThreadId);
     }
 
-    // === 💬 Quote Command ===
+    // === ðŸ’¬ Quote Command ===
     function handleQuoteCommand() {
         const quotes = [
             "Believe you can and you're halfway there. - Theodore Roosevelt",
             "The only limit to our realization of tomorrow is our doubts of today. - Franklin D. Roosevelt",
-            "Do or do not. There is no try. – Yoda",
+            "Do or do not. There is no try. â€“ Yoda",
             "The future belongs to those who believe in the beauty of their dreams. - Eleanor Roosevelt",
             "Strive not to be a success, but rather to be of value. - Albert Einstein"
         ];
         const quote = quotes[Math.floor(Math.random() * quotes.length)];
         const botMessageId = generateMessageId();
-        addMessageToChat(`📜 ${quote}`, 'bot', false, botMessageId);
-        updateConversationHistory('assistant', `📜 ${quote}`, botMessageId);
+        addMessageToChat(`ðŸ“œ ${quote}`, 'bot', false, botMessageId);
+        updateConversationHistory('assistant', `ðŸ“œ ${quote}`, botMessageId);
         saveConversation(currentChatThreadId);
     }
 
-    // === 🎶 Background Music Feature ===
+    // === ðŸŽ¶ Background Music Feature ===
     const bgMusicAudio = new Audio('path/to/your/royalty-free-music-loop.mp3'); // IMPORTANT: Replace with your music file
     bgMusicAudio.loop = true;
     let isMusicPlaying = JSON.parse(localStorage.getItem('musicPlaying') || 'false');
@@ -438,11 +438,11 @@
         isMusicPlaying = !isMusicPlaying;
         if (isMusicPlaying) {
             bgMusicAudio.play().catch(e => console.error("Music play failed:", e));
-            if(musicToggleButton) musicToggleButton.innerHTML = '🔇 <span class="text">Mute</span>';
+            if(musicToggleButton) musicToggleButton.innerHTML = 'ðŸ”‡ <span class="text">Mute</span>';
             if(musicToggleButton) musicToggleButton.setAttribute('aria-label', 'Mute background music');
         } else {
             bgMusicAudio.pause();
-            if(musicToggleButton) musicToggleButton.innerHTML = '🎵 <span class="text">Music</span>';
+            if(musicToggleButton) musicToggleButton.innerHTML = 'ðŸŽµ <span class="text">Music</span>';
             if(musicToggleButton) musicToggleButton.setAttribute('aria-label', 'Play background music');
         }
         localStorage.setItem('musicPlaying', isMusicPlaying);
@@ -451,7 +451,7 @@
     function setupMusicToggle() {
         musicToggleButton = document.createElement('button');
         musicToggleButton.id = 'music-toggle';
-        musicToggleButton.innerHTML = isMusicPlaying ? '🔇 <span class="text">Mute</span>' : '🎵 <span class="text">Music</span>';
+        musicToggleButton.innerHTML = isMusicPlaying ? 'ðŸ”‡ <span class="text">Mute</span>' : 'ðŸŽµ <span class="text">Music</span>';
         musicToggleButton.setAttribute('aria-label', isMusicPlaying ? 'Mute background music' : 'Play background music');
         
         const controls = document.querySelector('.chat-header .header-controls');
@@ -467,7 +467,7 @@
         }
     }
 
-    // === 🎨 Theme Chooser Feature ===
+    // === ðŸŽ¨ Theme Chooser Feature ===
     let themeChooserSelect;
     const themes = {
         default: { name: "Default", isDarkDefault: false, vars: { /* Uses existing :root and body.dark-mode */ } },
@@ -578,7 +578,7 @@
         }
     }
 
-    // === 👤 Custom Persona Creator ===
+    // === ðŸ‘¤ Custom Persona Creator ===
     let customPersonas = JSON.parse(localStorage.getItem('customPersonas') || '{}');
     let customPersonaModal;
 
@@ -617,7 +617,7 @@
             <input type="text" id="personaGreetingInput">
             <label for="personaColorInput">Accent Color (e.g., #FF00FF or hotpink):</label>
             <input type="text" id="personaColorInput" placeholder="Optional web color">
-            <label for="personaEmojiInput">Mood Emoji (e.g., 😎):</label>
+            <label for="personaEmojiInput">Mood Emoji (e.g., ðŸ˜Ž):</label>
             <input type="text" id="personaEmojiInput" placeholder="Optional emoji">
             <div>
                 <button id="savePersonaBtn">Save Persona</button>
@@ -671,7 +671,7 @@
         }
     }
 
-    // === 🔊 Sound Effects Toggle ===
+    // === ðŸ”Š Sound Effects Toggle ===
     const sendMessageSound = new Audio('path/to/send-sound.mp3'); // IMPORTANT: Replace
     const receiveMessageSound = new Audio('path/to/receive-sound.mp3'); // IMPORTANT: Replace
     let soundEffectsEnabled = JSON.parse(localStorage.getItem('soundEffectsEnabled') || 'true');
@@ -679,7 +679,7 @@
 
     function toggleSoundEffects() {
         soundEffectsEnabled = !soundEffectsEnabled;
-        if(soundEffectsToggleButton) soundEffectsToggleButton.innerHTML = soundEffectsEnabled ? '🔊 <span class="text">SFX On</span>' : '🔈 <span class="text">SFX Off</span>';
+        if(soundEffectsToggleButton) soundEffectsToggleButton.innerHTML = soundEffectsEnabled ? 'ðŸ”Š <span class="text">SFX On</span>' : 'ðŸ”ˆ <span class="text">SFX Off</span>';
         if(soundEffectsToggleButton) soundEffectsToggleButton.setAttribute('aria-label', soundEffectsEnabled ? 'Disable sound effects' : 'Enable sound effects');
         localStorage.setItem('soundEffectsEnabled', soundEffectsEnabled);
     }
@@ -694,7 +694,7 @@
     function setupSoundEffectsToggle() {
         soundEffectsToggleButton = document.createElement('button');
         soundEffectsToggleButton.id = 'sfx-toggle';
-        soundEffectsToggleButton.innerHTML = soundEffectsEnabled ? '🔊 <span class="text">SFX On</span>' : '🔈 <span class="text">SFX Off</span>';
+        soundEffectsToggleButton.innerHTML = soundEffectsEnabled ? 'ðŸ”Š <span class="text">SFX On</span>' : 'ðŸ”ˆ <span class="text">SFX Off</span>';
         soundEffectsToggleButton.setAttribute('aria-label', soundEffectsEnabled ? 'Disable sound effects' : 'Enable sound effects');
 
         const controls = document.querySelector('.chat-header .header-controls');
@@ -709,7 +709,7 @@
         soundEffectsToggleButton.addEventListener('click', toggleSoundEffects);
     }
 
-    // === 🖼️ Image Upload Feature ===
+    // === ðŸ–¼ï¸ Image Upload Feature ===
     let imageUploadInput;
     let imageUploadButton;
 
@@ -717,7 +717,7 @@
         imageUploadButton = document.createElement('button');
         imageUploadButton.type = 'button';
         imageUploadButton.id = 'imageUploadButton';
-        imageUploadButton.innerHTML = '🖼️';
+        imageUploadButton.innerHTML = 'ðŸ–¼ï¸';
         imageUploadButton.title = 'Upload Image';
 
         imageUploadInput = document.createElement('input');
@@ -810,7 +810,7 @@
         } else if (lowerPrompt === "hey") {
             response = "Hey there!";
         } else if (lowerPrompt === "yo") {
-            response = "Yo! What’s up?";
+            response = "Yo! Whatâ€™s up?";
         } else if (lowerPrompt === "sup" || lowerPrompt.startsWith("what's up") || lowerPrompt.startsWith("whatsup")) {
             response = "Not much, just chilling in the code. You?";
         } else if (lowerPrompt === "howdy") {
@@ -889,7 +889,7 @@
         } else if (lowerPrompt.includes("translate this") || lowerPrompt.includes("can you translate")) {
             response = "I'm not equipped with translation tools right now. What language were you thinking of?";
         } else if (lowerPrompt.includes("open the pod bay doors")) {
-            response = `I’m sorry, ${userName || 'Dave'}, I’m afraid I can’t do that. This is a rule-based system, after all!`;
+            response = `Iâ€™m sorry, ${userName || 'Dave'}, Iâ€™m afraid I canâ€™t do that. This is a rule-based system, after all!`;
         }
 
         // --- Emotion / Empathy Triggers ---
@@ -941,7 +941,7 @@
         else if (lowerPrompt === "wut" || lowerPrompt === "wat") { response = "Is that a 'what' in internet-speak? Could you clarify for me?"; }
         else if (lowerPrompt === "bruh") { response = "Bruh. What's the situation?"; }
         else if (lowerPrompt === "yeet") { response = "YEET! Did something exciting happen?"; }
-        else if (lowerPrompt === "meow" || lowerPrompt === "purr") { response = "Are you a cat? 🐱 That's purrfectly fine by me!"; }
+        else if (lowerPrompt === "meow" || lowerPrompt === "purr") { response = "Are you a cat? ðŸ± That's purrfectly fine by me!"; }
         else if (lowerPrompt === "moo") { response = "Moo to you too! Having a dairy good day?"; }
         else if (lowerPrompt === "oof") { response = "Big oof indeed. What happened?"; }
         else if (lowerPrompt.includes("lol") || lowerPrompt.includes("haha") || lowerPrompt.includes("lmao")) { response = "Glad I could amuse you! LOL!"; }
@@ -962,7 +962,7 @@
         } else if (lowerPrompt.includes("call") && lowerPrompt.includes("mom") || lowerPrompt.includes("text someone")) {
             response = "I can't make calls or send texts. I'm just a chatbot!";
         } else if (lowerPrompt.includes("play music") || lowerPrompt.includes("play a song")) {
-            response = "I can't play music, but I can imagine your favorite tune is playing right now! 🎶 Or you can use the music toggle in the header!";
+            response = "I can't play music, but I can imagine your favorite tune is playing right now! ðŸŽ¶ Or you can use the music toggle in the header!";
         } else if (lowerPrompt.includes("open google") || lowerPrompt.includes("open youtube")) {
             response = "I can't open other websites or apps for you. You can do that in your browser though!";
         } else if (lowerPrompt.includes("hack nasa") || lowerPrompt.includes("hack the pentagon")) {
@@ -999,7 +999,7 @@
         } else if (lowerPrompt.includes("that was funny")) {
             response = "Yay! I love making people laugh (or at least, typing 'LOL').";
         } else if (lowerPrompt.includes("you're cool") || lowerPrompt.includes("you are cool")) {
-            response = "Thanks! I try to keep things chill. 😎";
+            response = "Thanks! I try to keep things chill. ðŸ˜Ž";
         }
         else if (lowerPrompt.includes("you're awesome") || lowerPrompt.includes("you are awesome")) {
             response = "Aw, thank you! You're pretty awesome yourself for chatting with me!";
@@ -1159,13 +1159,13 @@
             actionsContainer.className = 'message-actions';
 
             const speakButton = document.createElement('button');
-            speakButton.innerHTML = '🔊';
+            speakButton.innerHTML = 'ðŸ”Š';
             speakButton.title = 'Read aloud';
             speakButton.onclick = () => speakText(originalText);
             actionsContainer.appendChild(speakButton);
 
             const rephraseButton = document.createElement('button');
-            rephraseButton.innerHTML = '🔁';
+            rephraseButton.innerHTML = 'ðŸ”';
             rephraseButton.title = 'Rephrase this (limited)';
             rephraseButton.onclick = () => handleRephraseMessage(originalText, messageId);
             actionsContainer.appendChild(rephraseButton);
@@ -1195,7 +1195,7 @@
 
                 speechRecognition.onstart = () => {
                     micButton.classList.add('recording');
-                    micButton.textContent = '🎙️';
+                    micButton.textContent = 'ðŸŽ™ï¸';
                     userInput.placeholder = "Listening...";
                 };
                 speechRecognition.onresult = (event) => {
@@ -1211,7 +1211,7 @@
                 };
                 speechRecognition.onend = () => {
                     micButton.classList.remove('recording');
-                    micButton.textContent = '🎤';
+                    micButton.textContent = 'ðŸŽ¤';
                     userInput.placeholder = "Ask me anything or type /help...";
                     if (!userInput.disabled) userInput.focus();
                 };
@@ -1232,7 +1232,7 @@
                 } catch(e) {
                     console.error("Could not start/stop speech recognition: ", e);
                     micButton.classList.remove('recording');
-                    micButton.textContent = '🎤';
+                    micButton.textContent = 'ðŸŽ¤';
                 }
             } else {
                 alert("Speech recognition is not available.");
@@ -1482,7 +1482,7 @@
             for (const fact in knownFacts) {
                 if (text.toLowerCase().includes(fact.toLowerCase())) { 
                     const regex = new RegExp(`\\b(${fact})\\b`, 'gi'); 
-                    html = html.replace(regex, (match) => `${match} <span class="info-tooltip" title="${knownFacts[fact]}">ℹ️</span>`);
+                    html = html.replace(regex, (match) => `${match} <span class="info-tooltip" title="${knownFacts[fact]}">â„¹ï¸</span>`);
                 }
             }
             messageElement.innerHTML = html;
@@ -1714,7 +1714,7 @@
         }
         function updateThemePreference() { // Original function, now mostly for icon
             const isDarkMode = document.body.classList.contains('dark-mode');
-            if (themeToggleIcon) themeToggleIcon.textContent = isDarkMode ? '☀️' : '🌙';
+            if (themeToggleIcon) themeToggleIcon.textContent = isDarkMode ? 'â˜€ï¸' : 'ðŸŒ™';
             if (themeToggleText) themeToggleText.textContent = isDarkMode ? 'Light' : 'Dark';
             localStorage.setItem('theme', isDarkMode ? 'dark' : 'light'); // Store base light/dark preference
         }
@@ -1727,3 +1727,120 @@
                 // If on a custom theme, toggle its dark mode state or revert to default light/dark cycle
                 const themeIsCurrentlyDark = document.body.classList.contains('dark-mode');
                 if (themeIsCurrentlyDark) { // currently
+
+// === ðŸŽ² Mini Game: Rock-Paper-Scissors ===
+function handleMiniGame() {
+  const choices = ["rock", "paper", "scissors"];
+  const botChoice = choices[Math.floor(Math.random() * choices.length)];
+  const userChoice = prompt("Rock, Paper, or Scissors?").toLowerCase();
+
+  let result = "";
+  if (!choices.includes(userChoice)) {
+    result = "Invalid choice! Try rock, paper, or scissors.";
+  } else if (userChoice === botChoice) {
+    result = `I chose ${botChoice}. It's a tie!`;
+  } else if (
+    (userChoice === "rock" && botChoice === "scissors") ||
+    (userChoice === "paper" && botChoice === "rock") ||
+    (userChoice === "scissors" && botChoice === "paper")
+  ) {
+    result = `I chose ${botChoice}. You win! ðŸŽ‰`;
+  } else {
+    result = `I chose ${botChoice}. You lose! ðŸ˜¢`;
+  }
+
+  const botMsgId = generateMessageId();
+  addMessageToChat(result, 'bot', false, botMsgId);
+  updateConversationHistory('assistant', result, botMsgId);
+  saveConversation(currentChatThreadId);
+}
+
+// === ðŸŽ² Dice Roller ===
+function handleDiceRoll() {
+  const roll = Math.floor(Math.random() * 6) + 1;
+  const result = `ðŸŽ² You rolled a ${roll}`;
+  const botMsgId = generateMessageId();
+  addMessageToChat(result, 'bot', false, botMsgId);
+  updateConversationHistory('assistant', result, botMsgId);
+  saveConversation(currentChatThreadId);
+}
+
+// === ðŸ“œ Random Quote ===
+function handleQuote() {
+  const quotes = [
+    "Believe in yourself.",
+    "You are capable of amazing things.",
+    "Keep going. You've got this!",
+    "Dream big. Work hard."
+  ];
+  const quote = quotes[Math.floor(Math.random() * quotes.length)];
+  const botMsgId = generateMessageId();
+  addMessageToChat(quote, 'bot', false, botMsgId);
+  updateConversationHistory('assistant', quote, botMsgId);
+  saveConversation(currentChatThreadId);
+}
+
+// === ðŸŽ¨ Theme Switcher ===
+function setTheme(themeName) {
+  const root = document.documentElement;
+  if (themeName === "vaporwave") {
+    root.style.setProperty("--body-bg-light", "#ffccff");
+    root.style.setProperty("--chat-bg-light", "#ffe6ff");
+    root.style.setProperty("--header-bg-light", "#cc99ff");
+  } else if (themeName === "space") {
+    root.style.setProperty("--body-bg-light", "#0a0a23");
+    root.style.setProperty("--chat-bg-light", "#1a1a3d");
+    root.style.setProperty("--header-bg-light", "#333366");
+  } else {
+    root.removeAttribute("style");
+  }
+}
+
+// === ðŸ”Š Message Sound ===
+let soundEnabled = true;
+function playSound() {
+  if (soundEnabled) {
+    const audio = new Audio("https://actions.google.com/sounds/v1/cartoon/pop.ogg");
+    audio.play();
+  }
+}
+
+// === ðŸ‘¤ Custom Persona Builder (basic memory) ===
+function createPersona(name, color, mood) {
+  const persona = { name, color, mood };
+  localStorage.setItem("customPersona", JSON.stringify(persona));
+  return persona;
+}
+function loadPersona() {
+  const persona = localStorage.getItem("customPersona");
+  return persona ? JSON.parse(persona) : null;
+}
+
+// === ðŸ§  Extend handleCommand to support new commands ===
+// Inside your handleCommand(command) function, add:
+if (command === "play") {
+  handleMiniGame();
+  return;
+}
+if (command === "roll") {
+  handleDiceRoll();
+  return;
+}
+if (command === "quote") {
+  handleQuote();
+  return;
+}
+if (command.startsWith("theme ")) {
+  setTheme(command.split(" ")[1]);
+  return;
+}
+if (command === "sound on") {
+  soundEnabled = true;
+  alert("ðŸ”Š Sound enabled!");
+  return;
+}
+if (command === "sound off") {
+  soundEnabled = false;
+  alert("ðŸ”‡ Sound disabled.");
+  return;
+}
