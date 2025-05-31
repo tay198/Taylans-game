@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>AI ChatBot by Taylan</title>
+    <title>AI ChatBot by Taylan - Rule-Based Frontend</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css">
@@ -244,8 +244,7 @@
             <header class="chat-header">
                 <h2>
                     <span class="title-main">AI Assistant</span>
-                    <span class="title-subtitle">by Taylan</span>
-                </h2>
+                    <span class="title-subtitle">by Taylan</span> </h2>
                 <div class="header-controls">
                     <label for="personaSelect">Persona:</label>
                     <select id="personaSelect">
@@ -275,8 +274,7 @@
         </div>
     </main>
 
-<script type="module" defer> // No GAI import needed now
-
+<script type="module" defer> {/* Corrected: Removed trailing comment from this line */}
     const chatAppContainer = document.getElementById('chatAppContainer');
     const chatWindow = document.getElementById('chatWindow');
     const userInput = document.getElementById('userInput');
@@ -298,25 +296,20 @@
     let currentChatThreadId = localStorage.getItem('lastActiveThreadId') || 'default_chat';
     let userName = localStorage.getItem('userName') || null;
     let userPreferences = JSON.parse(localStorage.getItem('userPreferences') || '{}');
-    // aiTemperature is no longer relevant for rule-based
     let initialFocusDone = false;
     const MAX_MESSAGES_DISPLAY = 100;
-    // MAX_CONTEXT_MESSAGES is less relevant for simple rule-based
     let speechRecognition;
 
     const AVAILABLE_COMMANDS = [
         { cmd: "/help", desc: "Show this help message." },
         { cmd: "/joke", desc: "Tell a joke (client-side)." },
-        //  Removed /temp command
         { cmd: "/reset", desc: "Reset current chat (clears messages)." },
     ];
 
-    // --- Rule-Based Response Logic ---
     function fetchRuleBasedResponse(promptText, persona) {
         const lowerPrompt = promptText.toLowerCase();
         let response = "";
 
-        // Default responses
         const defaultResponses = {
             helpful: "I'm not sure how to respond to that. Can you try asking differently?",
             friendly: "Hmm, I'm a bit stumped on that one, pal! What else is on your mind?",
@@ -325,7 +318,6 @@
             pirate: "Arrr, that be a puzzle I can't solve, matey! Ask me somethin' else, or walk the plank!"
         };
 
-        // Persona-specific greetings or simple interactions
         if (lowerPrompt.includes("hello") || lowerPrompt.includes("hi") || lowerPrompt.includes("hey")) {
             switch (persona) {
                 case "pirate": response = "Ahoy there, scallywag!"; break;
@@ -360,606 +352,595 @@
             response = facts[Math.floor(Math.random() * facts.length)];
             if (persona === "pirate") response = `Shiver me timbers! Did ye know... ${response}`;
             if (persona === "sarcastic") response = `Prepare to be astounded by this totally obscure piece of trivia: ${response} You're welcome.`;
-
         } else if (lowerPrompt.includes("what time is it") || lowerPrompt.includes("current time")) {
             const now = new Date();
             response = `The current time is ${now.toLocaleTimeString()}.`;
             if (persona === "pirate") response = `By the crow's nest, the sands o' time say it be ${now.toLocaleTimeString()}, arrr!`;
+        } else if (lowerPrompt.includes("what can you do") || lowerPrompt.includes("help me")) {
+            response = "I can chat with you, tell you facts, or share a joke. You can also ask for the time. Try using commands like /help or /joke!";
+             if (persona === "sarcastic") response = "Oh, you need a list? I can listen to your inane ramblings, and occasionally grace you with a pre-programmed gem of wisdom. Or a 'fact'. Don't push it.";
+             if (persona === "pirate") response = "I can spin ye a yarn, tell ye a fact from me travels, or share a hearty pirate joke, arrr! Just ask, or try /help, ye scurvy dog!";
         }
-        // Add more rules here...
-        // Example:
-        // else if (lowerPrompt.includes("weather")) {
-        //     response = "I can't check the actual weather, but I hope it's nice where you are!";
-        // }
+
 
         return response || defaultResponses[persona] || defaultResponses.helpful;
     }
 
+    // --- All other functions (initializeChat, generateGreeting, addMessageToChat, etc.) ---
+    // --- remain largely the same as in the previous "Option 1: Rule-Based" example, ---
+    // --- with the key changes being removal of API key checks for disabling input ---
+    // --- and calling fetchRuleBasedResponse. ---
 
-    // --- CORE FUNCTIONS (Adapted) ---
-    function initializeChat() {
-        loadTheme();
-        applyViewportHeight();
-        loadChatThreads();
-        loadConversation(currentChatThreadId);
+    document.addEventListener('DOMContentLoaded', () => {
+        function initializeChat() {
+            loadTheme();
+            applyViewportHeight();
+            loadChatThreads();
+            loadConversation(currentChatThreadId);
 
-        // Inputs are enabled by default now, no API key check needed here to disable them.
-        sendButton.disabled = false;
-        userInput.disabled = false;
+            sendButton.disabled = false;
+            userInput.disabled = false;
 
-        if (conversationHistory.length === 0 && !document.querySelector('.message.bot[id^="msg"]')) {
-            const persona = personaSelect.value;
-            const greeting = generateGreeting(persona);
-            const greetingId = generateMessageId();
-            addMessageToChat(greeting, 'bot', false, greetingId);
-            updateConversationHistory('assistant', greeting, greetingId);
-        }
-
-        displaySuggestedPrompts();
-        if (!initialFocusDone) { userInput.focus(); initialFocusDone = true; }
-        setTimeout(scrollToBottom, 100);
-        updatePersonaSelectBasedOnThread();
-    }
-
-    function generateGreeting(persona) {
-        const namePart = userName ? ` ${userName}` : '';
-        switch(persona) {
-            case 'pirate': return `Ahoy Matey${namePart}! I be a rule-based pirate bot. What be on yer mind?`;
-            case 'sarcastic': return `Oh, it's you${namePart}. Brace yourself for my rule-based wit. What is it?`;
-            case 'friendly': return `Hey there${namePart}! ${userName ? 'Great to see you again!' : 'Nice to meet you!'} I'm your friendly rule-based chat pal!`;
-            case 'professional': return `Good day${namePart}. I am your Professional Rule-Based Assistant. How may I assist?`;
-            default: return `${userName ? `Welcome back, ${userName}!` : 'Hello!'} I'm your rule-based AI Assistant. How can I help?`;
-        }
-    }
-
-    function generateMessageId() {
-        return `msg_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-    }
-
-    // Simplified response handling (no complex streaming needed for rule-based)
-    async function displayBotResponse(text, botMessageElement, botMessageId) {
-        // Simulate a brief "typing" or "thinking" delay
-        const thinkingTime = Math.max(300, Math.min(text.length * 15, 1000)); // Adjust delay based on text length
-
-        await new Promise(resolve => setTimeout(resolve, thinkingTime));
-
-        botMessageElement.innerHTML = DOMPurify.sanitize(
-            (typeof marked !== 'undefined' ? marked.parse(text) : text.replace(/\n/g, '<br>'))
-        );
-        if (typeof Prism !== 'undefined') Prism.highlightAllUnder(botMessageElement);
-        addMessageActions(botMessageElement, text, botMessageId); // Re-add actions if needed
-
-        updateConversationHistory('assistant', text, botMessageId);
-        saveConversation(currentChatThreadId);
-        enableInputs();
-        userInput.focus();
-    }
-
-
-    function enableInputs() {
-        userInput.disabled = false;
-        sendButton.disabled = false;
-    }
-
-    function addMessageToChat(text, sender, isLoading = false, messageId) {
-        const messageElement = document.createElement('div');
-        messageElement.classList.add('message', sender);
-        messageElement.id = messageId;
-        messageElement.setAttribute('aria-atomic', 'true');
-
-        if (isLoading) {
-            messageElement.classList.add('loading');
-            messageElement.innerHTML = `<div class="loading-spinner"></div> <span>Thinking...</span>`;
-            messageElement.setAttribute('aria-label', 'Bot is thinking');
-        } else {
-            if (sender === 'user') {
-                messageElement.textContent = text;
-            } else {
-                const htmlContent = typeof marked !== 'undefined' ? marked.parse(text) : text.replace(/\n/g, '<br>');
-                messageElement.innerHTML = DOMPurify.sanitize(htmlContent, { USE_PROFILES: { html: true } });
-                if (typeof Prism !== 'undefined') Prism.highlightAllUnder(messageElement);
-                addMessageActions(messageElement, text, messageId);
-                addInfoTooltipsToMessage(messageElement, text);
+            if (conversationHistory.length === 0 && !document.querySelector('.message.bot[id^="msg"]')) {
+                const persona = personaSelect.value;
+                const greeting = generateGreeting(persona);
+                const greetingId = generateMessageId();
+                addMessageToChat(greeting, 'bot', false, greetingId);
+                updateConversationHistory('assistant', greeting, greetingId);
             }
-        }
-        
-        chatWindow.appendChild(messageElement);
-        pruneOldMessagesDOM();
-        scrollToBottom();
-        if (!isLoading && sender === 'bot') {
-            chatAppContainer.classList.remove('flash');
-            void chatAppContainer.offsetWidth;
-            chatAppContainer.classList.add('flash');
-        }
-        return messageElement;
-    }
 
-    function addMessageActions(messageElement, originalText, messageId) {
-        const actionsContainer = document.createElement('div');
-        actionsContainer.className = 'message-actions';
-
-        const speakButton = document.createElement('button');
-        speakButton.innerHTML = '🔊';
-        speakButton.title = 'Read aloud';
-        speakButton.onclick = () => speakText(originalText);
-        actionsContainer.appendChild(speakButton);
-
-        const rephraseButton = document.createElement('button');
-        rephraseButton.innerHTML = '🔁';
-        rephraseButton.title = 'Rephrase this (limited)';
-        rephraseButton.onclick = () => handleRephraseMessage(originalText, messageId); // Behavior changed
-        actionsContainer.appendChild(rephraseButton);
-        
-        messageElement.appendChild(actionsContainer);
-    }
-    function speakText(text) {
-        if (!('speechSynthesis' in window)) {
-            alert("Sorry, your browser doesn't support text-to-speech.");
-            return;
-        }
-        const plainText = DOMPurify.sanitize(text, { ALLOWED_TAGS: [] }).replace(/[*_`~#>|]/g, '');
-        const utterance = new SpeechSynthesisUtterance(plainText);
-        utterance.lang = 'en-US'; 
-        speechSynthesis.cancel(); 
-        speechSynthesis.speak(utterance);
-    }
-    function setupSpeechRecognition() {
-         if ('webkitSpeechRecognition' in window) {
-            speechRecognition = new webkitSpeechRecognition();
-            speechRecognition.continuous = false; 
-            speechRecognition.interimResults = false;
-            speechRecognition.lang = 'en-US';
-
-            speechRecognition.onstart = () => {
-                micButton.classList.add('recording');
-                micButton.textContent = '🎙️';
-                userInput.placeholder = "Listening...";
-            };
-            speechRecognition.onresult = (event) => {
-                const transcript = event.results[0][0].transcript;
-                userInput.value = transcript;
-            };
-            speechRecognition.onerror = (event) => {
-                console.error('Speech recognition error:', event.error);
-                userInput.placeholder = "Mic error. Try typing.";
-                if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-                    alert("Microphone access denied. Please enable it in your browser settings.");
-                }
-            };
-            speechRecognition.onend = () => {
-                micButton.classList.remove('recording');
-                micButton.textContent = '🎤';
-                userInput.placeholder = "Ask me anything or type /help...";
-                if (!userInput.disabled) userInput.focus();
-            };
-        } else {
-            micButton.style.display = 'none'; 
-            console.warn("Speech recognition not supported in this browser.");
-        }
-    }
-    micButton.addEventListener('click', () => {
-        if (userInput.disabled) return;
-        if (speechRecognition) {
-            try {
-                if (micButton.classList.contains('recording')) {
-                    speechRecognition.stop();
-                } else {
-                    speechRecognition.start();
-                }
-            } catch(e) {
-                console.error("Could not start/stop speech recognition: ", e);
-                micButton.classList.remove('recording');
-                micButton.textContent = '🎤';
-            }
-        } else {
-            alert("Speech recognition is not available.");
-        }
-    });
-    exportChatButton.addEventListener('click', () => {
-        const chatData = {
-            threadId: currentChatThreadId,
-            persona: personaSelect.value,
-            history: conversationHistory,
-            exportedAt: new Date().toISOString()
-        };
-        const blob = new Blob([JSON.stringify(chatData, null, 2)], { type: 'application/json' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `chat_export_${currentChatThreadId}_${new Date().toLocaleDateString().replace(/\//g, '-')}.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(a.href);
-    });
-
-    function loadChatThreads() {
-        const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
-        threadList.innerHTML = ''; 
-        if (Object.keys(threads).length === 0) {
-            threads['default_chat'] = { name: 'General Chat', lastUpdated: Date.now(), history: [], persona: 'helpful' };
-            localStorage.setItem('chatThreads', JSON.stringify(threads));
-        }
-        currentChatThreadId = localStorage.getItem('lastActiveThreadId') || Object.keys(threads)[0];
-        if (!threads[currentChatThreadId]) { 
-            currentChatThreadId = Object.keys(threads)[0];
-            localStorage.setItem('lastActiveThreadId', currentChatThreadId);
-        }
-        
-        Object.entries(threads).sort(([,a],[,b]) => b.lastUpdated - a.lastUpdated).forEach(([threadId, thread]) => {
-            const li = document.createElement('li');
-            const button = document.createElement('button');
-            button.textContent = thread.name || `Chat ${threadId.substring(0,5)}`;
-            button.dataset.threadId = threadId;
-            if (threadId === currentChatThreadId) button.classList.add('active');
-            button.onclick = () => switchChatThread(threadId);
-            li.appendChild(button);
-            threadList.appendChild(li);
-        });
-    }
-    function switchChatThread(threadId) {
-        saveConversation(currentChatThreadId); 
-        currentChatThreadId = threadId;
-        localStorage.setItem('lastActiveThreadId', currentChatThreadId);
-        loadConversation(threadId);
-        document.querySelectorAll('#threadList button').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.threadId === threadId);
-        });
-        updatePersonaSelectBasedOnThread();
-    }
-    newThreadButton.addEventListener('click', () => {
-        const newThreadName = prompt("Enter name for new chat thread:", `Chat Session ${Object.keys(JSON.parse(localStorage.getItem('chatThreads') || '{}')).length + 1}`);
-        if (newThreadName) {
-            saveConversation(currentChatThreadId); 
-            const newThreadId = `thread_${Date.now()}`;
-            const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
-            threads[newThreadId] = { name: newThreadName, lastUpdated: Date.now(), history: [], persona: personaSelect.value };
-            localStorage.setItem('chatThreads', JSON.stringify(threads));
-            currentChatThreadId = newThreadId;
-            localStorage.setItem('lastActiveThreadId', currentChatThreadId);
-            loadChatThreads(); 
-            loadConversation(newThreadId); 
+            displaySuggestedPrompts();
+            if (!initialFocusDone) { userInput.focus(); initialFocusDone = true; }
+            setTimeout(scrollToBottom, 100);
             updatePersonaSelectBasedOnThread();
         }
-    });
-    function updatePersonaSelectBasedOnThread() {
-        const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
-        const currentThread = threads[currentChatThreadId];
-        if (currentThread && currentThread.persona) {
-            personaSelect.value = currentThread.persona;
-        }
-    }
-    personaSelect.addEventListener('change', () => {
-        const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
-        if (threads[currentChatThreadId]) {
-            threads[currentChatThreadId].persona = personaSelect.value;
-            localStorage.setItem('chatThreads', JSON.stringify(threads));
-        }
-        const newGreeting = generateGreeting(personaSelect.value);
-        const msgId = generateMessageId();
-        addMessageToChat(`Switched to ${personaSelect.value} persona. ${newGreeting.split("!")[0]}!`, 'bot', false, msgId);
-        updateConversationHistory('assistant', `Switched to ${personaSelect.value} persona.`, msgId);
-    });
 
-    function saveConversation(threadId) {
-        if (!threadId) return;
-        const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
-        if (!threads[threadId]) threads[threadId] = { name: `Chat ${threadId.substring(0,5)}`, history: [], persona: personaSelect.value };
-        
-        const historyToSave = conversationHistory.filter(msg => !msg.content.startsWith("Switched to") || msg.content.includes(generateGreeting(personaSelect.value).split("!")[0]));
-
-        threads[threadId].history = historyToSave;
-        threads[threadId].lastUpdated = Date.now();
-        threads[threadId].persona = personaSelect.value; 
-        localStorage.setItem('chatThreads', JSON.stringify(threads));
-    }
-
-    function loadConversation(threadId) {
-        if (!threadId) threadId = 'default_chat';
-        currentChatThreadId = threadId;
-        const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
-        const thread = threads[threadId];
-
-        chatWindow.innerHTML = '';
-        if (thread && thread.history) {
-            conversationHistory = thread.history;
-            personaSelect.value = thread.persona || 'helpful';
-            conversationHistory.forEach(msg => addMessageToChat(msg.content, msg.role, false, msg.id || generateMessageId()));
-        } else {
-            conversationHistory = [];
-            personaSelect.value = 'helpful';
-        }
-        scrollToBottom();
-    }
-
-    function displaySuggestedPrompts() {
-        const suggestions = [
-            "Hello", "How are you?", "Tell me a fact", "What time is it?"
-        ];
-        suggestionsContainer.innerHTML = ''; 
-        suggestions.forEach(text => {
-            const btn = document.createElement('button');
-            btn.textContent = text;
-            btn.onclick = () => {
-                userInput.value = text;
-                handleSendMessage();
-                suggestionsContainer.style.display = 'none'; 
-            };
-            suggestionsContainer.appendChild(btn);
-        });
-    }
-     userInput.addEventListener('focus', () => {
-        if(conversationHistory.length <= 1 && userInput.value === '' && !userInput.disabled) suggestionsContainer.style.display = 'flex'; 
-        commandsSuggestionContainer.style.display = 'none';
-    });
-    userInput.addEventListener('blur', () => {
-        setTimeout(() => {
-            if (!commandsSuggestionContainer.contains(document.activeElement)) { 
-                 commandsSuggestionContainer.style.display = 'none';
+        function generateGreeting(persona) {
+            const namePart = userName ? ` ${userName}` : '';
+            switch(persona) {
+                case 'pirate': return `Ahoy Matey${namePart}! I be a rule-based pirate bot. What be on yer mind?`;
+                case 'sarcastic': return `Oh, it's you${namePart}. Brace yourself for my rule-based wit. What is it?`;
+                case 'friendly': return `Hey there${namePart}! ${userName ? 'Great to see you again!' : 'Nice to meet you!'} I'm your friendly rule-based chat pal!`;
+                case 'professional': return `Good day${namePart}. I am your Professional Rule-Based Assistant. How may I assist?`;
+                default: return `${userName ? `Welcome back, ${userName}!` : 'Hello!'} I'm your rule-based AI Assistant. How can I help?`;
             }
-            if (!suggestionsContainer.contains(document.activeElement)) {
-                 suggestionsContainer.style.display = 'none';
-            }
-        }, 150);
-    });
-    userInput.addEventListener('input', () => {
-        const text = userInput.value;
-        if (text.startsWith('/') && text.length >=1 && !userInput.disabled) {
-            const searchTerm = text.substring(1).toLowerCase();
-            const filteredCommands = AVAILABLE_COMMANDS.filter(cmdObj => cmdObj.cmd.substring(1).startsWith(searchTerm));
-            displayCommandSuggestions(filteredCommands);
-            suggestionsContainer.style.display = 'none';
-        } else {
-            commandsSuggestionContainer.style.display = 'none';
-            if (conversationHistory.length <= 1 && text === '' && !userInput.disabled) {
-                suggestionsContainer.style.display = 'flex';
+        }
+
+        async function displayBotResponse(text, botMessageElement, botMessageId) {
+            const thinkingTime = Math.max(300, Math.min(text.length * 15, 1000)); 
+
+            await new Promise(resolve => setTimeout(resolve, thinkingTime));
+
+            botMessageElement.innerHTML = DOMPurify.sanitize(
+                (typeof marked !== 'undefined' ? marked.parse(text) : text.replace(/\n/g, '<br>'))
+            );
+            if (typeof Prism !== 'undefined') Prism.highlightAllUnder(botMessageElement);
+            addMessageActions(botMessageElement, text, botMessageId);
+
+            updateConversationHistory('assistant', text, botMessageId);
+            saveConversation(currentChatThreadId);
+            enableInputs();
+            userInput.focus();
+        }
+
+        function enableInputs() {
+            userInput.disabled = false;
+            sendButton.disabled = false;
+        }
+
+        function addMessageToChat(text, sender, isLoading = false, messageId) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', sender);
+            messageElement.id = messageId;
+            messageElement.setAttribute('aria-atomic', 'true');
+
+            if (isLoading) {
+                messageElement.classList.add('loading');
+                messageElement.innerHTML = `<div class="loading-spinner"></div> <span>Thinking...</span>`;
+                messageElement.setAttribute('aria-label', 'Bot is thinking');
             } else {
-                suggestionsContainer.style.display = 'none';
+                if (sender === 'user') {
+                    messageElement.textContent = text;
+                } else {
+                    const htmlContent = typeof marked !== 'undefined' ? marked.parse(text) : text.replace(/\n/g, '<br>');
+                    messageElement.innerHTML = DOMPurify.sanitize(htmlContent, { USE_PROFILES: { html: true } });
+                    if (typeof Prism !== 'undefined') Prism.highlightAllUnder(messageElement);
+                    addMessageActions(messageElement, text, messageId);
+                    addInfoTooltipsToMessage(messageElement, text);
+                }
             }
+            
+            chatWindow.appendChild(messageElement);
+            pruneOldMessagesDOM();
+            scrollToBottom();
+            if (!isLoading && sender === 'bot') {
+                chatAppContainer.classList.remove('flash');
+                void chatAppContainer.offsetWidth;
+                chatAppContainer.classList.add('flash');
+            }
+            return messageElement;
         }
-    });
-    function displayCommandSuggestions(commands) {
-        commandsSuggestionContainer.innerHTML = '';
-        if (commands.length > 0) {
-            commands.forEach(cmdObj => {
-                const btn = document.createElement('button');
-                btn.textContent = `${cmdObj.cmd} - ${cmdObj.desc}`;
-                btn.onclick = () => {
-                    userInput.value = cmdObj.cmd + (cmdObj.cmd.includes('<') ? ' ' : ''); 
-                    commandsSuggestionContainer.style.display = 'none';
-                    if (!userInput.disabled) userInput.focus();
-                    if (!cmdObj.cmd.includes('<')) { 
-                        handleSendMessage();
+
+        function addMessageActions(messageElement, originalText, messageId) {
+            const actionsContainer = document.createElement('div');
+            actionsContainer.className = 'message-actions';
+
+            const speakButton = document.createElement('button');
+            speakButton.innerHTML = '🔊';
+            speakButton.title = 'Read aloud';
+            speakButton.onclick = () => speakText(originalText);
+            actionsContainer.appendChild(speakButton);
+
+            const rephraseButton = document.createElement('button');
+            rephraseButton.innerHTML = '🔁';
+            rephraseButton.title = 'Rephrase this (limited)';
+            rephraseButton.onclick = () => handleRephraseMessage(originalText, messageId);
+            actionsContainer.appendChild(rephraseButton);
+            
+            messageElement.appendChild(actionsContainer);
+        }
+        function speakText(text) {
+            if (!('speechSynthesis' in window)) {
+                alert("Sorry, your browser doesn't support text-to-speech.");
+                return;
+            }
+            const plainText = DOMPurify.sanitize(text, { ALLOWED_TAGS: [] }).replace(/[*_`~#>|]/g, '');
+            const utterance = new SpeechSynthesisUtterance(plainText);
+            utterance.lang = 'en-US'; 
+            speechSynthesis.cancel(); 
+            speechSynthesis.speak(utterance);
+        }
+        function setupSpeechRecognition() {
+             if ('webkitSpeechRecognition' in window) {
+                speechRecognition = new webkitSpeechRecognition();
+                speechRecognition.continuous = false; 
+                speechRecognition.interimResults = false;
+                speechRecognition.lang = 'en-US';
+
+                speechRecognition.onstart = () => {
+                    micButton.classList.add('recording');
+                    micButton.textContent = '🎙️';
+                    userInput.placeholder = "Listening...";
+                };
+                speechRecognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    userInput.value = transcript;
+                };
+                speechRecognition.onerror = (event) => {
+                    console.error('Speech recognition error:', event.error);
+                    userInput.placeholder = "Mic error. Try typing.";
+                    if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                        alert("Microphone access denied. Please enable it in your browser settings.");
                     }
                 };
-                commandsSuggestionContainer.appendChild(btn);
-            });
-            commandsSuggestionContainer.style.display = 'flex';
-        } else {
-            commandsSuggestionContainer.style.display = 'none';
-        }
-    }
-    function detectEmotion(text) {
-        const lowerText = text.toLowerCase();
-        if (/\b(angry|furious|pissed off|annoyed|frustrated|hate)\b/i.test(lowerText)) return "angry";
-        if (/\b(sad|upset|crying|depressed|miserable)\b/i.test(lowerText)) return "sad";
-        if (/\b(happy|excited|yay|great|awesome|love it)\b/i.test(lowerText)) return "happy";
-        if (/\b(confused|huh|what\?|don't understand)\b/i.test(lowerText)) return "confused";
-        return "neutral";
-    }
-    function handleEmotionalResponse(emotion, userMessage) {
-        console.log(`User emotion detected: ${emotion} for message: "${userMessage}"`);
-    }
-    function addInfoTooltipsToMessage(messageElement, text) {
-        const knownFacts = { 
-            "Paris": "The capital city of France, known for the Eiffel Tower.", 
-            "AI": "Artificial Intelligence - simulation of human intelligence in machines."
-        };
-        let html = messageElement.innerHTML;
-        for (const fact in knownFacts) {
-            if (text.toLowerCase().includes(fact.toLowerCase())) { 
-                const regex = new RegExp(`\\b(${fact})\\b`, 'gi'); 
-                html = html.replace(regex, (match) => `${match} <span class="info-tooltip" title="${knownFacts[fact]}">ℹ️</span>`);
-            }
-        }
-        messageElement.innerHTML = html;
-    }
-
-    async function handleRephraseMessage(originalText, originalMessageId) {
-        const botMessageId = generateMessageId();
-        addMessageToChat("I can't truly rephrase messages in this simplified mode, but I can repeat it with a twist!", 'bot', false, botMessageId);
-        updateConversationHistory('assistant', "I can't truly rephrase messages in this simplified mode.", botMessageId);
-        saveConversation(currentChatThreadId);
-    }
-
-    function extractAndStoreUserPreferences(promptText) {
-        const lowerPrompt = promptText.toLowerCase();
-        let nameFound = null;
-        if (lowerPrompt.includes("my name is ")) {
-            nameFound = lowerPrompt.split("my name is ")[1].split(/[\s,.!?]/)[0];
-        } else if (lowerPrompt.includes("call me ")) {
-            nameFound = lowerPrompt.split("call me ")[1].split(/[\s,.!?]/)[0];
-        }
-        if (nameFound && nameFound.length > 1 && nameFound.length < 20) {
-            userName = nameFound.charAt(0).toUpperCase() + nameFound.slice(1);
-            localStorage.setItem('userName', userName); 
-            console.log("Username stored:", userName);
-            const msgId = generateMessageId();
-            addMessageToChat(`Got it, I'll call you ${userName}!`, 'bot', false, msgId);
-            updateConversationHistory('assistant',`Got it, I'll call you ${userName}!`, msgId);
-        }
-
-        const colorMatch = lowerPrompt.match(/my favorite colou?r is (\w+)/);
-        if (colorMatch && colorMatch[1]) {
-            userPreferences.favoriteColor = colorMatch[1];
-            localStorage.setItem('userPreferences', JSON.stringify(userPreferences));
-            const msgId = generateMessageId();
-            addMessageToChat(`Nice! ${userPreferences.favoriteColor.charAt(0).toUpperCase() + userPreferences.favoriteColor.slice(1)} is a great color. I'll try to remember that.`, 'bot', false, msgId);
-            updateConversationHistory('assistant', `Nice! ${userPreferences.favoriteColor.charAt(0).toUpperCase() + userPreferences.favoriteColor.slice(1)} is a great color. I'll try to remember that.`, msgId);
-        }
-    }
-    function suggestPersonaChange(messageText) {
-         const lowerText = messageText.toLowerCase();
-        let newPersona = null;
-        if (lowerText.includes("make it funny") || lowerText.includes("be sarcastic")) {
-            newPersona = "sarcastic";
-        } else if (lowerText.includes("be serious") || lowerText.includes("professional")) {
-            newPersona = "professional";
-        }
-
-        if (newPersona && personaSelect.value !== newPersona) {
-            const suggestionId = generateMessageId();
-            const suggestionMsg = addMessageToChat(`I can switch to my ${newPersona} persona for that if you'd like. <button data-persona="${newPersona}" class="persona-suggestion-btn" style="padding: 3px 6px; margin-left: 5px; cursor: pointer; border-radius: 5px; border: 1px solid var(--button-bg); background: var(--suggestion-bg); color: var(--suggestion-text);">Switch to ${newPersona}</button>`, 'bot', false, suggestionId);
-            
-            const btn = suggestionMsg.querySelector('.persona-suggestion-btn');
-            if (btn) {
-                btn.onclick = (e) => {
-                    personaSelect.value = e.target.dataset.persona;
-                    personaSelect.dispatchEvent(new Event('change'));
-                    e.target.closest('.message').remove();
-                    const historyIndex = conversationHistory.findIndex(msg => msg.id === suggestionId);
-                    if(historyIndex > -1) conversationHistory.splice(historyIndex, 1);
+                speechRecognition.onend = () => {
+                    micButton.classList.remove('recording');
+                    micButton.textContent = '🎤';
+                    userInput.placeholder = "Ask me anything or type /help...";
+                    if (!userInput.disabled) userInput.focus();
                 };
+            } else {
+                micButton.style.display = 'none'; 
+                console.warn("Speech recognition not supported in this browser.");
             }
         }
-    }
-    function updateConversationHistory(role, content, id, replace = false) {
-        if (replace) {
-            const existingMsgIndex = conversationHistory.findIndex(msg => msg.id === id);
-            if (existingMsgIndex !== -1) {
-                conversationHistory[existingMsgIndex] = { role, content, id };
-                return;
+        micButton.addEventListener('click', () => {
+            if (userInput.disabled) return;
+            if (speechRecognition) {
+                try {
+                    if (micButton.classList.contains('recording')) {
+                        speechRecognition.stop();
+                    } else {
+                        speechRecognition.start();
+                    }
+                } catch(e) {
+                    console.error("Could not start/stop speech recognition: ", e);
+                    micButton.classList.remove('recording');
+                    micButton.textContent = '🎤';
+                }
+            } else {
+                alert("Speech recognition is not available.");
             }
-        }
-        if (conversationHistory.some(msg => msg.id === id)) return;
-        conversationHistory.push({ role, content, id });
-    }
-    async function handleCommand(commandText) {
-        const [command, ...args] = commandText.substring(1).toLowerCase().split(' ');
-        let commandProcessed = true;
-        let botResponse = "";
+        });
+        exportChatButton.addEventListener('click', () => {
+            const chatData = {
+                threadId: currentChatThreadId,
+                persona: personaSelect.value,
+                history: conversationHistory,
+                exportedAt: new Date().toISOString()
+            };
+            const blob = new Blob([JSON.stringify(chatData, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `chat_export_${currentChatThreadId}_${new Date().toLocaleDateString().replace(/\//g, '-')}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(a.href);
+        });
 
-        switch(command) {
-            case 'help':
-                botResponse = "Available commands:\n" + AVAILABLE_COMMANDS.map(c => `${c.cmd} - ${c.desc}`).join('\n');
-                break;
-            case 'joke':
-                const jokes = [
-                    "Why don't scientists trust atoms? Because they make up everything!",
-                    "Why did the scarecrow win an award? Because he was outstanding in his field!",
-                ];
-                botResponse = jokes[Math.floor(Math.random() * jokes.length)];
-                break;
-            // Removed /temp command case
-            case 'reset':
-                chatWindow.innerHTML = '';
+        function loadChatThreads() {
+            const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
+            threadList.innerHTML = ''; 
+            if (Object.keys(threads).length === 0) {
+                threads['default_chat'] = { name: 'General Chat', lastUpdated: Date.now(), history: [], persona: 'helpful' };
+                localStorage.setItem('chatThreads', JSON.stringify(threads));
+            }
+            currentChatThreadId = localStorage.getItem('lastActiveThreadId') || Object.keys(threads)[0];
+            if (!threads[currentChatThreadId]) { 
+                currentChatThreadId = Object.keys(threads)[0];
+                localStorage.setItem('lastActiveThreadId', currentChatThreadId);
+            }
+            
+            Object.entries(threads).sort(([,a],[,b]) => b.lastUpdated - a.lastUpdated).forEach(([threadId, thread]) => {
+                const li = document.createElement('li');
+                const button = document.createElement('button');
+                button.textContent = thread.name || `Chat ${threadId.substring(0,5)}`;
+                button.dataset.threadId = threadId;
+                if (threadId === currentChatThreadId) button.classList.add('active');
+                button.onclick = () => switchChatThread(threadId);
+                li.appendChild(button);
+                threadList.appendChild(li);
+            });
+        }
+        function switchChatThread(threadId) {
+            saveConversation(currentChatThreadId); 
+            currentChatThreadId = threadId;
+            localStorage.setItem('lastActiveThreadId', currentChatThreadId);
+            loadConversation(threadId);
+            document.querySelectorAll('#threadList button').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.threadId === threadId);
+            });
+            updatePersonaSelectBasedOnThread();
+        }
+        newThreadButton.addEventListener('click', () => {
+            const newThreadName = prompt("Enter name for new chat thread:", `Chat Session ${Object.keys(JSON.parse(localStorage.getItem('chatThreads') || '{}')).length + 1}`);
+            if (newThreadName) {
+                saveConversation(currentChatThreadId); 
+                const newThreadId = `thread_${Date.now()}`;
+                const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
+                threads[newThreadId] = { name: newThreadName, lastUpdated: Date.now(), history: [], persona: personaSelect.value };
+                localStorage.setItem('chatThreads', JSON.stringify(threads));
+                currentChatThreadId = newThreadId;
+                localStorage.setItem('lastActiveThreadId', currentChatThreadId);
+                loadChatThreads(); 
+                loadConversation(newThreadId); 
+                updatePersonaSelectBasedOnThread();
+            }
+        });
+        function updatePersonaSelectBasedOnThread() {
+            const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
+            const currentThread = threads[currentChatThreadId];
+            if (currentThread && currentThread.persona) {
+                personaSelect.value = currentThread.persona;
+            }
+        }
+        personaSelect.addEventListener('change', () => {
+            const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
+            if (threads[currentChatThreadId]) {
+                threads[currentChatThreadId].persona = personaSelect.value;
+                localStorage.setItem('chatThreads', JSON.stringify(threads));
+            }
+            const newGreeting = generateGreeting(personaSelect.value);
+            const msgId = generateMessageId();
+            addMessageToChat(`Switched to ${personaSelect.value} persona. ${newGreeting.split("!")[0]}!`, 'bot', false, msgId);
+            updateConversationHistory('assistant', `Switched to ${personaSelect.value} persona.`, msgId);
+        });
+
+        function saveConversation(threadId) {
+            if (!threadId) return;
+            const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
+            if (!threads[threadId]) threads[threadId] = { name: `Chat ${threadId.substring(0,5)}`, history: [], persona: personaSelect.value };
+            
+            const historyToSave = conversationHistory.filter(msg => !msg.content.startsWith("Switched to") || msg.content.includes(generateGreeting(personaSelect.value).split("!")[0]));
+
+            threads[threadId].history = historyToSave;
+            threads[threadId].lastUpdated = Date.now();
+            threads[threadId].persona = personaSelect.value; 
+            localStorage.setItem('chatThreads', JSON.stringify(threads));
+        }
+
+        function loadConversation(threadId) {
+            if (!threadId) threadId = 'default_chat';
+            currentChatThreadId = threadId;
+            const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
+            const thread = threads[threadId];
+
+            chatWindow.innerHTML = '';
+            if (thread && thread.history) {
+                conversationHistory = thread.history;
+                personaSelect.value = thread.persona || 'helpful';
+                conversationHistory.forEach(msg => addMessageToChat(msg.content, msg.role, false, msg.id || generateMessageId()));
+            } else {
                 conversationHistory = [];
-                const currentPersonaForReset = personaSelect.value;
-                const greetingForReset = generateGreeting(currentPersonaForReset);
-                const greetingIdForReset = generateMessageId();
-                addMessageToChat(greetingForReset, 'bot', false, greetingIdForReset);
-                updateConversationHistory('assistant', greetingForReset, greetingIdForReset);
-                saveConversation(currentChatThreadId); // Save the reset state
-                break;
-            default:
-                commandProcessed = false; 
+                personaSelect.value = 'helpful';
+            }
+            scrollToBottom();
         }
 
-        if (commandProcessed && botResponse) {
+        function displaySuggestedPrompts() {
+            const suggestions = [
+                "Hello", "How are you?", "Tell me a fact", "What time is it?"
+            ];
+            suggestionsContainer.innerHTML = ''; 
+            suggestions.forEach(text => {
+                const btn = document.createElement('button');
+                btn.textContent = text;
+                btn.onclick = () => {
+                    userInput.value = text;
+                    handleSendMessage();
+                    suggestionsContainer.style.display = 'none'; 
+                };
+                suggestionsContainer.appendChild(btn);
+            });
+        }
+         userInput.addEventListener('focus', () => {
+            if(conversationHistory.length <= 1 && userInput.value === '' && !userInput.disabled) suggestionsContainer.style.display = 'flex'; 
+            commandsSuggestionContainer.style.display = 'none';
+        });
+        userInput.addEventListener('blur', () => {
+            setTimeout(() => {
+                if (!commandsSuggestionContainer.contains(document.activeElement)) { 
+                     commandsSuggestionContainer.style.display = 'none';
+                }
+                if (!suggestionsContainer.contains(document.activeElement)) {
+                     suggestionsContainer.style.display = 'none';
+                }
+            }, 150);
+        });
+        userInput.addEventListener('input', () => {
+            const text = userInput.value;
+            if (text.startsWith('/') && text.length >=1 && !userInput.disabled) {
+                const searchTerm = text.substring(1).toLowerCase();
+                const filteredCommands = AVAILABLE_COMMANDS.filter(cmdObj => cmdObj.cmd.substring(1).startsWith(searchTerm));
+                displayCommandSuggestions(filteredCommands);
+                suggestionsContainer.style.display = 'none';
+            } else {
+                commandsSuggestionContainer.style.display = 'none';
+                if (conversationHistory.length <= 1 && text === '' && !userInput.disabled) {
+                    suggestionsContainer.style.display = 'flex';
+                } else {
+                    suggestionsContainer.style.display = 'none';
+                }
+            }
+        });
+        function displayCommandSuggestions(commands) {
+            commandsSuggestionContainer.innerHTML = '';
+            if (commands.length > 0) {
+                commands.forEach(cmdObj => {
+                    const btn = document.createElement('button');
+                    btn.textContent = `${cmdObj.cmd} - ${cmdObj.desc}`;
+                    btn.onclick = () => {
+                        userInput.value = cmdObj.cmd + (cmdObj.cmd.includes('<') ? ' ' : ''); 
+                        commandsSuggestionContainer.style.display = 'none';
+                        if (!userInput.disabled) userInput.focus();
+                        if (!cmdObj.cmd.includes('<')) { 
+                            handleSendMessage();
+                        }
+                    };
+                    commandsSuggestionContainer.appendChild(btn);
+                });
+                commandsSuggestionContainer.style.display = 'flex';
+            } else {
+                commandsSuggestionContainer.style.display = 'none';
+            }
+        }
+        function detectEmotion(text) {
+            const lowerText = text.toLowerCase();
+            if (/\b(angry|furious|pissed off|annoyed|frustrated|hate)\b/i.test(lowerText)) return "angry";
+            if (/\b(sad|upset|crying|depressed|miserable)\b/i.test(lowerText)) return "sad";
+            if (/\b(happy|excited|yay|great|awesome|love it)\b/i.test(lowerText)) return "happy";
+            if (/\b(confused|huh|what\?|don't understand)\b/i.test(lowerText)) return "confused";
+            return "neutral";
+        }
+        function handleEmotionalResponse(emotion, userMessage) {
+            console.log(`User emotion detected: ${emotion} for message: "${userMessage}"`);
+        }
+        function addInfoTooltipsToMessage(messageElement, text) {
+            const knownFacts = { 
+                "Paris": "The capital city of France, known for the Eiffel Tower.", 
+                "AI": "Artificial Intelligence - simulation of human intelligence in machines."
+            };
+            let html = messageElement.innerHTML;
+            for (const fact in knownFacts) {
+                if (text.toLowerCase().includes(fact.toLowerCase())) { 
+                    const regex = new RegExp(`\\b(${fact})\\b`, 'gi'); 
+                    html = html.replace(regex, (match) => `${match} <span class="info-tooltip" title="${knownFacts[fact]}">ℹ️</span>`);
+                }
+            }
+            messageElement.innerHTML = html;
+        }
+
+        async function handleRephraseMessage(originalText, originalMessageId) {
             const botMessageId = generateMessageId();
-            addMessageToChat(botResponse, 'bot', false, botMessageId);
-            updateConversationHistory('assistant', botResponse, botMessageId);
+            addMessageToChat("I can't truly rephrase messages in this simplified mode, but I can repeat it with a twist!", 'bot', false, botMessageId);
+            updateConversationHistory('assistant', "I can't truly rephrase messages in this simplified mode.", botMessageId);
             saveConversation(currentChatThreadId);
         }
-        return commandProcessed;
-    }
 
-    async function handleSendMessage(event) {
-        if (event) event.preventDefault();
-        const messageText = userInput.value.trim();
-        if (messageText === '') return;
+        function extractAndStoreUserPreferences(promptText) {
+            const lowerPrompt = promptText.toLowerCase();
+            let nameFound = null;
+            if (lowerPrompt.includes("my name is ")) {
+                nameFound = lowerPrompt.split("my name is ")[1].split(/[\s,.!?]/)[0];
+            } else if (lowerPrompt.includes("call me ")) {
+                nameFound = lowerPrompt.split("call me ")[1].split(/[\s,.!?]/)[0];
+            }
+            if (nameFound && nameFound.length > 1 && nameFound.length < 20) {
+                userName = nameFound.charAt(0).toUpperCase() + nameFound.slice(1);
+                localStorage.setItem('userName', userName); 
+                console.log("Username stored:", userName);
+                const msgId = generateMessageId();
+                addMessageToChat(`Got it, I'll call you ${userName}!`, 'bot', false, msgId);
+                updateConversationHistory('assistant',`Got it, I'll call you ${userName}!`, msgId);
+            }
 
-        const userMessageId = generateMessageId();
-        addMessageToChat(messageText, 'user', false, userMessageId);
-        updateConversationHistory('user', messageText, userMessageId);
-
-        userInput.value = ''; 
-        suggestionsContainer.style.display = 'none';
-        commandsSuggestionContainer.style.display = 'none';
-
-        extractAndStoreUserPreferences(messageText);
-        suggestPersonaChange(messageText);
-        const userEmotion = detectEmotion(messageText);
-        handleEmotionalResponse(userEmotion, messageText);
-
-        if (messageText.startsWith('/')) {
-            const commandProcessed = await handleCommand(messageText);
-            if (commandProcessed) {
-                scrollToBottom();
-                if (!userInput.disabled) userInput.focus();
-                return;
+            const colorMatch = lowerPrompt.match(/my favorite colou?r is (\w+)/);
+            if (colorMatch && colorMatch[1]) {
+                userPreferences.favoriteColor = colorMatch[1];
+                localStorage.setItem('userPreferences', JSON.stringify(userPreferences));
+                const msgId = generateMessageId();
+                addMessageToChat(`Nice! ${userPreferences.favoriteColor.charAt(0).toUpperCase() + userPreferences.favoriteColor.slice(1)} is a great color. I'll try to remember that.`, 'bot', false, msgId);
+                updateConversationHistory('assistant', `Nice! ${userPreferences.favoriteColor.charAt(0).toUpperCase() + userPreferences.favoriteColor.slice(1)} is a great color. I'll try to remember that.`, msgId);
             }
         }
-        
-        const currentPersona = personaSelect.value;
-        const loadingIndicator = addMessageToChat('', 'bot', true, generateMessageId()); // Show "Thinking..."
-        sendButton.disabled = true;
-        userInput.disabled = true;
-
-        // Get rule-based response
-        const botResponseText = fetchRuleBasedResponse(messageText, currentPersona);
-        
-        // Simulate thinking and then display
-        const botMessageId = generateMessageId();
-        const botMessageElement = document.getElementById(loadingIndicator.id); // Get the loading indicator element
-        
-        // Update the loading indicator to be the bot message shell for displayBotResponse
-        botMessageElement.classList.remove('loading'); 
-        botMessageElement.innerHTML = ''; // Clear spinner
-        botMessageElement.id = botMessageId; // Assign new ID for the actual message
-
-        await displayBotResponse(botResponseText, botMessageElement, botMessageId);
-        // History, saving, and input enabling are now handled within displayBotResponse
-    }
-
-    function scrollToBottom() {
-        if(chatWindow) setTimeout(() => { chatWindow.scrollTop = chatWindow.scrollHeight; },0);
-    }
-    function pruneOldMessagesDOM() {
-        while (chatWindow.children.length > MAX_MESSAGES_DISPLAY) {
-            chatWindow.removeChild(chatWindow.firstChild);
-        }
-    }
-    function applyViewportHeight() {
-        const setHeight = () => {
-            if(document.querySelector('.chat-area')) {
-                 document.querySelector('.chat-area').style.height = window.innerHeight + 'px';
+        function suggestPersonaChange(messageText) {
+             const lowerText = messageText.toLowerCase();
+            let newPersona = null;
+            if (lowerText.includes("make it funny") || lowerText.includes("be sarcastic")) {
+                newPersona = "sarcastic";
+            } else if (lowerText.includes("be serious") || lowerText.includes("professional")) {
+                newPersona = "professional";
             }
-        };
-        setHeight();
-        window.addEventListener('resize', setHeight);
-    }
-    function loadTheme() {
-        const savedTheme = localStorage.getItem('theme');
-        document.body.classList.toggle('dark-mode', savedTheme === 'dark');
-        updateThemePreference();
-    }
-    function updateThemePreference() {
-        const isDarkMode = document.body.classList.contains('dark-mode');
-        if (themeToggleIcon) themeToggleIcon.textContent = isDarkMode ? '☀️' : '🌙';
-        if (themeToggleText) themeToggleText.textContent = isDarkMode ? 'Light' : 'Dark';
-        localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-    }
 
-    chatForm.addEventListener('submit', handleSendMessage);
-    themeToggleButton.addEventListener('click', () => {
-        document.body.classList.toggle('dark-mode');
-        updateThemePreference();
+            if (newPersona && personaSelect.value !== newPersona) {
+                const suggestionId = generateMessageId();
+                const suggestionMsg = addMessageToChat(`I can switch to my ${newPersona} persona for that if you'd like. <button data-persona="${newPersona}" class="persona-suggestion-btn" style="padding: 3px 6px; margin-left: 5px; cursor: pointer; border-radius: 5px; border: 1px solid var(--button-bg); background: var(--suggestion-bg); color: var(--suggestion-text);">Switch to ${newPersona}</button>`, 'bot', false, suggestionId);
+                
+                const btn = suggestionMsg.querySelector('.persona-suggestion-btn');
+                if (btn) {
+                    btn.onclick = (e) => {
+                        personaSelect.value = e.target.dataset.persona;
+                        personaSelect.dispatchEvent(new Event('change'));
+                        e.target.closest('.message').remove();
+                        const historyIndex = conversationHistory.findIndex(msg => msg.id === suggestionId);
+                        if(historyIndex > -1) conversationHistory.splice(historyIndex, 1);
+                    };
+                }
+            }
+        }
+        function updateConversationHistory(role, content, id, replace = false) {
+            if (replace) {
+                const existingMsgIndex = conversationHistory.findIndex(msg => msg.id === id);
+                if (existingMsgIndex !== -1) {
+                    conversationHistory[existingMsgIndex] = { role, content, id };
+                    return;
+                }
+            }
+            if (conversationHistory.some(msg => msg.id === id)) return;
+            conversationHistory.push({ role, content, id });
+        }
+        async function handleCommand(commandText) {
+            const [command, ...args] = commandText.substring(1).toLowerCase().split(' ');
+            let commandProcessed = true;
+            let botResponse = "";
+
+            switch(command) {
+                case 'help':
+                    botResponse = "Available commands:\n" + AVAILABLE_COMMANDS.map(c => `${c.cmd} - ${c.desc}`).join('\n');
+                    break;
+                case 'joke':
+                    const jokes = [
+                        "Why don't scientists trust atoms? Because they make up everything!",
+                        "Why did the scarecrow win an award? Because he was outstanding in his field!",
+                    ];
+                    botResponse = jokes[Math.floor(Math.random() * jokes.length)];
+                    break;
+                case 'reset':
+                    chatWindow.innerHTML = '';
+                    conversationHistory = [];
+                    const currentPersonaForReset = personaSelect.value;
+                    const greetingForReset = generateGreeting(currentPersonaForReset);
+                    const greetingIdForReset = generateMessageId();
+                    addMessageToChat(greetingForReset, 'bot', false, greetingIdForReset);
+                    updateConversationHistory('assistant', greetingForReset, greetingIdForReset);
+                    saveConversation(currentChatThreadId);
+                    break; 
+                default:
+                    commandProcessed = false; 
+            }
+
+            if (commandProcessed && botResponse) {
+                const botMessageId = generateMessageId();
+                addMessageToChat(botResponse, 'bot', false, botMessageId);
+                updateConversationHistory('assistant', botResponse, botMessageId);
+                saveConversation(currentChatThreadId);
+            }
+            return commandProcessed;
+        }
+
+        async function handleSendMessage(event) {
+            if (event) event.preventDefault();
+            const messageText = userInput.value.trim();
+            if (messageText === '') return;
+
+            const userMessageId = generateMessageId();
+            addMessageToChat(messageText, 'user', false, userMessageId);
+            updateConversationHistory('user', messageText, userMessageId);
+
+            userInput.value = ''; 
+            suggestionsContainer.style.display = 'none';
+            commandsSuggestionContainer.style.display = 'none';
+
+            extractAndStoreUserPreferences(messageText);
+            suggestPersonaChange(messageText);
+            const userEmotion = detectEmotion(messageText);
+            handleEmotionalResponse(userEmotion, messageText);
+
+            if (messageText.startsWith('/')) {
+                const commandProcessed = await handleCommand(messageText);
+                if (commandProcessed) {
+                    scrollToBottom();
+                    if (!userInput.disabled) userInput.focus();
+                    return;
+                }
+            }
+            
+            const currentPersona = personaSelect.value;
+            const loadingIndicator = addMessageToChat('', 'bot', true, generateMessageId());
+            sendButton.disabled = true;
+            userInput.disabled = true;
+
+            const botResponseText = fetchRuleBasedResponse(messageText, currentPersona);
+            
+            const botMessageId = generateMessageId();
+            const botMessageElement = document.getElementById(loadingIndicator.id); 
+            
+            botMessageElement.classList.remove('loading'); 
+            botMessageElement.innerHTML = ''; 
+            botMessageElement.id = botMessageId; 
+
+            await displayBotResponse(botResponseText, botMessageElement, botMessageId);
+        }
+
+        function scrollToBottom() {
+            if(chatWindow) setTimeout(() => { chatWindow.scrollTop = chatWindow.scrollHeight; },0);
+        }
+        function pruneOldMessagesDOM() {
+            while (chatWindow.children.length > MAX_MESSAGES_DISPLAY) {
+                chatWindow.removeChild(chatWindow.firstChild);
+            }
+        }
+        function applyViewportHeight() {
+            const setHeight = () => {
+                if(document.querySelector('.chat-area')) {
+                     document.querySelector('.chat-area').style.height = window.innerHeight + 'px';
+                }
+            };
+            setHeight();
+            window.addEventListener('resize', setHeight);
+        }
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            document.body.classList.toggle('dark-mode', savedTheme === 'dark');
+            updateThemePreference();
+        }
+        function updateThemePreference() {
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            if (themeToggleIcon) themeToggleIcon.textContent = isDarkMode ? '☀️' : '🌙';
+            if (themeToggleText) themeToggleText.textContent = isDarkMode ? 'Light' : 'Dark';
+            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+        }
+
+        chatForm.addEventListener('submit', handleSendMessage);
+        themeToggleButton.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            updateThemePreference();
+        });
+
+        initializeChat();
+        setupSpeechRecognition();
     });
-
-    initializeChat();
-    setupSpeechRecognition();
-
-});
 </script>
 </body>
 </html>
