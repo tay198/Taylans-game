@@ -3,24 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Rhythm Jumper</title>
+    <title>Evidence Lockdown: Rhythm Scan</title>
     <style>
         body, html {
             margin: 0;
             padding: 0;
-            overflow: hidden; /* Prevents scrollbars */
-            background-color: #000; /* High-contrast background for the page itself */
+            overflow: hidden;
+            background-color: #0A0A0A; /* Dark background for the page */
+            color: #E0E0E0;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         canvas {
             display: block;
-            /* The canvas itself will have its background drawn in JS,
-               but a fallback or initial color can be set here if desired.
-               #111 is used in JS, so this is mostly for structure. */
-            /* background-color: #111; */
+            background-color: #181818; /* Slightly lighter dark grey for canvas */
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3); /* Cyan glow for a techy feel */
         }
     </style>
 </head>
@@ -28,59 +28,55 @@
     <canvas id="gameCanvas"></canvas>
 
     <script>
-        // Get the canvas element and its context
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        // --- Game Variables ---
-        let screenWidth;
-        let screenHeight;
+        // --- Game Configuration ---
+        let screenWidth, screenHeight;
         let gameRunning = false;
-        let animationFrameId; // To control the game loop
+        let animationFrameId;
 
-        // Player properties
-        let player = {
-            x: 50,
-            y: 0, // Will be set dynamically
-            width: 30,
-            height: 30,
-            color: '#00FF00', // Bright green for high contrast
-            velocityY: 0,
-            gravity: 0.6,     // Slightly increased gravity for a snappier feel
-            jumpStrength: -12, // Adjusted jump strength
-            isJumping: false
-        };
+        const BEATS_PER_MINUTE = 90; // Rhythm of the game
+        const BEAT_INTERVAL = 60000 / BEATS_PER_MINUTE; // Milliseconds per beat
+        let lastBeatTime = 0;
+        let beatCount = 0; // Total beats elapsed in current game
 
-        // Obstacle properties
-        let obstacles = [];
-        let obstacleWidth = 40;
-        let obstacleMinHeightRatio = 0.1; // e.g. 10% of screen height
-        let obstacleMaxHeightRatio = 0.4; // e.g. 40% of screen height
-        let obstacleGapRatio = 0.25;      // e.g. 25% of screen height for the gap
-        let obstacleColor = '#FF0000'; // Bright red
-        let obstacleSpeed = 3;
-        const initialObstacleSpeed = 3; // To reset speed
+        // Scanner Configuration
+        const SCANNER_COLOR = 'rgba(0, 255, 255, 0.7)'; // Cyan, semi-transparent
+        const SCANNER_WIDTH = 8;
+        let scannerX = 0;
+        const SCANNER_SPEED_PIXELS_PER_MS = 0.15; // Adjust for desired sweep speed
+        let scannerDirection = 1; // 1 for right, -1 for left
 
-        // Environment & Game Mechanics
-        let groundHeightRatio = 0.05; // 5% of screen height
-        let actualGroundHeight; // in pixels, calculated in resizeCanvas
-
-        let gameSpeedIncreaseInterval = 5000; // Increase speed every 5 seconds (in ms)
-        let lastSpeedIncreaseTime = 0;
-        let speedIncrement = 0.2;
+        // Evidence & Distractor Configuration
+        let items = []; // Will hold evidence and distractors
+        const ITEM_RADIUS = 15;
+        const EVIDENCE_COLOR = 'rgba(0, 255, 0, 0.8)'; // Green
+        const DISTRACTOR_COLOR = 'rgba(255, 165, 0, 0.8)'; // Orange
+        const ITEM_SPAWN_CHANCE_PER_BEAT = 0.6; // 60% chance to spawn an item on a beat
+        const DISTRACTOR_SPAWN_CHANCE = 0.3; // 30% of spawned items are distractors
+        const ITEM_ACTIVE_DURATION_MS = BEAT_INTERVAL * 3.5; // How long an item stays tappable
+        const PERFECT_TAP_WINDOW_MS = BEAT_INTERVAL / 3; // Time window for a perfect tap
 
         // Scoring
         let score = 0;
-        let highScore = localStorage.getItem('rhythmJumperHighScore') || 0;
+        let highScore = localStorage.getItem('evidenceLockdownHighScore') || 0;
+        let combo = 0;
+        const SCORE_PER_EVIDENCE = 100;
+        const COMBO_MULTIPLIER_BONUS = 10; // Extra points per combo level
+        const PENALTY_FOR_DISTRACTOR = -150;
+        const PENALTY_FOR_MISS = -50; // If an evidence item expires untouched
 
-        // Beat/Pulse for obstacle spawning
-        let beatInterval = 1800; // ms, approx 33 BPM if 1 beat = 1 obstacle. Adjust for rhythm.
-        let lastBeatTime = 0; // Time of the last obstacle spawn
+        // Feedback
+        let tapFeedback = []; // {x, y, text, color, time}
+
+        // Game State
+        let lives = 3; // Player lives
+        const INITIAL_LIVES = 3;
 
         // --- Utility Functions ---
-        function getRandom(min, max) {
-            return Math.random() * (max - min) + min;
-        }
+        function getRandom(min, max) { return Math.random() * (max - min) + min; }
+        function lerp(start, end, amt) { return (1 - amt) * start + amt * end; }
 
         // --- Canvas & Display ---
         function resizeCanvas() {
@@ -88,316 +84,319 @@
             screenHeight = window.innerHeight;
             canvas.width = screenWidth;
             canvas.height = screenHeight;
-
-            actualGroundHeight = screenHeight * groundHeightRatio;
-
-            // Update player size/position based on screen size if desired
-            // For now, player size is fixed, but y position needs adjustment
-            player.width = 30; // Or scale with screenWidth/Height
-            player.height = 30;
-
-
-            // Update obstacle dynamic properties based on new screen size
-            // obstacleGap = screenHeight * obstacleGapRatio; // Recalculate gap if needed
-
-            // Set player's initial y position
-            if (!gameRunning) { // Only set initial position if game hasn't started or during reset
-                player.y = screenHeight - player.height - actualGroundHeight;
-            } else {
-                // If game is running and screen resizes, adjust player Y to prevent falling through floor
-                if (player.y + player.height > screenHeight - actualGroundHeight) {
-                    player.y = screenHeight - player.height - actualGroundHeight;
-                    player.isJumping = false; // May need to reset jump state
-                    player.velocityY = 0;
-                }
-            }
-            // Redraw elements if game is running and screen resizes (or on initial load)
-            if (gameRunning) {
-                draw();
-            } else {
-                // If game is not running, show the appropriate message (start or game over)
-                if (score > 0 || (localStorage.getItem('rhythmJumperPlayedOnce') === 'true')) { // Show game over if a game was played
-                    drawGameOverMessage();
-                } else {
-                    drawStartMessage();
-                }
-            }
+            scannerX = SCANNER_WIDTH / 2; // Start scanner at the left
+            draw(); // Redraw, especially for start/game over messages
         }
 
-        // --- Game Control ---
+        // --- Input Handling ---
         function handleTap(event) {
-            if (event) event.preventDefault(); // Prevent default touch behavior
+            if (event) event.preventDefault();
 
             if (!gameRunning) {
                 startGame();
-            } else if (!player.isJumping) {
-                player.velocityY = player.jumpStrength;
-                player.isJumping = true;
-            }
-        }
-
-        // Event listeners
-        canvas.addEventListener('mousedown', handleTap);
-        canvas.addEventListener('touchstart', handleTap, { passive: false });
-        document.addEventListener('keydown', function(e) { // Allow spacebar to jump too
-            if (e.code === 'Space') {
-                e.preventDefault(); // Prevent space from scrolling the page
-                handleTap(null);
-            }
-        });
-
-
-        // --- Drawing ---
-        function drawPlayer() {
-            ctx.fillStyle = player.color;
-            ctx.fillRect(player.x, player.y, player.width, player.height);
-        }
-
-        function drawObstacles() {
-            ctx.fillStyle = obstacleColor;
-            obstacles.forEach(obstacle => {
-                // Top part of the obstacle
-                ctx.fillRect(obstacle.x, 0, obstacle.width, obstacle.topHeight);
-                // Bottom part of the obstacle
-                ctx.fillRect(obstacle.x, screenHeight - obstacle.bottomHeight - actualGroundHeight, obstacle.width, obstacle.bottomHeight);
-            });
-        }
-
-        function drawScore() {
-            ctx.fillStyle = '#FFFFFF';
-            ctx.font = `${Math.max(18, screenWidth * 0.03)}px Arial`; // Responsive font size
-            ctx.textAlign = 'left';
-            ctx.fillText(`Score: ${score}`, 20, Math.max(30, screenHeight * 0.05));
-            ctx.textAlign = 'right';
-            ctx.fillText(`High Score: ${highScore}`, screenWidth - 20, Math.max(30, screenHeight * 0.05));
-        }
-
-        function drawMessages(mainText, subText1, subText2, subText3) {
-            const overlayAlpha = gameRunning ? 0 : 0.7; // No overlay if game is somehow running with message
-            ctx.fillStyle = `rgba(0, 0, 0, ${overlayAlpha})`;
-            ctx.fillRect(0, 0, screenWidth, screenHeight);
-
-            ctx.fillStyle = '#FFFFFF';
-            ctx.textAlign = 'center';
-
-            const mainFontSize = Math.max(28, screenWidth * 0.07);
-            const subFontSize = Math.max(18, screenWidth * 0.04);
-            const detailFontSize = Math.max(16, screenWidth * 0.03);
-
-            ctx.font = `${mainFontSize}px Arial`;
-            ctx.fillText(mainText, screenWidth / 2, screenHeight / 2 - mainFontSize * 1.2);
-
-            if (subText1) {
-                ctx.font = `${subFontSize}px Arial`;
-                ctx.fillText(subText1, screenWidth / 2, screenHeight / 2);
-            }
-            if (subText2) {
-                ctx.font = `${detailFontSize}px Arial`;
-                ctx.fillText(subText2, screenWidth / 2, screenHeight / 2 + subFontSize * 1.5);
-            }
-            if (subText3) {
-                ctx.font = `${detailFontSize}px Arial`;
-                ctx.fillText(subText3, screenWidth / 2, screenHeight / 2 + subFontSize * 1.5 + detailFontSize * 1.5);
-            }
-        }
-
-        function drawGameOverMessage() {
-            drawMessages('Game Over', `Your Score: ${score}`, `High Score: ${highScore}`, 'Tap or Space to Restart');
-        }
-
-        function drawStartMessage() {
-            let highScoreText = highScore > 0 ? `Current High Score: ${highScore}` : '';
-            drawMessages('Rhythm Jumper', 'Tap or Press Space to Start', highScoreText, '');
-            // Clear any residual score from a potential previous game over state if starting fresh
-            if(score > 0 && !gameRunning) score = 0;
-        }
-
-
-        function draw() {
-            // Clear the canvas
-            ctx.fillStyle = '#111'; // Main background color
-            ctx.fillRect(0, 0, screenWidth, screenHeight);
-
-            // Draw ground line
-            ctx.fillStyle = '#333';
-            ctx.fillRect(0, screenHeight - actualGroundHeight, screenWidth, actualGroundHeight);
-
-            drawPlayer();
-            drawObstacles();
-            drawScore();
-
-            // Message handling is now done by resizeCanvas or specific game state functions
-            // to prevent drawing them over a running game.
-        }
-
-        // --- Game Logic Updates ---
-        function updatePlayer() {
-            player.y += player.velocityY;
-            player.velocityY += player.gravity;
-
-            // Ground collision
-            if (player.y + player.height > screenHeight - actualGroundHeight) {
-                player.y = screenHeight - player.height - actualGroundHeight;
-                player.velocityY = 0;
-                player.isJumping = false;
-            }
-
-            // Prevent player from going above the screen (optional)
-            if (player.y < 0) {
-                player.y = 0;
-                player.velocityY = 0; // Stop upward momentum if hitting ceiling
-            }
-        }
-
-        function spawnObstacle() {
-            const obstacleGap = screenHeight * obstacleGapRatio;
-            const minH = screenHeight * obstacleMinHeightRatio;
-            const maxH = screenHeight * obstacleMaxHeightRatio;
-
-            // The total height available for the two parts of the obstacle, excluding ground
-            const availableHeightForParts = screenHeight - actualGroundHeight - obstacleGap;
-
-            let topObstacleHeight = getRandom(minH, Math.min(maxH, availableHeightForParts - minH));
-            let bottomObstacleHeight = availableHeightForParts - topObstacleHeight;
-
-            // Ensure bottom obstacle isn't too small if top is large
-            if (bottomObstacleHeight < minH && availableHeightForParts > minH + minH ) { // check if possible to meet minH for both
-                 bottomObstacleHeight = minH;
-                 topObstacleHeight = availableHeightForParts - bottomObstacleHeight;
-            }
-             // Ensure top obstacle isn't too small
-            if (topObstacleHeight < minH && availableHeightForParts > minH + minH) {
-                topObstacleHeight = minH;
-                bottomObstacleHeight = availableHeightForParts - topObstacleHeight;
-            }
-
-
-            obstacles.push({
-                x: screenWidth,
-                width: obstacleWidth, // Could also be responsive: screenWidth * 0.05
-                topHeight: topObstacleHeight,
-                bottomHeight: bottomObstacleHeight,
-                passed: false // To track for scoring
-            });
-        }
-
-        function updateObstacles(currentTime) {
-            // Spawn new obstacles based on beat/pulse
-            if (gameRunning && currentTime - lastBeatTime > beatInterval) {
-                spawnObstacle();
-                lastBeatTime = currentTime;
-            }
-
-            for (let i = obstacles.length - 1; i >= 0; i--) {
-                let obs = obstacles[i];
-                obs.x -= obstacleSpeed;
-
-                // Scoring: if obstacle passed player's x position and hasn't been scored yet
-                if (!obs.passed && obs.x + obs.width < player.x) {
-                    score++;
-                    obs.passed = true;
-                }
-
-                // Remove obstacles that are off-screen
-                if (obs.x + obs.width < 0) {
-                    obstacles.splice(i, 1);
-                }
-            }
-        }
-
-        function checkCollisions() {
-            for (let obs of obstacles) {
-                // Check collision with top part of obstacle
-                if (player.x < obs.x + obs.width &&
-                    player.x + player.width > obs.x &&
-                    player.y < obs.topHeight) {
-                    return true; // Collision
-                }
-                // Check collision with bottom part of obstacle
-                // The Y for the top-left corner of the bottom obstacle is screenHeight - obs.bottomHeight - actualGroundHeight
-                if (player.x < obs.x + obs.width &&
-                    player.x + player.width > obs.x &&
-                    player.y + player.height > screenHeight - obs.bottomHeight - actualGroundHeight) {
-                    return true; // Collision
-                }
-            }
-            return false; // No collision
-        }
-
-        function updateGameSpeed(currentTime) {
-            if (gameRunning && currentTime - lastSpeedIncreaseTime > gameSpeedIncreaseInterval) {
-                obstacleSpeed += speedIncrement;
-                lastSpeedIncreaseTime = currentTime;
-                // console.log("Game speed increased to:", obstacleSpeed.toFixed(2));
-            }
-        }
-
-        // --- Game Loop ---
-        function gameLoop(currentTime) {
-            if (!gameRunning) { // Should be caught by gameOver or startGame's cancelAnimationFrame
                 return;
             }
 
-            updatePlayer();
-            updateObstacles(currentTime);
-            updateGameSpeed(currentTime);
+            const tapTime = performance.now();
+            let itemHit = false;
 
-            if (checkCollisions()) {
-                gameOver();
-                return; // Important to stop further processing in this frame
+            for (let i = items.length - 1; i >= 0; i--) {
+                const item = items[i];
+                const distanceToScanner = Math.abs(item.x - scannerX);
+
+                // Check if tap is near the scanner line and an item is close to the line
+                if (distanceToScanner < item.radius + SCANNER_WIDTH && Math.abs(tapTime - item.spawnTime - (ITEM_ACTIVE_DURATION_MS / 2)) < PERFECT_TAP_WINDOW_MS * 2) {
+                    // More precise check if scanner is actually overlapping item vertically when line is there
+                    if (scannerX >= item.x - item.radius && scannerX <= item.x + item.radius &&
+                        tapTime >= item.spawnTime && tapTime <= item.spawnTime + ITEM_ACTIVE_DURATION_MS) {
+
+                        if (item.type === 'evidence') {
+                            score += SCORE_PER_EVIDENCE + (combo * COMBO_MULTIPLIER_BONUS);
+                            combo++;
+                            addTapFeedback(item.x, item.y, `+${SCORE_PER_EVIDENCE + ((combo-1) * COMBO_MULTIPLIER_BONUS)}`, EVIDENCE_COLOR, tapTime);
+                            // Optional: bonus for perfect timing
+                            const timingAccuracy = Math.abs(tapTime - (item.spawnTime + BEAT_INTERVAL)); // Assuming items should be tapped ON a beat after spawn
+                            if(timingAccuracy < PERFECT_TAP_WINDOW_MS / 2) {
+                                score += 50; // Perfect timing bonus
+                                addTapFeedback(item.x, item.y - 20, `Perfect! +50`, SCANNER_COLOR, tapTime);
+                            }
+
+                        } else { // Distractor
+                            score += PENALTY_FOR_DISTRACTOR;
+                            combo = 0; // Reset combo
+                            lives--;
+                            addTapFeedback(item.x, item.y, `${PENALTY_FOR_DISTRACTOR}`, DISTRACTOR_COLOR, tapTime);
+                        }
+                        items.splice(i, 1); // Remove item
+                        itemHit = true;
+                        break; // Process one item per tap
+                    }
+                }
             }
 
-            draw(); // Draw all game elements
+            if (!itemHit) {
+                // Optional: Penalty for tapping nothing, or just do nothing
+                // combo = 0;
+                // addTapFeedback(scannerX, screenHeight / 2, 'Miss!', '#FFAAAA', tapTime);
+            }
 
-            animationFrameId = requestAnimationFrame(gameLoop);
+            if (lives <= 0) {
+                gameOver();
+            }
         }
 
-        // --- Game State Management ---
-        function startGame() {
-            if (gameRunning) return; // Prevent multiple starts
+        function addTapFeedback(x, y, text, color, time) {
+            tapFeedback.push({ x, y, text, color, spawnTime: time, alpha: 1 });
+        }
 
-            gameRunning = true;
-            localStorage.setItem('rhythmJumperPlayedOnce', 'true');
-            score = 0;
-            obstacleSpeed = initialObstacleSpeed;
-            obstacles = [];
+        // --- Item Spawning & Management ---
+        function spawnItem(currentTime) {
+            if (Math.random() > ITEM_SPAWN_CHANCE_PER_BEAT) return;
 
-            // Reset player position and state
-            player.y = screenHeight - player.height - actualGroundHeight;
-            player.velocityY = 0;
-            player.isJumping = false;
+            const type = Math.random() < DISTRACTOR_SPAWN_CHANCE ? 'distractor' : 'evidence';
+            const x = getRandom(ITEM_RADIUS * 2, screenWidth - ITEM_RADIUS * 2);
+            const y = getRandom(ITEM_RADIUS * 2, screenHeight - ITEM_RADIUS * 2);
 
-            lastBeatTime = performance.now();
-            lastSpeedIncreaseTime = performance.now();
+            // Avoid spawning too close to existing items (simple check)
+            for (const existingItem of items) {
+                const dist = Math.hypot(existingItem.x - x, existingItem.y - y);
+                if (dist < ITEM_RADIUS * 4) return; // Too close, skip spawn this time
+            }
 
-            if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
+            items.push({
+                x, y,
+                radius: ITEM_RADIUS,
+                type,
+                color: type === 'evidence' ? EVIDENCE_COLOR : DISTRACTOR_COLOR,
+                spawnTime: currentTime,
+                alpha: 0 // Start invisible, fade in
+            });
+        }
+
+        function updateItems(currentTime, deltaTime) {
+            for (let i = items.length - 1; i >= 0; i--) {
+                const item = items[i];
+
+                // Fade in
+                if (item.alpha < 1) {
+                    item.alpha += (deltaTime / (BEAT_INTERVAL / 2))); // Fade in over half a beat
+                    if (item.alpha > 1) item.alpha = 1;
+                }
+
+                // Check for expiration
+                if (currentTime > item.spawnTime + ITEM_ACTIVE_DURATION_MS) {
+                    if (item.type === 'evidence') {
+                        score += PENALTY_FOR_MISS;
+                        combo = 0;
+                        lives--;
+                        addTapFeedback(item.x, item.y, 'Missed!', DISTRACTOR_COLOR, currentTime);
+                    }
+                    items.splice(i, 1);
+                }
+            }
+            if (lives <= 0 && gameRunning) {
+                 gameOver();
+            }
+        }
+
+        // --- Scanner Logic ---
+        function updateScanner(deltaTime) {
+            scannerX += SCANNER_SPEED_PIXELS_PER_MS * deltaTime * scannerDirection;
+
+            if (scannerX - SCANNER_WIDTH / 2 > screenWidth) {
+                scannerX = screenWidth - SCANNER_WIDTH / 2;
+                scannerDirection = -1;
+            } else if (scannerX + SCANNER_WIDTH / 2 < 0) {
+                scannerX = SCANNER_WIDTH / 2;
+                scannerDirection = 1;
+            }
+        }
+
+        // --- Drawing Functions ---
+        function drawBackground() {
+            // Could add a subtle grid or "scanline" effect here later
+            ctx.fillStyle = '#181818';
+            ctx.fillRect(0, 0, screenWidth, screenHeight);
+        }
+
+        function drawScanner() {
+            ctx.fillStyle = SCANNER_COLOR;
+            ctx.fillRect(scannerX - SCANNER_WIDTH / 2, 0, SCANNER_WIDTH, screenHeight);
+
+            // Pulse effect for scanner based on beat
+            const timeSinceLastBeat = performance.now() - lastBeatTime;
+            const pulseProgress = Math.min(1, timeSinceLastBeat / BEAT_INTERVAL);
+            const pulseAlpha = Math.sin(pulseProgress * Math.PI) * 0.3; // Sine wave for smooth pulse
+
+            ctx.fillStyle = `rgba(0, 255, 255, ${pulseAlpha})`;
+            ctx.fillRect(scannerX - SCANNER_WIDTH * 2, 0, SCANNER_WIDTH * 4, screenHeight);
+        }
+
+        function drawItems(currentTime) {
+            items.forEach(item => {
+                const age = currentTime - item.spawnTime;
+                const pulsate = Math.sin(age / (BEAT_INTERVAL/2) * Math.PI) * 0.2 + 0.8; // 0.8 to 1.0 scale
+                const currentRadius = item.radius * pulsate * item.alpha;
+
+                ctx.beginPath();
+                ctx.arc(item.x, item.y, currentRadius, 0, Math.PI * 2);
+                ctx.fillStyle = item.color.replace(/, [0-9\.]+\)/, `, ${item.alpha * (item.type === 'evidence' ? 0.8 : 0.6)})`); // Adjust base alpha
+                ctx.fill();
+
+                // Outline to indicate "active" or "perfect tap" window (conceptual)
+                const timeToPerfect = item.spawnTime + BEAT_INTERVAL - currentTime; // Example: perfect tap is on the beat after spawn
+                if(item.type === 'evidence' && timeToPerfect > 0 && timeToPerfect < PERFECT_TAP_WINDOW_MS * 1.5) {
+                    ctx.strokeStyle = `rgba(255, 255, 0, ${0.5 * item.alpha * (1 - timeToPerfect / (PERFECT_TAP_WINDOW_MS * 1.5))})`; // Fading yellow
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                }
+            });
+        }
+
+        function drawUI() {
+            ctx.fillStyle = '#E0E0E0';
+            const fontSize = Math.max(18, screenWidth * 0.025);
+            ctx.font = `${fontSize}px 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`;
+            ctx.textAlign = 'left';
+            ctx.fillText(`Score: ${score}`, 20, fontSize * 1.5);
+            ctx.fillText(`Lives: ${lives}`, 20, fontSize * 3);
+
+            ctx.textAlign = 'right';
+            ctx.fillText(`High Score: ${highScore}`, screenWidth - 20, fontSize * 1.5);
+            if (combo > 1) {
+                ctx.fillStyle = SCANNER_COLOR;
+                ctx.fillText(`Combo: x${combo}`, screenWidth - 20, fontSize * 3);
+            }
+        }
+
+        function drawTapFeedback(currentTime) {
+            for (let i = tapFeedback.length - 1; i >= 0; i--) {
+                const fb = tapFeedback[i];
+                const age = currentTime - fb.spawnTime;
+                const fadeDuration = 800; // 0.8 seconds
+
+                if (age > fadeDuration) {
+                    tapFeedback.splice(i, 1);
+                    continue;
+                }
+
+                fb.alpha = 1 - (age / fadeDuration);
+                const yPos = fb.y - (age / 20); // Text floats up
+
+                ctx.font = `bold ${Math.max(16, screenWidth*0.02)}px Arial`;
+                ctx.fillStyle = fb.color.replace(/, [0-9\.]+\)/, `, ${fb.alpha})`); // Use feedback's own alpha
+                ctx.textAlign = 'center';
+                ctx.fillText(fb.text, fb.x, yPos);
+            }
+        }
+
+        function drawMessages(mainText, subText1, subText2 = "") {
+            ctx.fillStyle = 'rgba(10, 10, 10, 0.75)'; // Dark overlay
+            ctx.fillRect(0, 0, screenWidth, screenHeight);
+
+            ctx.fillStyle = '#E0E0E0';
+            ctx.textAlign = 'center';
+
+            const mainFontSize = Math.max(30, screenWidth * 0.06);
+            const subFontSize = Math.max(18, screenWidth * 0.035);
+
+            ctx.font = `bold ${mainFontSize}px 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`;
+            ctx.fillText(mainText, screenWidth / 2, screenHeight / 2 - mainFontSize * 0.8);
+
+            ctx.font = `${subFontSize}px 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`;
+            ctx.fillText(subText1, screenWidth / 2, screenHeight / 2 + subFontSize);
+            if (subText2) {
+                ctx.fillText(subText2, screenWidth / 2, screenHeight / 2 + subFontSize * 2.5);
+            }
+        }
+
+        // --- Game Loop & State ---
+        let lastTime = 0;
+        function gameLoop(currentTime) {
+            if (!gameRunning) {
+                if (lives <= 0) drawMessages("Game Over!", `Final Score: ${score}`, "Tap to Restart");
+                return;
             }
             animationFrameId = requestAnimationFrame(gameLoop);
+
+            const deltaTime = currentTime - lastTime;
+            lastTime = currentTime;
+
+            // Beat tracking
+            if (currentTime - lastBeatTime >= BEAT_INTERVAL) {
+                lastBeatTime = currentTime - ((currentTime - lastBeatTime) % BEAT_INTERVAL); // Align to beat grid
+                beatCount++;
+                spawnItem(currentTime); // Spawn items on the beat
+                // Potentially increase difficulty on certain beat counts
+                if (beatCount > 0 && beatCount % 20 === 0) { // Every 20 beats
+                    // SCANNER_SPEED_PIXELS_PER_MS *= 1.05; // Example: increase speed
+                    // ITEM_SPAWN_CHANCE_PER_BEAT = Math.min(0.9, ITEM_SPAWN_CHANCE_PER_BEAT + 0.05);
+                }
+            }
+
+            updateScanner(deltaTime);
+            updateItems(currentTime, deltaTime);
+            // checkCollisions() is integrated into handleTap for this game type
+
+            draw(); // Draw all game elements
+            drawTapFeedback(currentTime);
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, screenWidth, screenHeight); // Ensure clean slate
+            drawBackground();
+            drawScanner();
+            drawItems(performance.now()); // Use current time for item animations
+            drawUI();
+        }
+
+        function startGame() {
+            score = 0;
+            combo = 0;
+            lives = INITIAL_LIVES;
+            items = [];
+            tapFeedback = [];
+            beatCount = 0;
+            // Reset scanner speed and item spawn chance if they change during game
+            // SCANNER_SPEED_PIXELS_PER_MS = 0.15;
+            // ITEM_SPAWN_CHANCE_PER_BEAT = 0.6;
+
+
+            scannerX = SCANNER_WIDTH / 2;
+            scannerDirection = 1;
+
+            lastBeatTime = performance.now();
+            lastTime = performance.now();
+            gameRunning = true;
+
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            gameLoop(performance.now());
         }
 
         function gameOver() {
             gameRunning = false;
-            if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
-            }
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
 
             if (score > highScore) {
                 highScore = score;
-                localStorage.setItem('rhythmJumperHighScore', highScore);
+                localStorage.setItem('evidenceLockdownHighScore', highScore);
             }
-            drawGameOverMessage(); // Explicitly draw game over message
-            // console.log("Game Over! Score:", score, "High Score:", highScore);
+            // Game over message is drawn in the gameLoop's !gameRunning check or by resizeCanvas
+            draw(); // Final draw of game state
+            drawMessages("Game Over!", `Final Score: ${score}`, "Tap to Restart");
         }
 
         // --- Initialization ---
         function init() {
-            window.addEventListener('resize', resizeCanvas); // Adjust canvas on window resize
-            resizeCanvas(); // Initial resize and draw start message
-            // drawStartMessage() is called inside resizeCanvas if !gameRunning
+            resizeCanvas(); // Set initial size and draw start message
+            window.addEventListener('resize', resizeCanvas);
+            canvas.addEventListener('mousedown', handleTap);
+            canvas.addEventListener('touchstart', handleTap, { passive: false });
+
+            // Initial "Tap to Start" message
+            drawMessages("Evidence Lockdown", "Tap Screen to Start Scan", `High Score: ${highScore}`);
         }
 
-        // Start the initialization process
         init();
     </script>
 </body>
