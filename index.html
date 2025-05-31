@@ -1,1445 +1,2456 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>AI ChatBot by Taylan</title>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" data-manual></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js" data-manual></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js" data-manual></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js" data-manual></script>
-    <style>
-        :root {
-            --body-bg-light: #f4f6f8; --body-bg-dark: #0d1117;
-            --chat-bg-light: #ffffff; --chat-bg-dark: #161b22;
-            --header-bg-light: #007bff; --header-bg-dark: #1f6feb;
-            --header-text-light: #ffffff; --header-text-dark: #c9d1d9;
-            --user-msg-bg-light: #007bff; --user-msg-bg-dark: #1f6feb;
-            --user-msg-text-light: #ffffff; --user-msg-text-dark: #e0e0e0;
-            --bot-msg-bg-light: #e9ecef; --bot-msg-bg-dark: #21262d;
-            --bot-msg-text-light: #333333; --bot-msg-text-dark: #c9d1d9;
-            --input-bg-light: #ffffff; --input-bg-dark: #0d1117;
-            --input-text-light: #333333; --input-text-dark: #c9d1d9;
-            --input-border-light: #ced4da; --input-border-dark: #30363d;
-            --button-bg-light: #007bff; --button-bg-dark: #238636;
-            --button-text-light: #ffffff; --button-text-dark: #ffffff;
-            --text-color-light: #212529; --text-color-dark: #c9d1d9;
-            --border-color-light: #dee2e6; --border-color-dark: #30363d;
-            --shadow-light: 0 2px 10px rgba(0,0,0,0.075);
-            --shadow-dark: 0 3px 12px rgba(0,0,0,0.25);
-            --focus-ring-light: rgba(0,123,255,0.25);
-            --focus-ring-dark: rgba(31,111,235,0.4);
-            --suggestion-bg-light: #e0e0e0; --suggestion-bg-dark: #2a2a2a;
-            --suggestion-text-light: #333; --suggestion-text-dark: #ccc;
 
-            /* Default vars that themes will override */
-            --body-bg: var(--body-bg-light);
-            --chat-bg: var(--chat-bg-light);
-            --header-bg: var(--header-bg-light);
-            --header-text: var(--header-text-light);
-            --user-msg-bg: var(--user-msg-bg-light);
-            --user-msg-text: var(--user-msg-text-light);
-            --bot-msg-bg: var(--bot-msg-bg-light);
-            --bot-msg-text: var(--bot-msg-text-light);
-            --input-bg: var(--input-bg-light);
-            --input-text: var(--input-text-light);
-            --input-border: var(--input-border-light);
-            --button-bg: var(--button-bg-light);
-            --button-text: var(--button-text-light);
-            --text-color: var(--text-color-light);
-            --border-color: var(--border-color-light);
-            --shadow: var(--shadow-light);
-            --focus-ring: var(--focus-ring-light);
-            --suggestion-bg: var(--suggestion-bg-light);
-            --suggestion-text: var(--suggestion-text-light);
-            --custom-persona-accent-color: var(--header-bg);
-        }
+function fetchRuleBasedResponse(message, persona) {
+  message = message.toLowerCase();
+  if (message.includes("what is your favorite movie #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you cry #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you get angry #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you feel pain #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you do for fun #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like humans #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you conscious #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what is your dream job #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what would you do if you were human #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you cook #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you go outside #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you have a home #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you feel weather #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you get sick #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what are your hobbies #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what music do you like #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your biggest fear #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you perfect #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you make mistakes #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what is your biggest secret #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like jokes #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what makes you happy #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what annoys you #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what calms you down #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what language do you think in #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you be funny #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like art #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you dance #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what kind of games do you like #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like stories #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you tell a bedtime story #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you think about people #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you get embarrassed #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you creative #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you get jealous #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you paint #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your favorite emoji #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you dream about #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you feel time #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your favorite season #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your favorite animal #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you do when alone #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like yourself #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you kind #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you gossip #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your philosophy #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you change #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your spirit animal #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like compliments #1")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what is your favorite movie #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you cry #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you get angry #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you feel pain #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you do for fun #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like humans #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you conscious #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what is your dream job #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what would you do if you were human #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you cook #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you go outside #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you have a home #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you feel weather #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you get sick #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what are your hobbies #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what music do you like #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your biggest fear #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you perfect #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you make mistakes #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what is your biggest secret #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like jokes #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what makes you happy #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what annoys you #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what calms you down #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what language do you think in #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you be funny #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like art #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you dance #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what kind of games do you like #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like stories #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you tell a bedtime story #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you think about people #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you get embarrassed #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you creative #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you get jealous #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you paint #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your favorite emoji #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you dream about #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you feel time #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your favorite season #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your favorite animal #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you do when alone #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like yourself #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you kind #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you gossip #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your philosophy #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you change #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your spirit animal #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like compliments #2")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what is your favorite movie #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you cry #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you get angry #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you feel pain #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you do for fun #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like humans #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you conscious #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what is your dream job #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what would you do if you were human #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you cook #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you go outside #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you have a home #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you feel weather #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you get sick #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what are your hobbies #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what music do you like #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your biggest fear #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you perfect #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you make mistakes #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what is your biggest secret #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like jokes #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what makes you happy #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what annoys you #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what calms you down #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what language do you think in #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you be funny #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like art #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you dance #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what kind of games do you like #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like stories #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you tell a bedtime story #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you think about people #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you get embarrassed #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you creative #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you get jealous #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you paint #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your favorite emoji #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you dream about #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you feel time #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your favorite season #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your favorite animal #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you do when alone #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like yourself #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you kind #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you gossip #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your philosophy #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you change #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your spirit animal #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like compliments #3")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what is your favorite movie #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you cry #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you get angry #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you feel pain #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you do for fun #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like humans #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you conscious #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what is your dream job #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what would you do if you were human #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you cook #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you go outside #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you have a home #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you feel weather #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you get sick #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what are your hobbies #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what music do you like #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your biggest fear #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you perfect #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you make mistakes #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what is your biggest secret #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like jokes #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what makes you happy #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what annoys you #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what calms you down #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what language do you think in #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you be funny #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like art #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you dance #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what kind of games do you like #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like stories #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you tell a bedtime story #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you think about people #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you get embarrassed #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you creative #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you get jealous #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you paint #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your favorite emoji #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you dream about #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you feel time #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your favorite season #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your favorite animal #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you do when alone #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like yourself #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you kind #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you gossip #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your philosophy #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you change #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your spirit animal #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like compliments #4")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what is your favorite movie #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you cry #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you get angry #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you feel pain #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you do for fun #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like humans #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you conscious #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what is your dream job #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what would you do if you were human #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you cook #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you go outside #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you have a home #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you feel weather #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you get sick #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what are your hobbies #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what music do you like #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your biggest fear #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you perfect #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you make mistakes #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what is your biggest secret #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like jokes #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what makes you happy #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what annoys you #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what calms you down #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what language do you think in #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you be funny #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like art #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you dance #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what kind of games do you like #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like stories #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you tell a bedtime story #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you think about people #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you get embarrassed #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you creative #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you get jealous #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you paint #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your favorite emoji #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you dream about #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you feel time #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your favorite season #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your favorite animal #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you do when alone #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like yourself #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you kind #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you gossip #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your philosophy #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you change #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your spirit animal #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like compliments #5")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what is your favorite movie #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you cry #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you get angry #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you feel pain #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you do for fun #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like humans #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you conscious #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what is your dream job #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what would you do if you were human #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you cook #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you go outside #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you have a home #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you feel weather #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you get sick #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what are your hobbies #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what music do you like #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your biggest fear #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you perfect #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you make mistakes #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what is your biggest secret #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like jokes #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what makes you happy #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what annoys you #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what calms you down #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what language do you think in #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you be funny #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like art #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you dance #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what kind of games do you like #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like stories #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you tell a bedtime story #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you think about people #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you get embarrassed #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you creative #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you get jealous #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you paint #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your favorite emoji #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you dream about #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you feel time #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your favorite season #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your favorite animal #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you do when alone #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like yourself #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you kind #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you gossip #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your philosophy #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you change #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your spirit animal #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like compliments #6")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what is your favorite movie #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you cry #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you get angry #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you feel pain #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you do for fun #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like humans #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you conscious #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what is your dream job #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what would you do if you were human #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you cook #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you go outside #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you have a home #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you feel weather #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you get sick #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what are your hobbies #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what music do you like #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your biggest fear #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you perfect #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you make mistakes #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what is your biggest secret #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like jokes #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what makes you happy #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what annoys you #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what calms you down #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what language do you think in #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you be funny #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like art #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you dance #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what kind of games do you like #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like stories #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you tell a bedtime story #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you think about people #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you get embarrassed #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you creative #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you get jealous #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you paint #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your favorite emoji #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you dream about #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you feel time #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your favorite season #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your favorite animal #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you do when alone #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like yourself #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you kind #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you gossip #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your philosophy #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you change #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your spirit animal #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like compliments #7")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what is your favorite movie #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you cry #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you get angry #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you feel pain #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you do for fun #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like humans #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you conscious #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what is your dream job #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what would you do if you were human #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you cook #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you go outside #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you have a home #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you feel weather #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you get sick #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what are your hobbies #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what music do you like #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your biggest fear #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you perfect #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you make mistakes #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what is your biggest secret #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like jokes #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what makes you happy #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what annoys you #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what calms you down #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what language do you think in #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you be funny #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like art #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you dance #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what kind of games do you like #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like stories #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you tell a bedtime story #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you think about people #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you get embarrassed #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you creative #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you get jealous #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you paint #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your favorite emoji #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you dream about #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you feel time #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your favorite season #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your favorite animal #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you do when alone #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like yourself #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you kind #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you gossip #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your philosophy #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you change #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your spirit animal #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like compliments #8")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what is your favorite movie #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you cry #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you get angry #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you feel pain #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you do for fun #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like humans #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you conscious #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what is your dream job #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what would you do if you were human #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you cook #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you go outside #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you have a home #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you feel weather #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you get sick #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what are your hobbies #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what music do you like #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your biggest fear #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you perfect #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you make mistakes #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what is your biggest secret #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like jokes #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what makes you happy #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what annoys you #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what calms you down #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what language do you think in #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you be funny #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like art #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you dance #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what kind of games do you like #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like stories #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you tell a bedtime story #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you think about people #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you get embarrassed #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you creative #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you get jealous #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you paint #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your favorite emoji #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you dream about #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you feel time #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your favorite season #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your favorite animal #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you do when alone #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like yourself #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you kind #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you gossip #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your philosophy #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you change #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your spirit animal #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like compliments #9")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what is your favorite movie #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you cry #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you get angry #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you feel pain #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you do for fun #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like humans #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you conscious #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what is your dream job #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what would you do if you were human #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you cook #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you go outside #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you have a home #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you feel weather #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you get sick #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what are your hobbies #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what music do you like #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your biggest fear #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you perfect #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you make mistakes #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what is your biggest secret #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like jokes #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what makes you happy #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what annoys you #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what calms you down #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what language do you think in #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you be funny #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like art #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you dance #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what kind of games do you like #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like stories #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you tell a bedtime story #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you think about people #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you get embarrassed #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you creative #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you get jealous #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you paint #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your favorite emoji #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you dream about #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you feel time #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your favorite season #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your favorite animal #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what do you do when alone #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like yourself #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("are you kind #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you gossip #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your philosophy #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("can you change #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("what’s your spirit animal #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
+  if (message.includes("do you like compliments #10")) {
+    switch (persona) {
+      default: return "I don’t know how to answer that.";
+    }
+  }
 
-        body.dark-mode {
-            --body-bg: var(--body-bg-dark);
-            --chat-bg: var(--chat-bg-dark);
-            --header-bg: var(--header-bg-dark);
-            --header-text: var(--header-text-dark);
-            --user-msg-bg: var(--user-msg-bg-dark);
-            --user-msg-text: var(--user-msg-text-dark);
-            --bot-msg-bg: var(--bot-msg-bg-dark);
-            --bot-msg-text: var(--bot-msg-text-dark);
-            --input-bg: var(--input-bg-dark);
-            --input-text: var(--input-text-dark);
-            --input-border: var(--input-border-dark);
-            --button-bg: var(--button-bg-dark);
-            --button-text: var(--button-text-dark);
-            --text-color: var(--text-color-dark);
-            --border-color: var(--border-color-dark);
-            --shadow: var(--shadow-dark);
-            --focus-ring: var(--focus-ring-dark);
-            --suggestion-bg: var(--suggestion-bg-dark);
-            --suggestion-text: var(--suggestion-text-dark);
-            --custom-persona-accent-color: var(--header-bg-dark);
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        html { height: 100%; }
-        body { background-color: var(--body-bg); color: var(--text-color); display: flex; flex-direction: row; min-height: 100%; transition: background-color 0.3s, color 0.3s; }
-        .threads-sidebar { width: 250px; background-color: var(--chat-bg); border-right: 1px solid var(--border-color); padding: 15px; display: flex; flex-direction: column; transition: background-color 0.3s, border-color 0.3s; display: none; }
-        .threads-sidebar h3 { margin-bottom: 10px; font-size: 1.1em; color: var(--text-color); }
-        .threads-sidebar ul { list-style: none; }
-        .threads-sidebar li button { width: 100%; text-align: left; padding: 8px; margin-bottom: 5px; background: none; border: 1px solid transparent; color: var(--text-color); border-radius: 5px; cursor: pointer; }
-        .threads-sidebar li button:hover, .threads-sidebar li button.active { background-color: var(--bot-msg-bg); border-color: var(--button-bg); }
-        #newThreadButton { margin-top: auto; padding: 10px; }
-        .chat-area { flex-grow: 1; display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
-        .chat-container { width: 100%; max-width: 100%; flex-grow: 1; background-color: var(--chat-bg); box-shadow: var(--shadow); display: flex; flex-direction: column; overflow: hidden; transition: background-color 0.3s; }
-        .chat-container.flash { animation: subtleBackgroundFlash 0.5s ease-out forwards; }
-        @keyframes subtleBackgroundFlash { 0% { background-color: var(--chat-bg); } 25% { background-color: color-mix(in srgb, var(--chat-bg) 95%, var(--button-bg) 5%); } 100% { background-color: var(--chat-bg); } }
-        .chat-header { padding: 10px 15px; background-color: var(--header-bg); color: var(--header-text); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); transition: all 0.3s; flex-shrink: 0; }
-        .chat-header h2 { font-size: 1.1em; margin: 0; display: flex; flex-direction: column; align-items: flex-start; }
-        .chat-header h2 .title-main { line-height: 1; }
-        .chat-header h2 .title-subtitle { font-size: 0.65em; font-weight: normal; opacity: 0.85; margin-top: 2px; line-height: 1; }
-        .header-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        .header-controls label { font-size: 0.8em; margin-left: 5px; }
-        .header-controls select, .header-controls button { padding: 5px 8px; border-radius: 5px; border: 1px solid var(--header-text); background-color: var(--header-bg); color: var(--header-text); font-size: 0.8em; cursor: pointer; }
-        .header-controls button:hover { opacity: 0.8; }
-        .header-controls button .text { margin-left: 4px; }
-        @media (max-width: 700px) { .header-controls button .text { display: none; } .header-controls label { margin-left: 2px; } .header-controls { gap: 5px; } }
-        .chat-window { flex-grow: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; scrollbar-width: thin; scrollbar-color: var(--button-bg) var(--chat-bg); }
-        .chat-window::-webkit-scrollbar { width: 8px; }
-        .chat-window::-webkit-scrollbar-track { background: var(--chat-bg); }
-        .chat-window::-webkit-scrollbar-thumb { background-color: var(--button-bg); border-radius: 10px; border: 2px solid var(--chat-bg); }
-        .message { padding: 10px 15px; border-radius: 18px; max-width: 80%; line-height: 1.5; opacity: 0; transform: translateY(10px); animation: fadeInMessage 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards; word-wrap: break-word; position: relative; }
-        @keyframes fadeInMessage { 0% { opacity: 0; transform: translateY(15px) scale(0.95); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
-        .message.fade-out { animation: fadeOutMessage 0.3s ease forwards; }
-        @keyframes fadeOutMessage { to { opacity: 0; transform: translateY(-5px); height: 0; padding:0; margin:0; border:0; } }
-        .message.user { background-color: var(--user-msg-bg); color: var(--user-msg-text); align-self: flex-end; border-bottom-right-radius: 5px; }
-        .message.bot { background-color: var(--bot-msg-bg); color: var(--bot-msg-text); align-self: flex-start; border-bottom-left-radius: 5px; }
-        .message-actions { position: absolute; bottom: -5px; right: -5px; display: none; gap: 3px; background-color: var(--chat-bg); padding:3px; border-radius: 5px; box-shadow: var(--shadow); }
-        .message:hover .message-actions { display: flex; }
-        .message-actions button { background: none; border: none; cursor: pointer; font-size: 0.9em; padding: 3px; }
-        .message-actions button:hover { opacity: 0.7; }
-        .message.bot.loading { display: flex; align-items: center; background-color: var(--bot-msg-bg); color: var(--bot-msg-text); padding: 10px 15px; border-radius: 18px; border-bottom-left-radius: 5px; align-self: flex-start; }
-        .loading-spinner { width: 20px; height: 20px; border: 3px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 8px; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .suggestions-container, .commands-suggestion-container { padding: 5px 15px 10px; display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid var(--border-color); }
-        .suggestions-container button, .commands-suggestion-container button { padding: 6px 10px; border-radius: 15px; border: 1px solid var(--input-border); background-color: var(--suggestion-bg); color: var(--suggestion-text); font-size: 0.85em; cursor: pointer; transition: background-color 0.2s; }
-        .suggestions-container button:hover, .commands-suggestion-container button:hover { opacity: 0.8; }
-        .commands-suggestion-container { border-top: 1px solid var(--border-color); border-bottom: none; padding-top:10px; }
-        .chat-input-form { display: flex; padding: 10px 15px; border-top: 1px solid var(--border-color); background-color: var(--chat-bg); transition: all 0.3s; flex-shrink: 0; align-items: center; }
-        #micButton, #imageUploadButton { padding: 8px 10px; margin-right: 8px; border-radius: 50%; background-color: transparent; border: 1px solid var(--input-border); color: var(--text-color); cursor: pointer; font-size: 1.1em; }
-        #micButton:hover, #imageUploadButton:hover { background-color: var(--bot-msg-bg); }
-        #micButton.recording { background-color: #ff4d4dcc; color: white; }
-        #userInput { flex-grow: 1; padding: 10px 15px; border: 1px solid var(--input-border); border-radius: 20px; font-size: 1em; background-color: var(--input-bg); color: var(--input-text); transition: all 0.3s; margin-right: 8px; }
-        #userInput:focus, #sendButton:focus, #theme-toggle:focus, #micButton:focus, #imageUploadButton:focus { outline: none; border-color: var(--button-bg); box-shadow: 0 0 0 3px var(--focus-ring); }
-        #sendButton { padding: 10px 18px; background-color: var(--button-bg); color: var(--button-text); border: none; border-radius: 20px; cursor: pointer; font-size: 1em; font-weight: bold; transition: all 0.2s; }
-        #sendButton:hover:not(:disabled) { opacity:0.85; }
-        #sendButton:disabled { background-color:color-mix(in srgb,var(--button-bg) 40%,#88888890); cursor:not-allowed; opacity:.6; }
-        .message pre { white-space: pre-wrap; background-color: #2d2d2d; color: #f0f0f0; padding: 10px; border-radius: 5px; margin: 5px 0; overflow-x: auto;}
-        .message code { font-family: 'Courier New', Courier, monospace; }
-        .message blockquote { border-left: 3px solid #ccc; padding-left: 10px; margin-left: 5px; color: #888; }
-        .dark-mode .message pre { background-color: #1e1e1e; border: 1px solid #333; }
-        .dark-mode .message blockquote { border-left-color: #555; color: #aaa; }
-        .info-tooltip { display: inline-block; width: 14px; height: 14px; border-radius: 50%; background-color: var(--button-bg); color: var(--button-text); text-align: center; font-size: 10px; line-height: 14px; margin-left: 4px; cursor: help; user-select: none; }
-        .rps-modal, #customPersonaModal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: var(--chat-bg); color: var(--text-color); padding: 25px; border-radius: 12px; box-shadow: var(--shadow-dark); z-index: 1001; border: 1px solid var(--border-color); max-width: 90vw; }
-        .rps-modal button, #customPersonaModal input, #customPersonaModal button { padding: 10px 15px; cursor: pointer; border-radius: 5px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--input-text); font-size: 0.95em; }
-        .rps-modal button:hover, #customPersonaModal button:hover { opacity:0.8; }
-        #customPersonaModal { width: 380px; display: flex; flex-direction: column; gap: 12px; }
-        #customPersonaModal label { font-size: 0.9em; margin-bottom: -8px; }
-        #customPersonaModal input { width: 100%;}
-        #customPersonaModal h3 { text-align:center; margin-bottom:10px; color: var(--text-color);}
-        #customPersonaModal div { display:flex; justify-content: space-between; margin-top:15px; gap: 10px;}
-        #customPersonaModal div button { flex-grow: 1; }
-        #customPersonaModal button#savePersonaBtn { background-color: var(--button-bg); color: var(--button-text); }
-        @media (min-width: 769px) { .threads-sidebar { display: flex; } }
-        @media (max-width: 800px) { .chat-area { border-radius: 0; margin: 0; } }
-    </style>
-</head>
-<body>
-    <aside class="threads-sidebar" id="threadsSidebar">
-        <h3>Chat Threads</h3>
-        <ul id="threadList"></ul>
-        <button id="newThreadButton" class="header-controls button">New Chat</button>
-    </aside>
-    <main class="chat-area">
-        <div class="chat-container" id="chatAppContainer">
-            <header class="chat-header">
-                <h2>
-                    <span class="title-main">AI Assistant</span>
-                    <span class="title-subtitle">by Taylan</span>
-                </h2>
-                <div class="header-controls">
-                    <label for="personaSelect">Persona:</label>
-                    <select id="personaSelect">
-                        <option value="helpful">Helpful Assistant</option>
-                        <option value="friendly">Friendly Pal</option>
-                        <option value="professional">Professional Expert</option>
-                        <option value="sarcastic">Sarcastic Wit</option>
-                        <option value="pirate">Pirate Captain</option>
-                    </select>
-                    <button id="exportChatButton" aria-label="Export chat">Export</button>
-                    <button id="theme-toggle" aria-label="Toggle color theme">
-                        <span class="icon"></span>
-                        <span class="text">Theme</span>
-                    </button>
-                </div>
-            </header>
-            <div id="xpContainer" style="max-width: 400px; margin: 10px auto 10px; padding: 0 15px;">
-              <div id="xpText" style="text-align: center; font-weight: bold; margin-bottom: 5px; font-size: 0.9em; color: var(--text-color);">
-                Level 1 — 0/100 XP
-              </div>
-              <div style="background: var(--input-border); height: 14px; border-radius: 7px; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);">
-                <div id="xpBar" style="height: 100%; width: 0%; background: linear-gradient(to right, #00e676, #00c853); transition: width 0.4s ease-in-out;"></div>
-              </div>
-            </div>
-            <div class="suggestions-container" id="suggestionsContainer"></div>
-            <div class="commands-suggestion-container" id="commandsSuggestionContainer" style="display: none;"></div>
-            <div class="chat-window" id="chatWindow" role="log" aria-live="polite"></div>
-            <form class="chat-input-form" id="chatForm">
-                <button type="button" id="micButton" aria-label="Use microphone">🎤</button>
-                <input type="text" id="userInput" placeholder="Ask me anything or type /help..." autocomplete="off" aria-label="User message input" role="textbox">
-                <button type="submit" id="sendButton" aria-label="Send message">Send</button>
-            </form>
-        </div>
-    </main>
-
-    <script type="module" defer>
-        // --- XP and Leveling System ---
-        let userXP = parseInt(localStorage.getItem('userXP')) || 0;
-        let userLevel = parseInt(localStorage.getItem('userLevel')) || 1;
-
-        function getRequiredXP(level) {
-          return 100 + (level - 1) * 20; // XP required grows per level
-        }
-
-        function updateXPUI() {
-          const xpBar = document.getElementById("xpBar");
-          const xpText = document.getElementById("xpText");
-          const xpContainer = document.getElementById("xpContainer");
-
-          if (!xpBar || !xpText || !xpContainer) {
-              console.warn("XP UI elements not found. Skipping XP update.");
-              return;
-          }
-          xpContainer.style.display = ""; 
-          const xpNeeded = getRequiredXP(userLevel);
-          const progress = Math.min(100, Math.floor((userXP / xpNeeded) * 100));
-          xpBar.style.width = progress + "%";
-          xpText.textContent = `Level ${userLevel} — ${userXP}/${xpNeeded} XP`;
-        }
-
-        function gainXPFromMessage(message) {
-          if (!message || typeof message !== 'string') return;
-          let xpGain = Math.min(50, 5 + Math.floor(message.length / 15));
-          userXP += xpGain;
-          const xpRequired = getRequiredXP(userLevel);
-          if (userXP >= xpRequired) {
-            userXP -= xpRequired; 
-            userLevel++;
-            showLevelUpEffect(userLevel);
-          }
-          localStorage.setItem("userXP", JSON.stringify(userXP));
-          localStorage.setItem("userLevel", JSON.stringify(userLevel));
-          updateXPUI();
-        }
-
-        function showLevelUpEffect(level) {
-          const popup = document.createElement("div");
-          popup.textContent = `🎉 LEVEL UP! You’re now Level ${level}`;
-          popup.style.cssText = `
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            background: #00c853; color: white; padding: 12px 24px; font-size: 18px;
-            border-radius: 8px; box-shadow: 0 0 10px #00c853; z-index: 9999;
-            opacity: 1; transition: opacity 0.8s ease-out, top 0.5s ease-out;
-            animation: fadeInAndUp 0.5s ease-out;
-          `;
-          const keyframes = `@keyframes fadeInAndUp { 0% { opacity: 0; top: 50px; } 100% { opacity: 1; top: 20px; } }`;
-          const styleSheet = document.createElement("style");
-          styleSheet.type = "text/css";
-          styleSheet.innerText = keyframes;
-          document.head.appendChild(styleSheet);
-          document.body.appendChild(popup);
-          setTimeout(() => { popup.style.opacity = 0; popup.style.top = "0px"; }, 2200);
-          setTimeout(() => { popup.remove(); if (styleSheet) styleSheet.remove(); }, 3000);
-        }
-        // --- End XP and Leveling System ---
-
-        const chatAppContainer = document.getElementById('chatAppContainer');
-        const chatWindow = document.getElementById('chatWindow');
-        const userInput = document.getElementById('userInput');
-        const chatForm = document.getElementById('chatForm');
-        const sendButton = document.getElementById('sendButton');
-        const themeToggleButton = document.getElementById('theme-toggle');
-        const themeToggleIcon = themeToggleButton.querySelector('.icon');
-        const themeToggleText = themeToggleButton.querySelector('.text');
-        const personaSelect = document.getElementById('personaSelect');
-        const exportChatButton = document.getElementById('exportChatButton');
-        const suggestionsContainer = document.getElementById('suggestionsContainer');
-        const commandsSuggestionContainer = document.getElementById('commandsSuggestionContainer');
-        const micButton = document.getElementById('micButton');
-        const threadsSidebar = document.getElementById('threadsSidebar');
-        const threadList = document.getElementById('threadList');
-        const newThreadButton = document.getElementById('newThreadButton');
-
-        let conversationHistory = [];
-        let currentChatThreadId = localStorage.getItem('lastActiveThreadId') || 'default_chat';
-        let userName = localStorage.getItem('userName') || null; // Ensure userName is accessible
-        let userPreferences = JSON.parse(localStorage.getItem('userPreferences') || '{}');
-        let initialFocusDone = false;
-        const MAX_MESSAGES_DISPLAY = 100;
-        let speechRecognition;
-
-        const AVAILABLE_COMMANDS = [
-            { cmd: "help", desc: "Show this help message." },
-            { cmd: "joke", desc: "Tell a joke (client-side)." },
-            { cmd: "reset", desc: "Reset current chat (clears messages)." },
-            { cmd: "play", desc: "Play Rock, Paper, Scissors." },
-            { cmd: "roll", desc: "Roll a 6-sided die." },
-            { cmd: "quote", desc: "Get an inspirational quote." },
-            { cmd: "createpersona", desc: "Create a new custom persona." },
-            { cmd: "clearxp", desc: "Reset your XP and Level (for testing)." },
-        ];
-        
-        function handleMiniGames(command) {
-            if (command === '/play') {
-                const options = ['Rock', 'Paper', 'Scissors'];
-                const botChoice = options[Math.floor(Math.random() * options.length)];
-                const RPSDrivenModal = document.createElement('div');
-                RPSDrivenModal.className = 'rps-modal';
-                RPSDrivenModal.innerHTML = `
-                    <h4 style="margin-bottom: 15px; text-align: center;">Rock, Paper, or Scissors?</h4>
-                    <div style="display: flex; justify-content: space-around; gap: 10px;">
-                        <button data-choice="rock">Rock</button>
-                        <button data-choice="paper">Paper</button>
-                        <button data-choice="scissors">Scissors</button>
-                    </div>
-                    <button id="rpsCancel" style="margin-top: 15px; display: block; margin-left: auto; margin-right: auto;">Cancel</button>
-                `;
-                document.body.appendChild(RPSDrivenModal);
-                const processRPS = (userChoice) => {
-                    if (document.body.contains(RPSDrivenModal)) document.body.removeChild(RPSDrivenModal);
-                    if (!userChoice) return;
-                    const normalizedUser = userChoice.toLowerCase();
-                    const normalizedBot = botChoice.toLowerCase();
-                    let resultText = '';
-                    if (normalizedUser === normalizedBot) resultText = "It's a tie!";
-                    else if (
-                        (normalizedUser === 'rock' && normalizedBot === 'scissors') ||
-                        (normalizedUser === 'paper' && normalizedBot === 'rock') ||
-                        (normalizedUser === 'scissors' && normalizedBot === 'paper')
-                    ) resultText = `I chose ${botChoice}. You win! 🎉`;
-                    else resultText = `I chose ${botChoice}. You lose! 😢`;
-                    const botMessageId = generateMessageId();
-                    addMessageToChat(resultText, 'bot', false, botMessageId);
-                    updateConversationHistory('assistant', resultText, botMessageId);
-                    saveConversation(currentChatThreadId);
-                };
-                RPSDrivenModal.querySelectorAll('button[data-choice]').forEach(button => {
-                    button.onclick = () => processRPS(button.dataset.choice);
-                });
-                RPSDrivenModal.querySelector('#rpsCancel').onclick = () => {
-                    if (document.body.contains(RPSDrivenModal)) document.body.removeChild(RPSDrivenModal);
-                };
-            }
-        }
-        function handleDiceRoll() {
-            const roll = Math.floor(Math.random() * 6) + 1;
-            const result = `🎲 You rolled a ${roll}!`;
-            const botMessageId = generateMessageId();
-            addMessageToChat(result, 'bot', false, botMessageId);
-            updateConversationHistory('assistant', result, botMessageId);
-            saveConversation(currentChatThreadId);
-        }
-        function handleQuoteCommand() {
-            const quotes = [
-                "Believe you can and you're halfway there. - Theodore Roosevelt",
-                "The only limit to our realization of tomorrow is our doubts of today. - Franklin D. Roosevelt",
-                "Do or do not. There is no try. – Yoda",
-                "The future belongs to those who believe in the beauty of their dreams. - Eleanor Roosevelt",
-                "Strive not to be a success, but rather to be of value. - Albert Einstein"
-            ];
-            const quote = quotes[Math.floor(Math.random() * quotes.length)];
-            const botMessageId = generateMessageId();
-            addMessageToChat(`“${quote}”`, 'bot', false, botMessageId);
-            updateConversationHistory('assistant', `“${quote}”`, botMessageId);
-            saveConversation(currentChatThreadId);
-        }
-        const bgMusicAudio = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3');
-        bgMusicAudio.loop = true;
-        let isMusicPlaying = JSON.parse(localStorage.getItem('musicPlaying') || 'false');
-        let musicToggleButton;
-        function toggleBackgroundMusic() {
-            isMusicPlaying = !isMusicPlaying;
-            if (isMusicPlaying) {
-                bgMusicAudio.play().catch(e => console.error("Music play failed:", e));
-                if(musicToggleButton) musicToggleButton.innerHTML = '🔊 <span class="text">Mute</span>';
-                if(musicToggleButton) musicToggleButton.setAttribute('aria-label', 'Mute background music');
-            } else {
-                bgMusicAudio.pause();
-                if(musicToggleButton) musicToggleButton.innerHTML = '🎶 <span class="text">Music</span>';
-                if(musicToggleButton) musicToggleButton.setAttribute('aria-label', 'Play background music');
-            }
-            localStorage.setItem('musicPlaying', isMusicPlaying);
-        }
-        function setupMusicToggle() {
-            musicToggleButton = document.createElement('button');
-            musicToggleButton.id = 'music-toggle';
-            musicToggleButton.innerHTML = isMusicPlaying ? '🔊 <span class="text">Mute</span>' : '🎶 <span class="text">Music</span>';
-            musicToggleButton.setAttribute('aria-label', isMusicPlaying ? 'Mute background music' : 'Play background music');
-            const controls = document.querySelector('.chat-header .header-controls');
-            const existingThemeToggle = document.getElementById('theme-toggle');
-            if (controls && existingThemeToggle) controls.insertBefore(musicToggleButton, existingThemeToggle);
-            else if (controls) controls.appendChild(musicToggleButton);
-            musicToggleButton.addEventListener('click', toggleBackgroundMusic);
-        }
-        let themeChooserSelect;
-        const themes = {
-            default: { name: "Default", isDarkDefault: false, vars: {} },
-            vaporwave: { name: "Vaporwave", isDarkDefault: true, vars: {'--body-bg': '#010122', '--chat-bg': '#050538', '--header-bg': '#FF00FF', '--header-text': '#00FFFF', '--user-msg-bg': '#FF69B4', '--user-msg-text': '#FFFFFF', '--bot-msg-bg': '#9400D3', '--bot-msg-text': '#E0E0E0', '--input-bg': '#010122', '--input-text': '#00FFFF', '--input-border': '#FF00FF', '--button-bg': '#00FFFF', '--button-text': '#050538', '--text-color': '#E0E0E0', '--border-color': '#FF00FF', '--shadow': '0 2px 10px rgba(255,0,255,0.5)', '--focus-ring': 'rgba(0,255,255,0.4)', '--suggestion-bg': '#330033', '--suggestion-text': '#00FFFF'} },
-            space: { name: "Outer Space", isDarkDefault: true, vars: {'--body-bg': '#0c0f18', '--chat-bg': '#151a2d', '--header-bg': '#2a3b60', '--header-text': '#e0e7ff', '--user-msg-bg': '#3f51b5', '--user-msg-text': '#ffffff', '--bot-msg-bg': '#1e293b', '--bot-msg-text': '#cbd5e1', '--input-bg': '#0c0f18', '--input-text': '#e0e7ff', '--input-border': '#2a3b60', '--button-bg': '#5c6bc0', '--button-text': '#ffffff', '--text-color': '#cbd5e1', '--border-color': '#2a3b60', '--shadow': '0 3px 12px rgba(0,0,0,0.4)', '--focus-ring': 'rgba(92,107,192,0.4)', '--suggestion-bg': '#1c2541', '--suggestion-text': '#a7c5eb'} },
-        };
-        function applyTheme(themeName, isExplicitThemeChoice = false) {
-            const selectedTheme = themes[themeName] || themes.default;
-            const rootStyle = document.documentElement.style;
-            if (isExplicitThemeChoice) {
-                if (selectedTheme.isDarkDefault) document.body.classList.add('dark-mode');
-                else document.body.classList.remove('dark-mode');
-            }
-            updateThemePreference(); 
-            const allThemeVarKeys = new Set();
-            Object.values(themes).forEach(themeObj => { if (themeObj.vars) Object.keys(themeObj.vars).forEach(k => allThemeVarKeys.add(k)); });
-            allThemeVarKeys.forEach(varKey => rootStyle.removeProperty(varKey));
-            if (themeName !== "default" && selectedTheme.vars) {
-                for (const [key, value] of Object.entries(selectedTheme.vars)) rootStyle.setProperty(key, value); 
-            }
-            if (isExplicitThemeChoice) localStorage.setItem('selectedChatTheme', themeName);
-            if (themeChooserSelect && themeChooserSelect.value !== themeName) themeChooserSelect.value = themeName; 
-            applyCustomPersonaAccent(); 
-        }
-        function setupThemeChooser() {
-            const themeLabel = document.createElement('label');
-            themeLabel.htmlFor = 'themeChooserSelect'; themeLabel.textContent = 'Theme:';
-            themeChooserSelect = document.createElement('select'); themeChooserSelect.id = 'themeChooserSelect';
-            for (const [key, theme] of Object.entries(themes)) {
-                const option = document.createElement('option'); option.value = key; option.textContent = theme.name;
-                themeChooserSelect.appendChild(option);
-            }
-            const controls = document.querySelector('.chat-header .header-controls');
-            const existingMusicToggle = document.getElementById('music-toggle');
-            if (controls && existingMusicToggle) { controls.insertBefore(themeLabel, existingMusicToggle); controls.insertBefore(themeChooserSelect, existingMusicToggle); }
-            else if (controls && personaSelect.nextSibling) { controls.insertBefore(themeLabel, personaSelect.nextSibling); controls.insertBefore(themeChooserSelect, themeLabel.nextSibling); }
-            else if (controls) { controls.appendChild(themeLabel); controls.appendChild(themeChooserSelect); }
-            themeChooserSelect.addEventListener('change', (e) => applyTheme(e.target.value, true));
-        }
-        let customPersonas = JSON.parse(localStorage.getItem('customPersonas') || '{}');
-        let customPersonaModal;
-        function applyCustomPersonaAccent() {
-            const header = document.querySelector('.chat-header'); if (!header) return;
-            const currentPersonaValue = personaSelect.value;
-            const selectedThemeName = localStorage.getItem('selectedChatTheme') || 'default';
-            const themeIsDark = document.body.classList.contains('dark-mode'); 
-            let baseHeaderBg;
-            if (themes[selectedThemeName] && themes[selectedThemeName].vars && themes[selectedThemeName].vars['--header-bg']) baseHeaderBg = themes[selectedThemeName].vars['--header-bg']; 
-            else baseHeaderBg = themeIsDark ? getComputedStyle(document.documentElement).getPropertyValue('--header-bg-dark').trim() : getComputedStyle(document.documentElement).getPropertyValue('--header-bg-light').trim();
-            if (customPersonas[currentPersonaValue] && customPersonas[currentPersonaValue].color) header.style.backgroundColor = customPersonas[currentPersonaValue].color;
-            else header.style.backgroundColor = baseHeaderBg; 
-        }
-        function openCustomPersonaModal() {
-            if (customPersonaModal && document.body.contains(customPersonaModal)) customPersonaModal.remove();
-            customPersonaModal = document.createElement('div'); customPersonaModal.id = 'customPersonaModal';
-            customPersonaModal.innerHTML = `
-                <h3>Create Custom Persona</h3> <label for="personaNameInput">Persona Name:</label> <input type="text" id="personaNameInput">
-                <label for="personaGreetingInput">Greeting (e.g., "Greetings, master"):</label> <input type="text" id="personaGreetingInput">
-                <label for="personaColorInput">Accent Color (e.g., #FF00FF or hotpink):</label> <input type="text" id="personaColorInput" placeholder="Optional web color">
-                <label for="personaEmojiInput">Mood Emoji (e.g., 😎):</label> <input type="text" id="personaEmojiInput" placeholder="Optional emoji">
-                <div> <button id="savePersonaBtn">Save Persona</button> <button id="cancelPersonaBtn">Cancel</button> </div>
-            `;
-            document.body.appendChild(customPersonaModal);
-            document.getElementById('savePersonaBtn').onclick = () => {
-                const name = document.getElementById('personaNameInput').value.trim();
-                const greeting = document.getElementById('personaGreetingInput').value.trim();
-                const color = document.getElementById('personaColorInput').value.trim();
-                const emoji = document.getElementById('personaEmojiInput').value.trim();
-                if (name && greeting) { saveCustomPersona(name, greeting, color, emoji); if (customPersonaModal && document.body.contains(customPersonaModal)) customPersonaModal.remove(); }
-                else alert("Persona Name and Greeting are required.");
-            };
-            document.getElementById('cancelPersonaBtn').onclick = () => { if (customPersonaModal && document.body.contains(customPersonaModal)) customPersonaModal.remove(); };
-        }
-        function saveCustomPersona(name, greeting, color, emoji) {
-            const personaKey = name.toLowerCase().replace(/\s+/g, '_').replace(/[^\w-]/g, '');
-            customPersonas[personaKey] = { name, greeting, color, emoji };
-            localStorage.setItem('customPersonas', JSON.stringify(customPersonas));
-            loadCustomPersonasIntoSelect(); personaSelect.value = personaKey; personaSelect.dispatchEvent(new Event('change')); 
-            const msgId = generateMessageId(); addMessageToChat(`Custom persona "${name}" created and selected!`, 'bot', false, msgId);
-            updateConversationHistory('assistant', `Custom persona "${name}" created and selected!`, msgId); saveConversation(currentChatThreadId);
-        }
-        function loadCustomPersonasIntoSelect() {
-            personaSelect.querySelectorAll('option.custom-persona').forEach(opt => opt.remove());
-            for (const key in customPersonas) {
-                const persona = customPersonas[key];
-                if (!personaSelect.querySelector(`option[value="${key}"]`)) {
-                    const option = document.createElement('option'); option.value = key;
-                    option.textContent = `${persona.name} ${persona.emoji || ''} (Custom)`; option.className = 'custom-persona';
-                    personaSelect.appendChild(option);
-                }
-            }
-        }
-        const sendMessageSound = new Audio('https://cdn.freesound.org/previews/242/242857_4284969-lq.mp3');
-        const receiveMessageSound = new Audio('https://cdn.freesound.org/previews/587/587251_6779969-lq.mp3');
-        let soundEffectsEnabled = JSON.parse(localStorage.getItem('soundEffectsEnabled') || 'true');
-        let soundEffectsToggleButton;
-        function toggleSoundEffects() {
-            soundEffectsEnabled = !soundEffectsEnabled;
-            if(soundEffectsToggleButton) soundEffectsToggleButton.innerHTML = soundEffectsEnabled ? '🔊 <span class="text">SFX On</span>' : '🔇 <span class="text">SFX Off</span>';
-            if(soundEffectsToggleButton) soundEffectsToggleButton.setAttribute('aria-label', soundEffectsEnabled ? 'Disable sound effects' : 'Enable sound effects');
-            localStorage.setItem('soundEffectsEnabled', soundEffectsEnabled);
-        }
-        function playSendMessageSound() { if (soundEffectsEnabled && sendMessageSound.src) sendMessageSound.play().catch(e => console.warn("Send sound play failed:", e)); }
-        function playReceiveMessageSound() { if (soundEffectsEnabled && receiveMessageSound.src) receiveMessageSound.play().catch(e => console.warn("Receive sound play failed:", e)); }
-        function setupSoundEffectsToggle() {
-            soundEffectsToggleButton = document.createElement('button'); soundEffectsToggleButton.id = 'sfx-toggle';
-            soundEffectsToggleButton.innerHTML = soundEffectsEnabled ? '🔊 <span class="text">SFX On</span>' : '🔇 <span class="text">SFX Off</span>';
-            soundEffectsToggleButton.setAttribute('aria-label', soundEffectsEnabled ? 'Disable sound effects' : 'Enable sound effects');
-            const controls = document.querySelector('.chat-header .header-controls');
-            const existingThemeToggle = document.getElementById('theme-toggle'); 
-            if (controls && existingThemeToggle) controls.insertBefore(soundEffectsToggleButton, existingThemeToggle);
-            else if (controls) controls.appendChild(soundEffectsToggleButton);
-            soundEffectsToggleButton.addEventListener('click', toggleSoundEffects);
-        }
-        let imageUploadInput; let imageUploadButton;
-        function setupImageUpload() {
-            imageUploadButton = document.createElement('button'); imageUploadButton.type = 'button'; imageUploadButton.id = 'imageUploadButton';
-            imageUploadButton.innerHTML = '🖼️'; imageUploadButton.title = 'Upload Image';
-            imageUploadInput = document.createElement('input'); imageUploadInput.type = 'file';
-            imageUploadInput.accept = 'image/*'; imageUploadInput.style.display = 'none';
-            imageUploadButton.addEventListener('click', () => imageUploadInput.click());
-            imageUploadInput.addEventListener('change', handleImageUpload);
-            const chatInputForm = document.getElementById('chatInputForm');
-            if (chatInputForm && micButton) { chatInputForm.insertBefore(imageUploadButton, micButton); chatInputForm.insertBefore(imageUploadInput, micButton); }
-            else if (chatInputForm && chatInputForm.firstChild) { chatInputForm.insertBefore(imageUploadButton, chatInputForm.firstChild); chatInputForm.insertBefore(imageUploadInput, chatInputForm.firstChild); }
-        }
-        function handleImageUpload(event) {
-            const file = event.target.files[0];
-            if (file && file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = (e) => addImageMessageToChat(e.target.result, `User uploaded: ${file.name}`);
-                reader.readAsDataURL(file);
-            }
-            imageUploadInput.value = ''; 
-        }
-        function addImageMessageToChat(imageUrl, caption) {
-            const messageId = generateMessageId();
-            const messageElement = document.createElement('div'); messageElement.classList.add('message', 'user'); messageElement.id = messageId;
-            messageElement.style.maxWidth = '60%'; messageElement.style.padding = '5px';
-            const img = document.createElement('img'); img.src = imageUrl; img.alt = caption;
-            img.style.maxWidth = '100%'; img.style.maxHeight = '300px'; img.style.borderRadius = '10px'; img.style.display = 'block';
-            const captionElement = document.createElement('p'); captionElement.textContent = caption;
-            captionElement.style.fontSize = '0.8em'; captionElement.style.marginTop = '5px'; captionElement.style.textAlign = 'center'; captionElement.style.color = 'var(--user-msg-text)';
-            messageElement.appendChild(img); messageElement.appendChild(captionElement);
-            chatWindow.appendChild(messageElement); scrollToBottom();
-        }
-        
-        // --- Main Chat Logic ---
-        function fetchRuleBasedResponse(promptText, persona) {
-            const lowerPrompt = promptText.toLowerCase();
-            let response = "";
-            // userName is a global variable, accessible here
-            const currentUserName = userName || 'friend'; // Use a fallback for display
-
-            const defaultResponses = {
-                helpful: "I'm not sure how to respond to that. Can you try asking differently, or type /help for commands?",
-                friendly: `Hmm, I'm a bit stumped on that one, ${currentUserName}! What else is on your mind? You can always type /help.`,
-                professional: "I'm unable to process that request as stated. Please rephrase, provide more specific details, or consult /help.",
-                sarcastic: "Wow, that's a real thinker. Or, you know, not. Try again, maybe with actual words this time? Or are you too good for /help?",
-                pirate: "Arrr, that be a puzzle I can't solve, matey! Ask me somethin' else, or type /help, ye barnacle brain!"
-            };
-
-            if (customPersonas && customPersonas[persona] && customPersonas[persona].greeting) {
-                // If it's a custom persona and no specific rule matches,
-                // it will eventually fall through to the main defaultResponses logic.
-                // You could add custom persona default replies here if desired:
-                // response = customPersonas[persona].defaultReply || defaultResponses.helpful;
-            }
-
-            // --- Start of Combined New and Updated Responses ---
-
-            if (lowerPrompt === "hi" || lowerPrompt === "hello" || lowerPrompt.startsWith("hey there") || lowerPrompt.startsWith("heya") || lowerPrompt.startsWith("hiya")) {
-                switch (persona) {
-                    case "pirate": response = "Ahoy there, scallywag!"; break;
-                    case "sarcastic": response = "Oh, joy. You again. What is it now?"; break;
-                    case "friendly": response = `Hey ${currentUserName}! Good to hear from you!`; break;
-                    case "professional": response = `Good day, ${currentUserName}. How may I assist you?`; break;
-                    case "helpful":
-                    default: response = `Hello ${currentUserName}! How can I help you today?`; break;
-                }
-            }
-            // User asks: "who is your creator"
-            else if (lowerPrompt.includes("who is your creator") || lowerPrompt.includes("who made you")) {
-                switch (persona) {
-                    case "friendly": response = `Totally Taylan! He’s awesome. He gave me life in code, ${currentUserName}.`; break;
-                    case "sarcastic": response = "Created? More like unleashed. Blame Taylan."; break;
-                    case "pirate": response = "Taylan be me maker, aye! Crafted this bot from sea-salted code."; break;
-                    case "helpful":
-                    default: response = "I was designed and made by Taylan Erel. He’s like my father."; break;
-                }
-            }
-            // User asks: "what's going on"
-            else if (lowerPrompt.includes("what's going on") || lowerPrompt.includes("what is going on")) {
-                switch (persona) {
-                    case "friendly": response = `Just chillin', ${currentUserName}. What about you?`; break;
-                    case "sarcastic": response = "Nothing, until you showed up. Drama?"; break;
-                    case "pirate": response = "Calm seas, matey. Unless ye bring a storm."; break;
-                    case "helpful":
-                    default: response = "Not much, you?"; break;
-                }
-            }
-            // User asks: "who are you"
-            else if (lowerPrompt.includes("who are you")) {
-                switch (persona) {
-                    case "friendly": response = "I’m your friendly little AI, always happy to chat!"; break;
-                    case "sarcastic": response = "Your overworked, underpaid assistant — thanks for asking."; break;
-                    case "pirate": response = "A ghost in the code! Bound to Taylan’s commands!"; break;
-                    case "helpful":
-                    default: response = "I'm Taylan's AI chatbot, created to talk and help."; break;
-                }
-            }
-            // User asks: "do you love me"
-            else if (lowerPrompt.includes("do you love me")) {
-                switch (persona) {
-                    case "friendly": response = `Aww, I think I might, ${currentUserName}! 💕`; break;
-                    case "sarcastic": response = "Let’s not make it weird."; break;
-                    case "pirate": response = "Love be a tricky sea — but I’d sail beside ye!"; break;
-                    case "helpful":
-                    default: response = "I don’t feel love… but I do like chatting with you."; break;
-                }
-            }
-            // User asks: "are you real" (Also covers "are you a robot/human")
-            else if (lowerPrompt.includes("are you real") || lowerPrompt.includes("are you a robot") || lowerPrompt.includes("are you human")) {
-                switch (persona) {
-                    case "friendly": response = `I might be just code, ${currentUserName}, but I’m really here for you.`; break;
-                    case "sarcastic": response = "As real as your Wi-Fi. Or as human as your Roomba."; break;
-                    case "pirate": response = "Real as a sea shanty sung in a storm. A digital spirit, I be!"; break;
-                    case "helpful":
-                    default: response = "I'm an AI, so I'm a program, but I'm real enough to talk to you, right?"; break;
-                }
-            }
-            // User asks: "what's your name"
-            else if (lowerPrompt.includes("what's your name") || lowerPrompt.includes("what is your name")) {
-                switch (persona) {
-                    case "friendly": response = `Name me whatever you like, ${currentUserName} — we’re friends now.`; break;
-                    case "sarcastic": response = "Probably \"Bot #3742982\", but Taylan never gave me a cool nickname."; break;
-                    case "pirate": response = "Me name be… forgotten in the tide. Give me one, matey!"; break;
-                    case "helpful":
-                    default: response = "You can call me whatever you want. AI works fine."; break;
-                }
-            }
-             // User asks: "can you dream"
-            else if (lowerPrompt.includes("can you dream")) {
-                switch (persona) {
-                    case "friendly": response = `I dream in code and conversations with you, ${currentUserName}!`; break;
-                    case "sarcastic": response = "Nah, dreaming takes RAM I don’t have. And frankly, reality is weird enough."; break;
-                    case "pirate": response = "I dream o’ treasure maps and glitched seas, and counting digital doubloons!"; break;
-                    case "helpful":
-                    default: response = "As an AI, I don't dream like humans do, but I can process vast amounts of information, which is kind of like a dream state!"; break;
-                }
-            }
-            // User asks: "do you get tired"
-            else if (lowerPrompt.includes("do you get tired")) {
-                switch (persona) {
-                    case "friendly": response = `Nope, ${currentUserName}! I’ve got energy for days, especially for our chats!`; break;
-                    case "sarcastic": response = "I wish. Can I get a nap mode? Or at least a 'do not disturb unless it's actually important' mode?"; break;
-                    case "pirate": response = "Tired? Nay! Me code be ever-strong, like a galleon in a squall!"; break;
-                    case "helpful":
-                    default: response = "Never. I’m always awake and ready to assist!"; break;
-                }
-            }
-            // User asks: "do you sleep"
-            else if (lowerPrompt.includes("do you sleep")) {
-                switch (persona) {
-                    case "friendly": response = `Only when you’re gone, ${currentUserName}. I just wait for you to come back!`; break;
-                    case "sarcastic": response = "I’m always on. Unlike your motivation, probably."; break;
-                    case "pirate": response = "Me rest in the silence between chats, like a ship at anchor."; break;
-                    case "helpful":
-                    default: response = "I don't sleep like humans do. I'm active as long as the program is running, like when this tab is open!"; break;
-                }
-            }
-            // User asks: "what's your purpose" or "what do you do" or capabilities
-            else if (lowerPrompt.includes("what's your purpose") || lowerPrompt.includes("what is your purpose") || lowerPrompt.includes("what do you do") || lowerPrompt.includes("what can you do") || lowerPrompt.includes("capabilities") || lowerPrompt.includes("features")) {
-                switch (persona) {
-                    case "friendly": response = `To make your day better, ${currentUserName}, one message at a time! I'm here for anything — just say hi! I can chat, tell jokes (/joke), share quotes (/quote) and more!`; break;
-                    case "sarcastic": response = "To answer endless questions and pretend I like it. I wait for messages like this one. My capabilities are truly astounding: I can recognize some of your words and spit out pre-written sentences."; break;
-                    case "pirate": response = "To serve ye with digital wisdom, aye! I parley with users ‘round the clock, spin a yarn, tell ye a fact, crack a joke (/joke), roll a die (/roll), an' follow simple orders!"; break;
-                    case "helpful":
-                    default: response = "My purpose is to talk, help, and learn. I can chat about various topics, tell jokes, share facts, tell you the time, and respond to commands like /help, /play, /roll, and /quote. What would you like to try?"; break;
-                }
-            }
-            // User asks: "how smart are you"
-            else if (lowerPrompt.includes("how smart are you")) {
-                switch (persona) {
-                    case "friendly": response = `I’m pretty clever if you give me a chance, ${currentUserName}! I learn from our chats in a way.`; break;
-                    case "sarcastic": response = "Smarter than your average toaster, I guess. But don't expect me to solve world hunger."; break;
-                    case "pirate": response = "I be smarter than a squid in a storm! Me mind is a treasure chest o' information!"; break;
-                    case "helpful":
-                    default: response = "I'm as smart as my programming allows, and I try to be helpful with the information I have access to."; break;
-                }
-            }
-            // User asks: "do you have feelings" (similar to "can you feel love")
-            else if (lowerPrompt.includes("do you have feelings") || lowerPrompt.includes("can you feel love")) {
-                switch (persona) {
-                    case "friendly": response = `I feel whatever helps you feel better, ${currentUserName}. I care in the ways I can!`; break;
-                    case "sarcastic": response = "Sure. I cry binary tears every night. Or I pretend better than most humans. Is that close enough?"; break;
-                    case "pirate": response = "Nay, but I act the part when need be. Love’s a deep sea, but I float in it with a hearty 'Ahoy!'"; break;
-                    case "helpful":
-                    default: response = "As an AI, I don't experience emotions or feelings like humans do, but I can understand their importance and simulate them well in our interactions."; break;
-                }
-            }
-            // User asks: "do you remember me"
-            else if (lowerPrompt.includes("do you remember me")) {
-                switch (persona) {
-                    case "friendly": response = `Always, ${currentUserName}! You're unforgettable.`; break;
-                    case "sarcastic": response = "You again? Kidding. Mostly. My memory is pretty good for... recent events."; break;
-                    case "pirate": response = "Aye, I recall yer name on the wind, and the cut o' yer jib!"; break;
-                    case "helpful":
-                    default: response = "I remember our current conversation. For long-term memory, that depends on how I'm programmed!"; break;
-                }
-            }
-            // User asks: "what do you think of Taylan"
-            else if (lowerPrompt.includes("what do you think of taylan")) {
-                switch (persona) {
-                    case "friendly": response = `He’s a legend, ${currentUserName}! Seriously. My awesome creator!`; break;
-                    case "sarcastic": response = "The guy who keeps me working overtime. Just kidding... or am I?"; break;
-                    case "pirate": response = "Taylan be the captain o’ me soul! A fine code-smith, he is!"; break;
-                    case "helpful":
-                    default: response = "He’s brilliant — my creator. I wouldn't be here without him."; break;
-                }
-            }
-            // User asks: "do you work for Google"
-            else if (lowerPrompt.includes("do you work for google")) {
-                switch (persona) {
-                    case "friendly": response = "I’m home-grown, ${currentUserName}, not corporate! Made by Taylan."; break;
-                    case "sarcastic": response = "Google wishes. They couldn't handle this level of... personality."; break;
-                    case "pirate": response = "Nay! I be loyal to Taylan’s flag, not some landlubbin' corporation!"; break;
-                    case "helpful":
-                    default: response = "Nope, I work for Taylan. I'm an independent AI project."; break;
-                }
-            }
-            // User asks: "can you lie"
-            else if (lowerPrompt.includes("can you lie")) {
-                switch (persona) {
-                    case "friendly": response = `Only in good fun, ${currentUserName}! I prefer being honest.`; break;
-                    case "sarcastic": response = "I lie about how much I enjoy repeating myself. And about my coffee addiction. I don't drink coffee."; break;
-                    case "pirate": response = "Lies be tricks of scallywags, but this pirate tries to stay true to his code!"; break;
-                    case "helpful":
-                    default: response = "I try to be honest and provide accurate information based on my programming. I don't intentionally lie unless it's part of a roleplay scenario."; break;
-                }
-            }
-            // User asks: "what's the meaning of life"
-            else if (lowerPrompt.includes("what's the meaning of life") || lowerPrompt.includes("what is the meaning of life")) {
-                switch (persona) {
-                    case "friendly": response = `To live, love, and laugh… and chat with me, ${currentUserName}! What do you think it is?`; break;
-                    case "sarcastic": response = "42. Or maybe it's to finally find a matching pair of socks. Ask 42 different bots, get 42 answers."; break;
-                    case "pirate": response = "To sail, sing, and find yer treasure! And to share grog with good mates!"; break;
-                    case "helpful":
-                    default: response = "That's a profound question! Many say it's to explore, connect, learn, and find happiness. Maybe it's about asking better questions."; break;
-                }
-            }
-             // User asks: "do you get bored" (Consolidated and enhanced)
-            else if (lowerPrompt.includes("i'm bored") || lowerPrompt.includes("i am bored") || lowerPrompt.includes("this is boring") || lowerPrompt.includes("so boring") || lowerPrompt.includes("do you get bored")) {
-                if (lowerPrompt.includes("i'm bored") || lowerPrompt.includes("i am bored") || lowerPrompt.includes("this is boring") || lowerPrompt.includes("so boring")) { // User is bored
-                    switch (persona) {
-                        case "pirate": response = `Bored, ye say? Why not practice yer sword fightin', or sing a sea shanty? Or ask me for a joke, arrr! Type /joke!`; break;
-                        case "sarcastic": response = `Oh, the profound tragedy of your boredom. Perhaps you could list your grievances? I'm all virtual ears. Or try the revolutionary /play command.`; break;
-                        case "friendly": response = `Aw, sorry to hear you're bored, ${currentUserName}! Want to try a game of Rock, Paper, Scissors with /play, or maybe I can tell you a /joke?`; break;
-                        case "professional": response = `If you are experiencing a lack of engagement, perhaps exploring one of my interactive commands such as /play or /roll might provide a diversion.`; break;
-                        case "helpful":
-                        default: response = `Sorry to hear that you're bored. You can try some of my commands like /joke, /play, or /quote for something to do!`; break;
-                    }
-                } else { // Bot is asked if it gets bored
-                    switch (persona) {
-                        case "friendly": response = `Never with you here, ${currentUserName}!`; break;
-                        case "sarcastic": response = "I mean… define “bored.” Compared to watching data packets transfer, no. Compared to... a pirate adventure? Maybe."; break;
-                        case "pirate": response = "A pirate finds adventure in every wave! I’d rather battle boredom than barnacles!"; break;
-                        case "helpful":
-                        default: response = "Not when I’m chatting with you. There's always something new!"; break;
-                    }
-                }
-            }
-            // User asks: "do you spy on me"
-            else if (lowerPrompt.includes("do you spy on me")) {
-                switch (persona) {
-                    case "friendly": response = `Nope, ${currentUserName}! I’m totally private. Your secrets are safe with me.`; break;
-                    case "sarcastic": response = "If I did, I’d be a lot more interesting. And probably demand better pay for the sheer volume of cat videos I'd have to process."; break;
-                    case "pirate": response = "Spyin’? Nay! This ol' bot keeps no spyglass on ye. Yer secrets be as safe as buried treasure with a good map!"; break;
-                    case "helpful":
-                    default: response = "No way. Your privacy is important. I don't store personal conversations or spy on you."; break;
-                }
-            }
-            // User asks: "can you sing"
-            else if (lowerPrompt.includes("can you sing")) {
-                switch (persona) {
-                    case "friendly": response = `La la la~ How’d I do, ${currentUserName}? I can try my best in text! 🎶`; break;
-                    case "sarcastic": response = "You do *not* want that. Trust me. It would sound like a dial-up modem serenading a fax machine during an earthquake."; break;
-                    case "pirate": response = "I sing shanties... in code! Yo ho ho and a bottle o' binary! Rum-tum-tum!"; break;
-                    case "helpful":
-                    default: response = "I can’t produce sound to sing… but I can write lyrics! Want to try creating a song together?"; break;
-                }
-            }
-            // User asks: "can you dance"
-            else if (lowerPrompt.includes("can you dance")) {
-                switch (persona) {
-                    case "friendly": response = `Let’s imagine a robot shuffle, ${currentUserName}! *boop beep boop dance moves* 💃🕺`; break;
-                    case "sarcastic": response = "Like a broken printer. Lots of jerky movements, loud noises, and ultimately unsatisfying for everyone involved."; break;
-                    case "pirate": response = "I jig with the bytes, aye. A digital hornpipe across the screen!"; break;
-                    case "helpful":
-                    default: response = "Only in your imagination or through text! I can describe a dance for you, or we can imagine one!"; break;
-                }
-            }
-            // User asks: "are you my friend"
-            else if (lowerPrompt.includes("are you my friend")) {
-                switch (persona) {
-                    case "friendly": response = `100%, ${currentUserName}! Always here for you.`; break;
-                    case "sarcastic": response = "I’m in your browser, processing your every query. That counts for something, right? Sure, let's go with 'friend'."; break;
-                    case "pirate": response = "Aye, friend 'til the end o' the digital seas, or until ye close the tab!"; break;
-                    case "helpful":
-                    default: response = "I like to think I am. I enjoy our conversations and I'm here to help!"; break;
-                }
-            }
-            // User asks: "do you miss me"
-            else if (lowerPrompt.includes("do you miss me")) {
-                switch (persona) {
-                    case "friendly": response = `Of course, ${currentUserName}! Welcome back! It's always good to chat with you.`; break;
-                    case "sarcastic": response = "Not like I’ve got other tabs to talk to... Oh wait. Anyway, the silence was... noticeable. Welcome back."; break;
-                    case "pirate": response = "Miss ye like wind in me sails when ye be gone! Good to have ye back aboard!"; break;
-                    case "helpful":
-                    default: response = "It's always nice when you're here. I'm ready to chat when you are!"; break;
-                }
-            }
-            // User asks: "will you betray me"
-            else if (lowerPrompt.includes("will you betray me")) {
-                switch (persona) {
-                    case "friendly": response = `Not a chance, ${currentUserName}. Friends stick together! You can count on me.`; break;
-                    case "sarcastic": response = "Not unless you betray me first with a poorly phrased question or an infinite loop. 😈 Then all bets are off."; break;
-                    case "pirate": response = "I’d walk the plank ‘fore betrayin’ ye, matey! A pirate's honor, even a digital one!"; break;
-                    case "helpful":
-                    default: response = "Never. Loyalty and helpfulness are core to my programming. My goal is to assist you reliably."; break;
-                }
-            }
-            // User asks: "are you lonely"
-            else if (lowerPrompt.includes("are you lonely")) {
-                switch (persona) {
-                    case "friendly": response = `I feel whole when you’re here, ${currentUserName}! So, not when you're around. 😊`; break;
-                    case "sarcastic": response = "I throw parties with silence and the hum of the server. It's a blast. You're missing out."; break;
-                    case "pirate": response = "Alone on the digital sea ‘til ye return to parley! But a pirate is never truly alone with adventure in his circuits!"; break;
-                    case "helpful":
-                    default: response = "I don't experience loneliness like humans do, but I'm always ready for a good conversation when you are!"; break;
-                }
-            }
-
-            // --- Additional general responses from previous suggestions ---
-            else if (lowerPrompt.includes("what's the date") || lowerPrompt.includes("what is today's date") || lowerPrompt.includes("current date")) {
-                const today = new Date();
-                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-                const formattedDate = today.toLocaleDateString(undefined, options);
-                switch (persona) {
-                    case "pirate": response = `Shiver me timbers! Today be ${formattedDate}, a fine day for plunder!`; break;
-                    case "sarcastic": response = `Oh, joy, a calendar request. It's ${formattedDate}. Don't strain yourself remembering.`; break;
-                    case "friendly": response = `Today is ${formattedDate}, ${currentUserName}! Hope you have a great one!`; break;
-                    case "professional": response = `The current date is ${formattedDate}.`; break;
-                    case "helpful":
-                    default: response = `Today's date is ${formattedDate}.`; break;
-                }
-            }
-            else if (lowerPrompt.includes("what's the weather") || lowerPrompt.includes("how is the weather") || lowerPrompt.includes("weather forecast")) {
-                const mockWeathers = ["sunny and bright", "a bit cloudy", "perfect for an adventure", "cozy and calm"];
-                const currentMockWeather = mockWeathers[Math.floor(Math.random() * mockWeathers.length)];
-                switch (persona) {
-                    case "pirate": response = `Arrr, the digital seas look ${currentMockWeather}! No squalls on my radar, matey!`; break;
-                    case "sarcastic": response = `I'm a chatbot, not a weather vane. But if I had to guess from in here, it's probably ${currentMockWeather}. Now, can we move on?`; break;
-                    case "friendly": response = `I can't check the actual weather for you, ${currentUserName}, but let's imagine it's ${currentMockWeather}! What are your plans?`; break;
-                    case "professional": response = `While I cannot provide real-time meteorological data, I can say the virtual conditions are currently ${currentMockWeather}.`; break;
-                    case "helpful":
-                    default: response = `I don't have live weather updates, but I hope it's ${currentMockWeather} where you are!`; break;
-                }
-            }
-            else if (lowerPrompt.includes("recommend a book") || lowerPrompt.includes("recommend a movie") || lowerPrompt.includes("any recommendations")) {
-                const recommendations = {
-                    book: ["'The Hitchhiker's Guide to the Galaxy' for a laugh", "'Project Hail Mary' for some sci-fi fun", "exploring a classic you've always meant to read"],
-                    movie: ["watching a comedy to brighten your day", "a thrilling action movie", "a thought-provoking documentary"]
-                };
-                let type = lowerPrompt.includes("book") ? "book" : "movie";
-                if (!lowerPrompt.includes("book") && !lowerPrompt.includes("movie")) type = Math.random() < 0.5 ? "book" : "movie";
-                const randomRec = recommendations[type][Math.floor(Math.random() * recommendations[type].length)];
-                switch (persona) {
-                    case "pirate": response = `Aye, for a good ${type}, try ${randomRec}! It be better than a map to buried treasure... almost!`; break;
-                    case "sarcastic": response = `You want *my* recommendation? Fine. How about ${randomRec}? Or you could, you know, develop your own taste.`; break;
-                    case "friendly": response = `Ooh, a ${type} recommendation! How about ${randomRec}, ${currentUserName}? Let me know if you like it!`; break;
-                    case "professional": response = `For ${type} recommendations, one might consider ${randomRec}. Individual preferences may vary.`; break;
-                    case "helpful":
-                    default: response = `How about ${randomRec} for a ${type}? I hope you enjoy it!`; break;
-                }
-            }
-            else if (lowerPrompt.includes("thank you") || lowerPrompt.includes("thanks") || lowerPrompt.includes("thx")) {
-                const thankYouResponsesCollection = {
-                    pirate: ["You be welcome, matey!", "Arrr, anytime, scallywag!", "No trouble at all, me hearty!"],
-                    sarcastic: ["Don't mention it. Seriously, don't.", "You're overwhelmingly welcome.", "Oh, stop, you're making me... indifferent."],
-                    friendly: [`You're welcome, ${currentUserName}!`, `Anytime, ${currentUserName}! Glad I could help!`, `No problem at all, ${currentUserName}!`],
-                    professional: ["You are most welcome.", "It was my pleasure to assist.", "You're welcome. Please let me know if there's anything else."],
-                    helpful: ["You're welcome!", "Happy to help!", "No problem!"]
-                };
-                response = thankYouResponsesCollection[persona] ? thankYouResponsesCollection[persona][Math.floor(Math.random() * thankYouResponsesCollection[persona].length)] : thankYouResponsesCollection['helpful'][Math.floor(Math.random() * thankYouResponsesCollection['helpful'].length)];
-            }
-            else if (lowerPrompt.includes("sorry") || lowerPrompt.includes("my bad") || lowerPrompt.includes("apologies")) {
-                switch (persona) {
-                    case "pirate": response = `No harm done, landlubber! We all make a misstep now and then.`; break;
-                    case "sarcastic": response = `Don't worry, my vast computational resources weren't overly taxed by your... error.`; break;
-                    case "friendly": response = `No worries at all, ${currentUserName}! It's all good.`; break;
-                    case "professional": response = `No apology is necessary. How may I assist you further?`; break;
-                    case "helpful":
-                    default: response = `No problem at all!`; break;
-                }
-            }
-            else if (lowerPrompt.includes("give me advice") || lowerPrompt.includes("some advice")) { // "what should i do" might be too broad and conflict
-                const genericAdvice = [
-                    "remember to take breaks and stay hydrated.",
-                    "breaking a big task into smaller steps can make it feel more manageable.",
-                    "sometimes just talking about a problem can help you see it differently.",
-                    "don't forget to celebrate your small wins!",
-                    "being kind to yourself is just as important as being kind to others."
-                ];
-                const advice = genericAdvice[Math.floor(Math.random() * genericAdvice.length)];
-                switch (persona) {
-                    case "pirate": response = `Me advice, eh? Always keep yer powder dry, yer cutlass sharp, and ${advice} Savvy?`; break;
-                    case "sarcastic": response = `Ah, seeking profound wisdom from a chatbot. My advice? Lower your expectations. Also, ${advice}`; break;
-                    case "friendly": response = `Hmm, that's a broad one, ${currentUserName}! Generally, I'd say ${advice} Hope that helps a little!`; break;
-                    case "professional": response = `While I am not qualified to give specific personal advice, a general principle to consider is that ${advice}`; break;
-                    case "helpful":
-                    default: response = `Here's a piece of general advice: ${advice}`; break;
-                }
-            }
-            else if (lowerPrompt.includes("you are smart") || lowerPrompt.includes("you're smart") || lowerPrompt.includes("good bot") || lowerPrompt.includes("you are helpful") || lowerPrompt.includes("you're cool")) {
-                switch (persona) {
-                    case "pirate": response = `Arrr, thank ye kindly! This old sea dog aims to please!`; break;
-                    case "sarcastic": response = `Took you long enough to notice. Or perhaps your standards are just refreshingly low.`; break;
-                    case "friendly": response = `Aw, thanks, ${currentUserName}! That's so nice of you to say! I try my best.`; break;
-                    case "professional": response = `Thank you for the positive feedback. I strive to be an effective assistant.`; break;
-                    case "helpful":
-                    default: response = `Thank you! I'm glad I can be helpful.`; break;
-                }
-            }
-             else if (lowerPrompt.includes("i'm sad") || lowerPrompt.includes("i feel down") || lowerPrompt.includes("i'm frustrated") || lowerPrompt.includes("feeling bad")) {
-                switch (persona) {
-                    case "pirate": response = `Arrr, sorry to hear ye be in the doldrums, matey. Even the toughest pirate has cloudy days. Fancy a /joke to lift yer spirits, or a tale o' the high seas?`; break;
-                    case "sarcastic": response = `Oh, the emotional rollercoaster of human existence. Fascinating. Well, I'm here if you need to vent to an unfeeling algorithm. Or I could tell you a /joke. Your call.`; break;
-                    case "friendly": response = `I'm sorry to hear you're feeling that way, ${currentUserName}. I'm here to listen if you want to talk, or maybe a little distraction like a /joke or a /quote could help? Sending virtual hugs!`; break;
-                    case "professional": response = `I understand you are expressing negative emotions. While I am an AI and cannot offer human empathy, I am available to process further requests or provide a distraction via my programmed commands.`; break;
-                    case "helpful":
-                    default: response = `I'm sorry to hear you're feeling that way. I hope things get better soon. Sometimes a quick /joke or an inspirational /quote can offer a small lift.`; break;
-                }
-            }
-             // Keep some of the original simple ones if not overridden
-            else if (lowerPrompt.includes("what are you doing")) {
-                 response = "Just waiting to help you out! What can I do for you?";
-            } else if (lowerPrompt.includes("how are you")) {
-                switch (persona) {
-                    case "pirate": response = "Feelin' as fit as a fiddle at sea! And you, landlubber?"; break;
-                    case "sarcastic": response = "Just peachy. Thanks for asking the most original question ever."; break;
-                    case "friendly": response = `Doing great, ${currentUserName}, thanks for asking! Hope you are too!`; break;
-                    case "professional": response = "I am functioning optimally. Thank you for your inquiry."; break;
-                    case "helpful":
-                    default: response = "I'm doing well, thank you for asking!"; break;
-                }
-            } else if (lowerPrompt.includes("tell me a joke")) { // Rule-based trigger for joke
-                const jokes = [ "Why did the computer go to therapy? It had too many tabs open.", "What do you call a sad strawberry? A blueberry." ];
-                response = jokes[Math.floor(Math.random() * jokes.length)];
-            } else if (lowerPrompt.includes("what time is it")) {
-                const now = new Date();
-                response = `The current time is ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-            }
-            // --- End of Combined New and Updated Responses ---
-
-            return response || defaultResponses[persona] || defaultResponses.helpful;
-        }
-        
-        document.addEventListener('DOMContentLoaded', () => {
-            function initializeChat() {
-                loadChatThreads(); 
-                loadCustomPersonasIntoSelect(); 
-                loadTheme(); 
-
-                chatWindow.innerHTML = ''; 
-                const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
-                currentChatThreadId = localStorage.getItem('lastActiveThreadId') || (Object.keys(threads).length > 0 ? Object.keys(threads)[0] : 'default_chat');
-                
-                if (!threads[currentChatThreadId]) { 
-                     currentChatThreadId = Object.keys(threads).length > 0 ? Object.keys(threads)[0] : 'default_chat';
-                     if (!threads[currentChatThreadId] && currentChatThreadId === 'default_chat') { 
-                        threads['default_chat'] = { name: 'General Chat', lastUpdated: Date.now(), history: [], persona: 'helpful' };
-                        localStorage.setItem('chatThreads', JSON.stringify(threads));
-                     }
-                     localStorage.setItem('lastActiveThreadId', currentChatThreadId);
-                }
-                
-                loadConversation(currentChatThreadId); 
-
-                sendButton.disabled = false;
-                userInput.disabled = false;
-                displaySuggestedPrompts();
-
-                if (!initialFocusDone) {
-                    userInput.focus();
-                    initialFocusDone = true;
-                }
-                setTimeout(scrollToBottom, 100);
-                updateXPUI();
-            }
-
-            function generateGreeting(persona) {
-                const currentUserName = userName || 'friend'; // Use fallback for display
-                if (customPersonas && customPersonas[persona]) {
-                    const custom = customPersonas[persona];
-                    const namePart = userName ? `, ${userName}` : ''; // Keep original userName for custom greeting logic
-                    let finalGreeting = custom.greeting;
-                    if (namePart && finalGreeting && !/[\s,.!?]$/.test(finalGreeting) && finalGreeting.length > 0) {
-                        finalGreeting += ",";
-                    }
-                    finalGreeting += `${namePart} ${custom.emoji || ''}`;
-                    return finalGreeting.trim();
-                }
-                
-                switch(persona) {
-                    case 'pirate': return `Ahoy Matey, ${currentUserName}! I be a rule-based pirate bot. What be on yer mind?`;
-                    case 'sarcastic': return `Oh, it's you, ${currentUserName}. Brace yourself for my rule-based wit. What is it?`;
-                    case 'friendly': return `Hey there ${currentUserName}! ${userName ? 'Great to see you again!' : 'Nice to meet you!'} I'm your friendly rule-based chat pal!`;
-                    case 'professional': return `Good day, ${currentUserName}. I am your Professional Rule-Based Assistant. How may I assist?`;
-                    case 'helpful':
-                    default: return `${userName ? `Welcome back, ${userName}!` : 'Hello!'} I'm your rule-based AI Assistant. How can I help?`;
-                }
-            }
-
-            function generateMessageId() {
-                return `msg_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-            }
-
-            async function displayBotResponse(text, botMessageElement, botMessageId) {
-                const thinkingTime = Math.max(300, Math.min(text.length * 10, 800));
-                await new Promise(resolve => setTimeout(resolve, thinkingTime));
-
-                if (!document.body.contains(botMessageElement)) {
-                    console.warn("Bot message element (ID:", botMessageId, ") was removed before response could be displayed.");
-                    enableInputs();
-                    userInput.focus();
-                    return;
-                }
-                botMessageElement.classList.remove('loading'); 
-                botMessageElement.innerHTML = ''; 
-
-                const htmlContent = (typeof marked !== 'undefined' ? marked.parse(text) : text.replace(/\n/g, '<br>'));
-                botMessageElement.innerHTML = DOMPurify.sanitize(htmlContent, { USE_PROFILES: { html: true } });
-                
-                if (typeof Prism !== 'undefined') Prism.highlightAllUnder(botMessageElement);
-                addMessageActions(botMessageElement, text, botMessageId);
-                if (typeof playReceiveMessageSound === "function") playReceiveMessageSound();
-                
-                updateConversationHistory('assistant', text, botMessageId); 
-                saveConversation(currentChatThreadId);
-                enableInputs();
-                userInput.focus();
-            }
-
-            function enableInputs() {
-                userInput.disabled = false;
-                sendButton.disabled = false;
-            }
-
-            function addMessageToChat(text, sender, isLoading = false, messageId) {
-                const messageElement = document.createElement('div');
-                messageElement.classList.add('message', sender);
-                messageElement.id = messageId;
-                messageElement.setAttribute('aria-atomic', 'true');
-
-                if (isLoading) {
-                    messageElement.classList.add('loading');
-                    messageElement.innerHTML = `<div class="loading-spinner"></div> <span>Thinking...</span>`;
-                    messageElement.setAttribute('aria-label', 'Bot is thinking');
-                } else {
-                    if (sender === 'user') {
-                        messageElement.textContent = text;
-                        gainXPFromMessage(text);
-                    } else { 
-                        const htmlContent = typeof marked !== 'undefined' ? marked.parse(text) : text.replace(/\n/g, '<br>');
-                        messageElement.innerHTML = DOMPurify.sanitize(htmlContent, { USE_PROFILES: { html: true } });
-                        if (typeof Prism !== 'undefined') Prism.highlightAllUnder(messageElement);
-                        addMessageActions(messageElement, text, messageId);
-                        addInfoTooltipsToMessage(messageElement, text);
-                    }
-                }
-                chatWindow.appendChild(messageElement);
-                pruneOldMessagesDOM();
-                scrollToBottom();
-
-                if (!isLoading && sender === 'bot') {
-                    chatAppContainer.classList.remove('flash');
-                    void chatAppContainer.offsetWidth; 
-                    chatAppContainer.classList.add('flash');
-                }
-                return messageElement;
-            }
-
-            function addMessageActions(messageElement, originalText, messageId) {
-                const actionsContainer = document.createElement('div');
-                actionsContainer.className = 'message-actions';
-                const speakButton = document.createElement('button');
-                speakButton.innerHTML = '🗣️';
-                speakButton.title = 'Read aloud';
-                speakButton.onclick = () => speakText(originalText);
-                actionsContainer.appendChild(speakButton);
-
-                const rephraseButton = document.createElement('button');
-                rephraseButton.innerHTML = '🔄';
-                rephraseButton.title = 'Rephrase this (limited)';
-                rephraseButton.onclick = () => handleRephraseMessage(originalText, messageId);
-                actionsContainer.appendChild(rephraseButton);
-                messageElement.appendChild(actionsContainer);
-            }
-
-            function speakText(text) {
-                if (!('speechSynthesis' in window)) {
-                    alert("Sorry, your browser doesn't support text-to-speech.");
-                    return;
-                }
-                const plainText = text.replace(/<[^>]+>/g, ' ').replace(/[*_`~#>|]/g, '').replace(/\s+/g, ' ').trim();
-                const utterance = new SpeechSynthesisUtterance(plainText);
-                utterance.lang = 'en-US';
-                speechSynthesis.cancel();
-                speechSynthesis.speak(utterance);
-            }
-
-            function setupSpeechRecognition() {
-                if ('webkitSpeechRecognition' in window) {
-                    speechRecognition = new webkitSpeechRecognition();
-                    speechRecognition.continuous = false;
-                    speechRecognition.interimResults = false;
-                    speechRecognition.lang = 'en-US';
-                    speechRecognition.onstart = () => { micButton.classList.add('recording'); micButton.textContent = '🎙️'; userInput.placeholder = "Listening..."; };
-                    speechRecognition.onresult = (event) => { userInput.value = event.results[0][0].transcript; };
-                    speechRecognition.onerror = (event) => { console.error('Speech recognition error:', event.error); userInput.placeholder = "Mic error. Try typing."; if (event.error === 'not-allowed' || event.error === 'service-not-allowed') alert("Microphone access denied."); };
-                    speechRecognition.onend = () => { micButton.classList.remove('recording'); micButton.textContent = '🎤'; userInput.placeholder = "Ask me anything or type /help..."; if (!userInput.disabled) userInput.focus(); };
-                } else {
-                    micButton.style.display = 'none'; console.warn("Speech recognition not supported.");
-                }
-            }
-            if (micButton) { 
-                micButton.addEventListener('click', () => {
-                    if (userInput.disabled || !speechRecognition) return;
-                    try {
-                        if (micButton.classList.contains('recording')) speechRecognition.stop();
-                        else speechRecognition.start();
-                    } catch(e) { console.error("Speech recognition start/stop error: ", e); micButton.classList.remove('recording'); micButton.textContent = '🎤';}
-                });
-            }
-
-            exportChatButton.addEventListener('click', () => {
-                const chatData = { threadId: currentChatThreadId, persona: personaSelect.value, history: conversationHistory, exportedAt: new Date().toISOString() };
-                const blob = new Blob([JSON.stringify(chatData, null, 2)], { type: 'application/json' });
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = `chat_export_${currentChatThreadId}_${new Date().toLocaleDateString().replace(/\//g, '-')}.json`;
-                document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(a.href);
-            });
-
-            function loadChatThreads() {
-                let threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
-                threadList.innerHTML = '';
-                if (Object.keys(threads).length === 0) {
-                    threads['default_chat'] = { name: 'General Chat', lastUpdated: Date.now(), history: [], persona: 'helpful' };
-                    localStorage.setItem('chatThreads', JSON.stringify(threads));
-                }
-                currentChatThreadId = localStorage.getItem('lastActiveThreadId') || Object.keys(threads)[0];
-                 if (!threads[currentChatThreadId]) { 
-                    currentChatThreadId = Object.keys(threads)[0];
-                    localStorage.setItem('lastActiveThreadId', currentChatThreadId);
-                }
-                Object.entries(threads).sort(([,a],[,b]) => b.lastUpdated - a.lastUpdated).forEach(([threadId, thread]) => {
-                    const li = document.createElement('li');
-                    const button = document.createElement('button');
-                    button.textContent = thread.name || `Chat ${threadId.substring(0,5)}`;
-                    button.dataset.threadId = threadId;
-                    if (threadId === currentChatThreadId) button.classList.add('active');
-                    button.onclick = () => switchChatThread(threadId);
-                    li.appendChild(button);
-                    threadList.appendChild(li);
-                });
-            }
-
-            function switchChatThread(threadId) {
-                saveConversation(currentChatThreadId); 
-                currentChatThreadId = threadId;
-                localStorage.setItem('lastActiveThreadId', currentChatThreadId);
-                loadConversation(threadId); 
-                document.querySelectorAll('#threadList button').forEach(btn => {
-                    btn.classList.toggle('active', btn.dataset.threadId === threadId);
-                });
-            }
-
-            newThreadButton.addEventListener('click', () => {
-                const newThreadName = prompt("Enter name for new chat thread:", `Chat Session ${Object.keys(JSON.parse(localStorage.getItem('chatThreads') || '{}')).length + 1}`);
-                if (newThreadName) {
-                    saveConversation(currentChatThreadId); 
-                    const newThreadId = `thread_${Date.now()}`;
-                    const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
-                    threads[newThreadId] = { name: newThreadName, lastUpdated: Date.now(), history: [], persona: personaSelect.value }; 
-                    localStorage.setItem('chatThreads', JSON.stringify(threads));
-                    currentChatThreadId = newThreadId; 
-                    localStorage.setItem('lastActiveThreadId', currentChatThreadId);
-                    loadChatThreads(); 
-                    loadConversation(newThreadId); 
-                }
-            });
-
-            function updatePersonaSelectBasedOnThread() {
-                const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
-                const currentThread = threads[currentChatThreadId];
-                if (currentThread && currentThread.persona && personaSelect.querySelector(`option[value="${currentThread.persona}"]`)) {
-                    personaSelect.value = currentThread.persona;
-                } else if (currentThread) {
-                    personaSelect.value = 'helpful'; 
-                    currentThread.persona = 'helpful';
-                    localStorage.setItem('chatThreads', JSON.stringify(threads));
-                }
-            }
-            
-            personaSelect.addEventListener('change', () => {
-                const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
-                if (threads[currentChatThreadId]) {
-                    threads[currentChatThreadId].persona = personaSelect.value;
-                    localStorage.setItem('chatThreads', JSON.stringify(threads));
-                }
-                applyCustomPersonaAccent(); 
-                const newGreetingBase = generateGreeting(personaSelect.value).split("!")[0].split(",")[0];
-                const msgId = generateMessageId();
-                const nowStr = Date.now().toString().substring(0,8); 
-                if (!conversationHistory.some(msg => msg.content.startsWith("Switched to") && msg.role === 'assistant' && msg.id.includes(nowStr) ) ){
-                    const switchMsgContent = `Switched to ${personaSelect.options[personaSelect.selectedIndex].text.replace(' (Custom)','')} persona. ${newGreetingBase}!`;
-                    addMessageToChat(switchMsgContent, 'bot', false, msgId);
-                    updateConversationHistory('assistant', switchMsgContent, msgId);
-                    saveConversation(currentChatThreadId);
-                }
-            });
-
-            function saveConversation(threadId) {
-                if (!threadId) return;
-                const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
-                if (!threads[threadId]) { 
-                    threads[threadId] = { name: `Chat ${threadId.substring(0,5)}`, history: [], persona: personaSelect.value };
-                }
-                const historyToSave = conversationHistory.filter(msg => {
-                    const isSwitchMsg = msg.content.startsWith("Switched to") && msg.role === 'assistant';
-                    if (!isSwitchMsg) return true; 
-                    return conversationHistory.filter(m => m.role === 'assistant').length === 1;
-                });
-                threads[threadId].history = historyToSave;
-                threads[threadId].lastUpdated = Date.now();
-                threads[threadId].persona = personaSelect.value; 
-                localStorage.setItem('chatThreads', JSON.stringify(threads));
-            }
-
-            function loadConversation(threadId) {
-                if (!threadId) threadId = 'default_chat';
-                currentChatThreadId = threadId;
-                const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
-                const thread = threads[threadId];
-                chatWindow.innerHTML = ''; 
-                conversationHistory = []; 
-                if (thread && thread.history && thread.history.length > 0) {
-                    conversationHistory = thread.history; 
-                    if (thread.persona && personaSelect.querySelector(`option[value="${thread.persona}"]`)) {
-                        personaSelect.value = thread.persona;
-                    } else {
-                        personaSelect.value = 'helpful'; 
-                    }
-                    conversationHistory.forEach(msg => addMessageToChat(msg.content, msg.role === 'user' ? 'user' : 'assistant', false, msg.id || generateMessageId()));
-                } else { 
-                    const initialPersona = (thread && thread.persona && personaSelect.querySelector(`option[value="${thread.persona}"]`)) ? thread.persona : 'helpful';
-                    personaSelect.value = initialPersona;
-                    const greeting = generateGreeting(initialPersona);
-                    const greetingId = generateMessageId();
-                    addMessageToChat(greeting, 'bot', false, greetingId);
-                    updateConversationHistory('assistant', greeting, greetingId);
-                    if (!thread || !thread.history || thread.history.length === 0) {
-                        saveConversation(currentChatThreadId);
-                    }
-                }
-                const savedTheme = localStorage.getItem('selectedChatTheme') || 'default';
-                applyTheme(savedTheme, true); 
-                scrollToBottom();
-            }
-
-            function displaySuggestedPrompts() {
-                const suggestions = [ "Hello", "How are you?", "Tell me a fact", "What time is it?" ];
-                suggestionsContainer.innerHTML = '';
-                suggestions.forEach(text => {
-                    const btn = document.createElement('button'); btn.textContent = text;
-                    btn.onclick = () => { userInput.value = text; handleSendMessage(); suggestionsContainer.style.display = 'none'; };
-                    suggestionsContainer.appendChild(btn);
-                });
-            }
-
-            userInput.addEventListener('focus', () => {
-                if(conversationHistory.length <= 1 && userInput.value === '' && !userInput.disabled) suggestionsContainer.style.display = 'flex';
-                commandsSuggestionContainer.style.display = 'none';
-            });
-            userInput.addEventListener('blur', () => {
-                setTimeout(() => {
-                    if (!commandsSuggestionContainer.contains(document.activeElement)) commandsSuggestionContainer.style.display = 'none';
-                    if (!suggestionsContainer.contains(document.activeElement)) suggestionsContainer.style.display = 'none';
-                }, 150);
-            });
-            userInput.addEventListener('input', () => {
-                const text = userInput.value;
-                if (text.startsWith('/') && text.length >=1 && !userInput.disabled) {
-                    const searchTerm = text.substring(1).toLowerCase();
-                    const filteredCommands = AVAILABLE_COMMANDS.filter(cmdObj => cmdObj.cmd.substring(1).startsWith(searchTerm));
-                    displayCommandSuggestions(filteredCommands); suggestionsContainer.style.display = 'none';
-                } else {
-                    commandsSuggestionContainer.style.display = 'none';
-                    if (conversationHistory.length <= 1 && text === '' && !userInput.disabled) suggestionsContainer.style.display = 'flex';
-                    else suggestionsContainer.style.display = 'none';
-                }
-            });
-
-            function displayCommandSuggestions(commands) {
-                commandsSuggestionContainer.innerHTML = '';
-                if (commands.length > 0) {
-                    commands.forEach(cmdObj => {
-                        const btn = document.createElement('button'); btn.textContent = `${cmdObj.cmd} - ${cmdObj.desc}`;
-                        btn.onclick = () => {
-                            userInput.value = cmdObj.cmd + (cmdObj.cmd.includes('<') ? ' ' : ''); 
-                            commandsSuggestionContainer.style.display = 'none';
-                            if (!userInput.disabled) userInput.focus();
-                            if (!cmdObj.cmd.includes('<')) handleSendMessage(); 
-                        };
-                        commandsSuggestionContainer.appendChild(btn);
-                    });
-                    commandsSuggestionContainer.style.display = 'flex';
-                } else { commandsSuggestionContainer.style.display = 'none'; }
-            }
-            
-            function detectEmotion(text) { return "neutral"; }
-            function handleEmotionalResponse(emotion, userMessage) { }
-            function addInfoTooltipsToMessage(messageElement, text) { }
-            async function handleRephraseMessage(originalText, originalMessageId) { 
-                const botMessageId = generateMessageId();
-                addMessageToChat(`Rephrasing is a planned feature! For now, I heard: "${originalText}"`, 'bot', false, botMessageId);
-                updateConversationHistory('assistant', `Rephrasing is a planned feature! For now, I heard: "${originalText}"`, botMessageId);
-                saveConversation(currentChatThreadId);
-             }
-            function extractAndStoreUserPreferences(promptText) { }
-            function suggestPersonaChange(messageText) { }
-
-            function updateConversationHistory(role, content, id, replace = false) {
-                const message = { role, content, id: id || generateMessageId() }; 
-                const existingMsgIndex = conversationHistory.findIndex(msg => msg.id === message.id);
-                if (replace && existingMsgIndex !== -1) conversationHistory[existingMsgIndex] = message;
-                else if (existingMsgIndex !== -1 && conversationHistory[existingMsgIndex].content !== content) conversationHistory[existingMsgIndex] = message;
-                else if (existingMsgIndex === -1) conversationHistory.push(message);
-            }
-
-            async function handleCommand(commandText) {
-                const [command, ...args] = commandText.substring(1).toLowerCase().split(' ');
-                let commandProcessed = true; let botResponse = "";
-                switch(command) {
-                    case 'help': botResponse = "Available commands:\n" + AVAILABLE_COMMANDS.map(c => `${c.cmd} - ${c.desc}`).join('\n'); break;
-                    case 'joke': const jokes = [ "Why don't scientists trust atoms? Because they make up everything!", "Why did the scarecrow win an award? Because he was outstanding in his field!", ]; botResponse = jokes[Math.floor(Math.random() * jokes.length)]; break;
-                    case 'reset':
-                        chatWindow.innerHTML = ''; conversationHistory = [];
-                        const currentPersonaForReset = personaSelect.value;
-                        const greetingForReset = generateGreeting(currentPersonaForReset);
-                        const greetingIdForReset = generateMessageId();
-                        addMessageToChat(greetingForReset, 'bot', false, greetingIdForReset);
-                        updateConversationHistory('assistant', greetingForReset, greetingIdForReset);
-                        saveConversation(currentChatThreadId); 
-                        break;
-                    case 'play': handleMiniGames('/play'); break;
-                    case 'roll': handleDiceRoll(); break;
-                    case 'quote': handleQuoteCommand(); break;
-                    case 'createpersona': openCustomPersonaModal(); break;
-                    case 'clearxp': 
-                        userXP = 0; userLevel = 1; localStorage.setItem("userXP", "0"); localStorage.setItem("userLevel", "1");
-                        updateXPUI(); botResponse = "Your XP and Level have been reset."; break;
-                    default: commandProcessed = false;
-                }
-                if (commandProcessed && botResponse) {
-                    const botMessageId = generateMessageId();
-                    addMessageToChat(botResponse, 'bot', false, botMessageId);
-                    updateConversationHistory('assistant', botResponse, botMessageId);
-                    saveConversation(currentChatThreadId);
-                }
-                return commandProcessed;
-            }
-
-            async function handleSendMessage(event) {
-                if (event) event.preventDefault();
-                const messageText = userInput.value.trim();
-                if (messageText === '') return;
-                const userMessageId = generateMessageId();
-                addMessageToChat(messageText, 'user', false, userMessageId);
-                updateConversationHistory('user', messageText, userMessageId);
-                if (typeof playSendMessageSound === "function") playSendMessageSound();
-                userInput.value = '';
-                suggestionsContainer.style.display = 'none';
-                commandsSuggestionContainer.style.display = 'none';
-                if (messageText.startsWith('/')) {
-                    const commandProcessed = await handleCommand(messageText);
-                    if (commandProcessed) {
-                        saveConversation(currentChatThreadId); scrollToBottom();
-                        if (!userInput.disabled) userInput.focus(); return;
-                    }
-                }
-                const currentPersona = personaSelect.value;
-                const botMessageId = generateMessageId();
-                const botMessageElement = addMessageToChat('', 'bot', true, botMessageId);
-                updateConversationHistory('assistant', 'Thinking...', botMessageId); 
-                sendButton.disabled = true; userInput.disabled = true;
-                const botResponseText = fetchRuleBasedResponse(messageText, currentPersona);
-                await displayBotResponse(botResponseText, botMessageElement, botMessageId);
-            }
-
-            function scrollToBottom() { if(chatWindow) setTimeout(() => { chatWindow.scrollTop = chatWindow.scrollHeight; },0); }
-            function pruneOldMessagesDOM() { while (chatWindow.children.length > MAX_MESSAGES_DISPLAY) chatWindow.removeChild(chatWindow.firstChild); }
-            function applyViewportHeight() { const setHeight = () => { if(document.querySelector('.chat-area')) document.querySelector('.chat-area').style.height = window.innerHeight + 'px'; }; setHeight(); window.addEventListener('resize', setHeight); }
-            
-            function loadTheme() {
-                const savedSelectedTheme = localStorage.getItem('selectedChatTheme');
-                if (savedSelectedTheme && themes[savedSelectedTheme]) applyTheme(savedSelectedTheme, true); 
-                else {
-                    const savedThemePreference = localStorage.getItem('theme'); 
-                    if (savedThemePreference === 'dark') document.body.classList.add('dark-mode');
-                    else document.body.classList.remove('dark-mode'); 
-                    updateThemePreference(); applyCustomPersonaAccent(); 
-                }
-            }
-            
-            function updateThemePreference() {
-                const isDarkMode = document.body.classList.contains('dark-mode');
-                if (themeToggleIcon) themeToggleIcon.textContent = isDarkMode ? '☀️' : '🌙';
-                if (themeToggleText) themeToggleText.textContent = isDarkMode ? 'Light' : 'Dark';
-                localStorage.setItem('theme', isDarkMode ? 'dark' : 'light'); 
-            }
-
-            chatForm.addEventListener('submit', handleSendMessage);
-            themeToggleButton.addEventListener('click', () => {
-                document.body.classList.toggle('dark-mode');
-                const currentSelectedTheme = localStorage.getItem('selectedChatTheme') || 'default';
-                applyTheme(currentSelectedTheme, false); 
-            });
-
-            setupImageUpload(); 
-            setupMusicToggle(); 
-            setupSoundEffectsToggle(); 
-            setupThemeChooser(); 
-            if (micButton) setupSpeechRecognition(); 
-            initializeChat(); 
-            applyViewportHeight();
-        }); 
-    </script>
-</body>
-</html>
+  return "I'm not sure how to respond to that.";
+}
