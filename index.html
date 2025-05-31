@@ -3,27 +3,108 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Evidence Lockdown: Rhythm Scan V3.2 (Attribution)</title>
+  <title>Evidence Lockdown: Sector Scan (V4.0 Proto)</title> {/* Updated Title Suggestion */}
   <style>
+    @font-face {
+      font-family: 'PoliceTech'; /* Placeholder for a police-themed font */
+      /* src: url('path/to/your/police-tech-font.woff2') format('woff2'); */
+      /* Add more font formats if needed */
+    }
+
     body, html {
       margin: 0;
       padding: 0;
       overflow: hidden;
-      color: #E0E0E0;
+      color: #E0E0E0; /* Default text color */
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'PoliceTech', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Apply new font */
+      cursor: default; /* Default cursor, will be changed by JS for desktop */
     }
     canvas {
       display: block;
       box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+      /* Custom cursor for desktop will be applied via JS if feature enabled */
     }
+    .police-tape {
+      position: absolute;
+      background-image: repeating-linear-gradient(
+        45deg,
+        #ffd700,
+        #ffd700 20px,
+        #333 20px,
+        #333 40px
+      );
+      color: #000;
+      font-weight: bold;
+      text-align: center;
+      font-size: 1.5vw; /* Responsive font size */
+      line-height: 3vw; /* Responsive line height */
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+      z-index: 10; /* Ensure tape is above canvas background but below UI popups if any */
+    }
+    .police-tape-top, .police-tape-bottom {
+        width: 100%;
+        height: 3vw; /* Match line-height */
+        left: 0;
+    }
+    .police-tape-left, .police-tape-right {
+        height: 100%;
+        width: 3vw; /* Match line-height */
+        top: 0;
+        writing-mode: vertical-rl;
+        text-orientation: mixed;
+    }
+    .police-tape-top { top: 0; }
+    .police-tape-bottom { bottom: 0; }
+    .police-tape-left { left: 0; }
+    .police-tape-right { right: 0; }
+
+    #wantedPosterContainer {
+        position: absolute;
+        top: 5vw; /* Below top tape */
+        left: 5vw; /* Right of left tape */
+        width: calc(100% - 10vw);
+        height: calc(100% - 10vw);
+        pointer-events: none; /* Don't interfere with canvas interaction */
+        overflow: hidden;
+    }
+
+    .wanted-poster {
+        position: absolute;
+        width: 10%; /* Adjust size as needed */
+        min-width: 80px;
+        max-width: 150px;
+        aspect-ratio: 0.7;
+        background-color: #f0e6d2;
+        border: 5px solid #5c3a21;
+        box-shadow: 5px 5px 10px rgba(0,0,0,0.5);
+        padding: 8px;
+        text-align: center;
+        font-family: 'Times New Roman', serif; /* Or another thematic font */
+        color: #333;
+        opacity: 0.7;
+        z-index: 1; /* Behind game items */
+    }
+    .wanted-poster h3 { margin: 0 0 5px 0; font-size: 1em; color: #000;}
+    .wanted-poster img { width: 80%; margin-bottom: 5px; border: 1px solid #333;}
+    .wanted-poster p { margin: 0; font-size: 0.7em;}
+
+
   </style>
 </head>
 <body>
+  <div class="police-tape police-tape-top">POLICE LINE DO NOT CROSS --- POLICE LINE DO NOT CROSS</div>
+  <div class="police-tape police-tape-bottom">POLICE LINE DO NOT CROSS --- POLICE LINE DO NOT CROSS</div>
+  <div class="police-tape police-tape-left">POLICE LINE DO NOT CROSS</div>
+  <div class="police-tape police-tape-right">POLICE LINE DO NOT CROSS</div>
+
+  <div id="wantedPosterContainer"></div>
+
   <canvas id="gameCanvas"></canvas>
+
   <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
@@ -31,6 +112,44 @@
     let gameRunning = false;
     let gamePaused = false;
     let animationFrameId;
+
+    // --- Audio Context and Elements ---
+    let audioContext;
+    const sounds = {
+        dispatchStart: null, // Placeholder for new AudioBuffer
+        backgroundMusic: null, // Placeholder for background music
+        radioStatic: null,
+        siren: null,
+        intercomMessages: [], // Array of AudioBuffers for intercom messages
+        // Add other sound effects here
+    };
+    let backgroundMusicSource = null; // To control the music loop
+
+    // Function to load a sound
+    async function loadSound(url) {
+        if (!audioContext) return null;
+        try {
+            const response = await fetch(url);
+            const arrayBuffer = await response.arrayBuffer();
+            return await audioContext.decodeAudioData(arrayBuffer);
+        } catch (error) {
+            console.error(`Error loading sound ${url}:`, error);
+            return null;
+        }
+    }
+
+    // Function to play a sound
+    function playSound(buffer, loop = false, volume = 1) {
+        if (!audioContext || !buffer) return null;
+        const source = audioContext.createBufferSource();
+        source.buffer = buffer;
+        const gainNode = audioContext.createGain();
+        gainNode.gain.value = volume;
+        source.connect(gainNode).connect(audioContext.destination);
+        source.loop = loop;
+        source.start();
+        return source;
+    }
 
     // --- Difficulty Settings ---
     const difficulties = {
@@ -61,19 +180,20 @@
     const DISTRACTOR_COLOR = 'rgba(255, 165, 0, 0.8)';
     const POWERUP_COLOR = 'rgba(255, 0, 255, 0.9)';
     const POWERUP_FREEZE_COLOR = 'rgba(100, 150, 255, 0.9)';
+    const POWERUP_FLASHLIGHT_COLOR = 'rgba(255, 255, 100, 0.9)'; // New Power-up color
     const FRAGMENT_COLOR = 'rgba(100, 200, 255, 0.8)';
 
     let currentItemSpawnChance = currentDifficultySetting.SPAWN_CHANCE;
     const DISTRACTOR_SPAWN_CHANCE = 0.25;
     const FRAGMENTED_EVIDENCE_SPAWN_CHANCE = 0.15;
-    const POWERUP_SPAWN_CHANCE = 0.08;
-    const POWERUP_TYPE_CHANCE = { focus: 0.5, freeze: 0.5 };
+    const POWERUP_SPAWN_CHANCE = 0.10; // Increased slightly for new power-up
+    const POWERUP_TYPE_CHANCE = { focus: 0.4, freeze: 0.4, flashlight: 0.2 }; // Added flashlight
 
     let currentItemActiveDurationMs = currentBeatInterval * currentDifficultySetting.ITEM_DURATION_BEATS;
 
     let score = 0;
-    // Using V3 key as fixes were for V3 features, attribution is minor. If major features are added next, consider V4 key.
-    let highScore = parseInt(localStorage.getItem('evidenceLockdownHighScoreV3') || "0"); 
+    let highScore = parseInt(localStorage.getItem('evidenceLockdownHighScoreV4Proto') || "0"); // Updated storage key
+    let lifetimeScore = parseInt(localStorage.getItem('evidenceLockdownLifetimeScoreV4Proto') || "0");
     let combo = 0;
     const SCORE_PER_EVIDENCE = 100;
     const SCORE_PER_FRAGMENT = 75;
@@ -81,6 +201,7 @@
     const COMBO_MULTIPLIER_BONUS = 10;
     const MAX_COMBO_FOR_METER = 15;
     const HIGH_COMBO_THRESHOLD = 7;
+    const PERFECT_COMBO_STREAK_FOR_SIREN = 15; // Feature 8
 
     const PENALTY_FOR_DISTRACTOR = -150;
     const PENALTY_FOR_MISS = -50;
@@ -97,21 +218,96 @@
     let evidenceMissedCount = 0;
     let totalEvidenceOpportunities = 0;
     let powerUpsCollectedCount = 0;
+    let powerUpsStats = { focus: 0, freeze: 0, flashlight: 0 }; // For Game Over report
 
-    let focusModeActive = false;
-    let focusModeEndTime = 0;
-    const FOCUS_MODE_DURATION_MS = 7000;
-    const FOCUS_MODE_SPEED_MULTIPLIER = 0.6;
-
-    let freezeModeActive = false;
-    let freezeModeEndTime = 0;
+    let focusModeActive = false; let focusModeEndTime = 0;
+    const FOCUS_MODE_DURATION_MS = 7000; const FOCUS_MODE_SPEED_MULTIPLIER = 0.6;
+    let freezeModeActive = false; let freezeModeEndTime = 0;
     const FREEZE_MODE_DURATION_MS = 3500;
+    let flashlightModeActive = false; let flashlightModeEndTime = 0; // Feature 3
+    const FLASHLIGHT_MODE_DURATION_MS = 5000;
 
-    const evidenceTypes = ['key', 'phone', 'footprint', 'document', 'sample'];
+    const evidenceTypes = ['key', 'phone', 'footprint', 'document', 'sample', 'weapon_outline', 'datapad']; // Added some thematic icons
     let backgroundHue = 200;
+
+    // --- Boss Scan Mode (Feature 4) ---
+    let bossScanModeActive = false;
+    let bossScanTimer = 0;
+    const BOSS_SCAN_INTERVAL = 60000; // 60 seconds
+    const BOSS_SCAN_DURATION = 15000; // 15 seconds
+    let bossScanEndTime = 0;
+    let originalDifficultyForBoss;
+
+    // --- Wanted Posters (Feature 7) ---
+    const wantedPostersData = [
+        { name: "Glitch Byte", reason: "Code Interference", img: "images/placeholders/wanted_glitch.png" }, // Placeholder images
+        { name: "Silent Static", reason: "Signal Jamming", img: "images/placeholders/wanted_static.png" },
+        { name: "Vector Vandall", reason: "Illegal Graphics", img: "images/placeholders/wanted_vector.png" }
+    ];
+    let activeWantedPosters = [];
+
+    // --- Siren Flash (Feature 8) ---
+    let sirenFlashActive = false;
+    let sirenFlashEndTime = 0;
+    const SIREN_FLASH_DURATION = 1000; // 1 second flash
+
+    // --- Achievements & Rank (Feature 9 & 11) ---
+    const achievements = {
+        rookie: { name: "Rookie Scanner", criteria: () => lifetimeScore >= 5000, unlocked: false, icon: "images/badges/badge_rookie.png"},
+        veteran: { name: "Veteran Analyst", criteria: () => lifetimeScore >= 25000, unlocked: false, icon: "images/badges/badge_veteran.png"},
+        master: { name: "Master Investigator", criteria: () => lifetimeScore >= 100000, unlocked: false, icon: "images/badges/badge_master.png"}
+    }; // Placeholder icons
+    const rankThresholds = [
+        { name: "Cadet", score: 0 },
+        { name: "Officer", score: 10000 },
+        { name: "Sergeant", score: 30000 },
+        { name: "Lieutenant", score: 75000 },
+        { name: "Captain", score: 150000 },
+        { name: "Commander", score: 300000 }
+    ];
+    let currentRank = rankThresholds[0];
+
+    // --- Detective Mode (Feature 10) ---
+    let detectiveModeActive = false;
+    let detectiveModeTapSequence = ['top-left', 'bottom-right', 'top-right', 'bottom-left']; // Example sequence
+    let currentTapSequence = [];
+    const DETECTIVE_MODE_TAP_AREA_SIZE = 0.2; // 20% of screen width/height for corners
+
+    // --- Police Intercom Messages (Feature 15) ---
+    const intercomMessages = [
+        { text: "Scanner detected interference...", audio: "audio/intercom/interference.mp3" },
+        { text: "Anomaly detected in Sector Gamma.", audio: "audio/intercom/anomaly_gamma.mp3" },
+        { text: "Maintain scan integrity.", audio: "audio/intercom/maintain_integrity.mp3" },
+        { text: "High priority target identified.", audio: "audio/intercom/high_priority.mp3" }
+    ]; // Placeholder audio
+    let currentIntercomMessage = null;
+    let intercomMessageEndTime = 0;
+    let nextIntercomMessageTime = 0;
+
 
     function getRandom(min, max) { return Math.random() * (max - min) + min; }
     function getRandomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+    function updateRankAndAchievements() {
+        for (const achKey in achievements) {
+            if (!achievements[achKey].unlocked && achievements[achKey].criteria()) {
+                achievements[achKey].unlocked = true;
+                // Optionally: show a notification for unlocked achievement
+                addTapFeedback(screenWidth/2, screenHeight/2, `Badge Unlocked: ${achievements[achKey].name}!`, POWERUP_COLOR, performance.now(), true);
+            }
+        }
+        localStorage.setItem('evidenceLockdownAchievementsV4Proto', JSON.stringify(achievements));
+
+        let newRank = rankThresholds[0];
+        for (let i = rankThresholds.length - 1; i >= 0; i--) {
+            if (lifetimeScore >= rankThresholds[i].score) {
+                newRank = rankThresholds[i];
+                break;
+            }
+        }
+        currentRank = newRank;
+    }
+
 
     function resizeCanvas() {
       screenWidth = window.innerWidth;
@@ -119,14 +315,30 @@
       canvas.width = screenWidth;
       canvas.height = screenHeight;
       scannerX = SCANNER_WIDTH / 2;
+
+      // Adjust police tape font size (example of dynamic adjustment)
+      const tapeElements = document.querySelectorAll('.police-tape');
+      const tapeFontSize = Math.min(screenWidth * 0.015, screenHeight * 0.03); // Responsive calculation
+      tapeElements.forEach(tape => {
+          tape.style.fontSize = `${tapeFontSize}px`;
+          tape.style.lineHeight = `${tapeFontSize * 2}px`;
+          if (tape.classList.contains('police-tape-top') || tape.classList.contains('police-tape-bottom')) {
+              tape.style.height = `${tapeFontSize * 2}px`;
+          } else {
+              tape.style.width = `${tapeFontSize * 2}px`;
+          }
+      });
+      // Reposition wanted posters if needed (simple version, could be more complex)
+      displayWantedPosters(false); // Redraw without randomizing
+      
       if (!gameRunning) {
-          if (lives <= 0 && score > 0) drawEndGameReport(); // Check score to ensure it's actually game over, not fresh load
+          if (lives <= 0 && score > 0) drawEndGameReport();
           else drawStartScreen();
       } else {
           draw();
       }
     }
-
+    
     function cycleDifficulty() {
         selectedDifficultyIndex = (selectedDifficultyIndex + 1) % difficultySelection.length;
         currentDifficultySetting = difficulties[difficultySelection[selectedDifficultyIndex]];
@@ -139,19 +351,56 @@
     
     function handleTap(event) {
       if (event) event.preventDefault();
+
+      // Initialize AudioContext on first user interaction
+      if (!audioContext) {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          // Load all sounds after context is created
+          Promise.all([
+              loadSound("audio/placeholders/dispatch_start.mp3").then(b => sounds.dispatchStart = b),
+              loadSound("audio/placeholders/scanner_music_90bpm.mp3").then(b => sounds.backgroundMusic = b), // Example BPM, might need different versions or rate adjustments
+              loadSound("audio/placeholders/radio_static_short.mp3").then(b => sounds.radioStatic = b),
+              loadSound("audio/placeholders/siren_short.mp3").then(b => sounds.siren = b),
+              // TODO: Load intercom message audio files here
+              // Promise.all(intercomMessages.map(msg => loadSound(msg.audio)))
+              // .then(loadedIntercomSounds => {
+              //     intercomMessages.forEach((msg, idx) => sounds.intercomMessages[idx] = loadedIntercomSounds[idx]);
+              // })
+          ]).then(() => console.log("Audio assets potentially loaded."));
+      }
+
+      const rect = canvas.getBoundingClientRect();
+      const tapX = (event.touches ? event.touches[0].clientX : event.clientX) - rect.left;
+      const tapY = (event.touches ? event.touches[0].clientY : event.clientY) - rect.top;
+
       if (!gameRunning && !gamePaused) {
-        const rect = canvas.getBoundingClientRect(); 
-        const tapY = (event.touches ? event.touches[0].clientY : event.clientY) - rect.top; // Handle mouse and touch
-        
-        // Approximate Y coordinate check for difficulty change text.
-        // This may need adjustment depending on final layout of drawStartScreen.
         const difficultyTextYAreaStart = screenHeight * 0.68; 
         const difficultyTextYAreaEnd = screenHeight * 0.78;
-
         if (tapY > difficultyTextYAreaStart && tapY < difficultyTextYAreaEnd) {
              cycleDifficulty();
              return;
         }
+        // Detective Mode tap check (Feature 10)
+        let tapZone = '';
+        if (tapX < screenWidth * DETECTIVE_MODE_TAP_AREA_SIZE && tapY < screenHeight * DETECTIVE_MODE_TAP_AREA_SIZE) tapZone = 'top-left';
+        else if (tapX > screenWidth * (1-DETECTIVE_MODE_TAP_AREA_SIZE) && tapY > screenHeight * (1-DETECTIVE_MODE_TAP_AREA_SIZE)) tapZone = 'bottom-right';
+        else if (tapX > screenWidth * (1-DETECTIVE_MODE_TAP_AREA_SIZE) && tapY < screenHeight * DETECTIVE_MODE_TAP_AREA_SIZE) tapZone = 'top-right';
+        else if (tapX < screenWidth * DETECTIVE_MODE_TAP_AREA_SIZE && tapY > screenHeight * (1-DETECTIVE_MODE_TAP_AREA_SIZE)) tapZone = 'bottom-left';
+        
+        if (tapZone) {
+            currentTapSequence.push(tapZone);
+            if (currentTapSequence.length > detectiveModeTapSequence.length) currentTapSequence.shift();
+            if (JSON.stringify(currentTapSequence) === JSON.stringify(detectiveModeTapSequence)) {
+                detectiveModeActive = !detectiveModeActive;
+                currentTapSequence = [];
+                addTapFeedback(screenWidth/2, screenHeight/2, `Detective Mode: ${detectiveModeActive ? 'ON' : 'OFF'}`, POWERUP_COLOR, performance.now());
+                drawStartScreen(); // Redraw to reflect change if any
+                return;
+            }
+        } else {
+            currentTapSequence = []; // Reset if tap is not in a corner
+        }
+
         startGame();
         return;
       }
@@ -169,13 +418,14 @@
             if (scannerX >= item.x - item.radius && scannerX <= item.x + item.radius) {
                 itemHitProcessed = true;
                 let pointsEarnedThisTap = 0;
-                let hitColor = item.color || EVIDENCE_BASE_COLOR; // Default color for feedback
+                let hitColor = item.color || EVIDENCE_BASE_COLOR;
 
                 if (item.type === 'evidence') {
                     pointsEarnedThisTap = SCORE_PER_EVIDENCE + (combo * COMBO_MULTIPLIER_BONUS);
                     score += pointsEarnedThisTap; combo++; evidenceCollectedCount++;
                     createParticleExplosion(item.x, item.y, EVIDENCE_BASE_COLOR);
                 } else if (item.type === 'fragment') {
+                    // ... (fragment logic remains same)
                     pointsEarnedThisTap = SCORE_PER_FRAGMENT;
                     score += pointsEarnedThisTap; fragmentsCollectedCount++;
                     hitColor = FRAGMENT_COLOR;
@@ -192,21 +442,29 @@
                         }
                     }
                 } else if (item.type === 'powerup_focus') {
-                    activateFocusMode(tapTime); powerUpsCollectedCount++; pointsEarnedThisTap = 0;
-                    hitColor = POWERUP_COLOR;
-                    createParticleExplosion(item.x, item.y, POWERUP_COLOR);
+                    activateFocusMode(tapTime); powerUpsCollectedCount++; powerUpsStats.focus++; pointsEarnedThisTap = 0;
+                    hitColor = POWERUP_COLOR; createParticleExplosion(item.x, item.y, POWERUP_COLOR);
                 } else if (item.type === 'powerup_freeze') {
-                    activateFreezeMode(tapTime); powerUpsCollectedCount++; pointsEarnedThisTap = 0;
-                    hitColor = POWERUP_FREEZE_COLOR;
-                    createParticleExplosion(item.x, item.y, POWERUP_FREEZE_COLOR);
+                    activateFreezeMode(tapTime); powerUpsCollectedCount++; powerUpsStats.freeze++; pointsEarnedThisTap = 0;
+                    hitColor = POWERUP_FREEZE_COLOR; createParticleExplosion(item.x, item.y, POWERUP_FREEZE_COLOR);
+                } else if (item.type === 'powerup_flashlight') { // Feature 3
+                    activateFlashlightMode(tapTime); powerUpsCollectedCount++; powerUpsStats.flashlight++; pointsEarnedThisTap = 0;
+                    hitColor = POWERUP_FLASHLIGHT_COLOR; createParticleExplosion(item.x, item.y, POWERUP_FLASHLIGHT_COLOR);
                 } else if (item.type === 'distractor') {
                     score = Math.max(0, score + PENALTY_FOR_DISTRACTOR); combo = 0; lives--;
                     distractorsHitCount++; pointsEarnedThisTap = PENALTY_FOR_DISTRACTOR;
-                    hitColor = DISTRACTOR_COLOR;
-                    createParticleExplosion(item.x, item.y, DISTRACTOR_COLOR, true);
+                    hitColor = DISTRACTOR_COLOR; createParticleExplosion(item.x, item.y, DISTRACTOR_COLOR, true);
+                    playSound(sounds.radioStatic, false, 0.5); // Feature 6: Radio static on distractor hit
                 }
                 addTapFeedback(item.x, item.y, (pointsEarnedThisTap >= 0 ? `+${pointsEarnedThisTap}`: `${pointsEarnedThisTap}`), hitColor, tapTime);
                 items.splice(i, 1);
+
+                // Feature 8: Siren sound and flash on perfect combo streaks
+                if (combo > 0 && combo % PERFECT_COMBO_STREAK_FOR_SIREN === 0) {
+                    playSound(sounds.siren, false, 0.7);
+                    sirenFlashActive = true;
+                    sirenFlashEndTime = performance.now() + SIREN_FLASH_DURATION;
+                }
                 break;
             }
         }
@@ -214,21 +472,45 @@
       if (lives <= 0) gameOver();
     }
 
-    function activateFocusMode(currentTime) { focusModeActive = true; freezeModeActive = false; focusModeEndTime = currentTime + FOCUS_MODE_DURATION_MS;}
+    function activateFocusMode(currentTime) { focusModeActive = true; freezeModeActive = false; flashlightModeActive = false; focusModeEndTime = currentTime + FOCUS_MODE_DURATION_MS;}
     function deactivateFocusMode() { focusModeActive = false; }
-    function activateFreezeMode(currentTime) { freezeModeActive = true; focusModeActive = false; freezeModeEndTime = currentTime + FREEZE_MODE_DURATION_MS; gamePaused = true;}
+    function activateFreezeMode(currentTime) { freezeModeActive = true; focusModeActive = false; flashlightModeActive = false; freezeModeEndTime = currentTime + FREEZE_MODE_DURATION_MS; gamePaused = true;}
     function deactivateFreezeMode() { freezeModeActive = false; gamePaused = false; lastBeatTime = performance.now(); lastTime = performance.now(); }
+    function activateFlashlightMode(currentTime) { // Feature 3
+        flashlightModeActive = true; focusModeActive = false; freezeModeActive = false;
+        flashlightModeEndTime = currentTime + FLASHLIGHT_MODE_DURATION_MS;
+        // Reveal hidden items or highlight items - handled in drawItems
+    }
+    function deactivateFlashlightMode() { flashlightModeActive = false; }
+
     function addTapFeedback(x, y, text, color, time, isBonus = false) { tapFeedback.push({ x, y, text, color, spawnTime: time, alpha: 1, scale: isBonus ? 1.3 : 1 });}
     
     let itemIdCounter = 0;
     function spawnItem(currentTime) { 
-        if (Math.random() > currentItemSpawnChance) return;
+        let currentSpawnChance = currentItemSpawnChance;
+        if (bossScanModeActive) currentSpawnChance *= 1.5; // Increased spawn in boss mode
+
+        if (Math.random() > currentSpawnChance) return;
         const spawnRoll = Math.random();
         let itemTypeToSpawn, itemIconType;
+        // Feature 3: Some items could be 'hidden' unless flashlight is active
+        let hidden = false;
+        if (!flashlightModeActive && Math.random() < 0.1) { // 10% chance for an item to be initially hidden
+            // This item will only be visible during flashlight mode or if flashlight reveals it
+            // The actual reveal logic will be in drawItems
+        }
+
 
         if (spawnRoll < POWERUP_SPAWN_CHANCE) {
-            itemTypeToSpawn = Math.random() < POWERUP_TYPE_CHANCE.focus ? 'powerup_focus' : 'powerup_freeze';
-            itemIconType = itemTypeToSpawn === 'powerup_focus' ? 'powerup_focus_icon' : 'powerup_freeze_icon';
+            const powerupRoll = Math.random();
+            if (powerupRoll < POWERUP_TYPE_CHANCE.focus) itemTypeToSpawn = 'powerup_focus';
+            else if (powerupRoll < POWERUP_TYPE_CHANCE.focus + POWERUP_TYPE_CHANCE.freeze) itemTypeToSpawn = 'powerup_freeze';
+            else itemTypeToSpawn = 'powerup_flashlight';
+            
+            if (itemTypeToSpawn === 'powerup_focus') itemIconType = 'powerup_focus_icon';
+            else if (itemTypeToSpawn === 'powerup_freeze') itemIconType = 'powerup_freeze_icon';
+            else itemIconType = 'powerup_flashlight_icon';
+
         } else if (spawnRoll < POWERUP_SPAWN_CHANCE + FRAGMENTED_EVIDENCE_SPAWN_CHANCE) {
             itemTypeToSpawn = 'fragment_parent';
         } else {
@@ -244,6 +526,14 @@
         }
         itemIdCounter++;
 
+        // Determine if item is hidden for Flashlight power-up (Feature 3)
+        // For demonstration, let's say 15% of regular evidence might be "partially hidden"
+        let initiallyHidden = false;
+        if (itemTypeToSpawn === 'evidence' && Math.random() < 0.15) {
+            initiallyHidden = true;
+        }
+
+
         if (itemTypeToSpawn === 'fragment_parent') {
             totalEvidenceOpportunities++; 
             const numFragments = getRandomInt(2, 3);
@@ -256,7 +546,13 @@
             }
         } else {
             if(itemTypeToSpawn === 'evidence') totalEvidenceOpportunities++;
-            items.push({ id: itemIdCounter, x, y, radius: ITEM_RADIUS_BASE, type: itemTypeToSpawn, color: itemTypeToSpawn === 'evidence' ? EVIDENCE_BASE_COLOR : (itemTypeToSpawn === 'powerup_focus' ? POWERUP_COLOR : (itemTypeToSpawn === 'powerup_freeze' ? POWERUP_FREEZE_COLOR : DISTRACTOR_COLOR)), iconType: itemIconType, spawnTime: currentTime, alpha: 0 });
+            let color;
+            if (itemTypeToSpawn === 'evidence') color = EVIDENCE_BASE_COLOR;
+            else if (itemTypeToSpawn === 'powerup_focus') color = POWERUP_COLOR;
+            else if (itemTypeToSpawn === 'powerup_freeze') color = POWERUP_FREEZE_COLOR;
+            else if (itemTypeToSpawn === 'powerup_flashlight') color = POWERUP_FLASHLIGHT_COLOR;
+            else color = DISTRACTOR_COLOR;
+            items.push({ id: itemIdCounter, x, y, radius: ITEM_RADIUS_BASE, type: itemTypeToSpawn, color: color, iconType: itemIconType, spawnTime: currentTime, alpha: 0, hidden: initiallyHidden });
         }
     }
 
@@ -274,6 +570,7 @@
           if (item.type === 'evidence' || item.type === 'fragment') {
             score = Math.max(0, score + PENALTY_FOR_MISS); combo = 0; evidenceMissedCount++;
             addTapFeedback(item.x, item.y, 'Missed!', DISTRACTOR_COLOR, currentTime);
+            playSound(sounds.radioStatic, false, 0.3); // Feature 6: Radio static on miss
           }
           items.splice(i, 1);
         }
@@ -285,6 +582,9 @@
       if (gamePaused) return;
       let scoreFactor = score * currentDifficultySetting.SCORE_SPEED_FACTOR;
       let dynamicSpeedMs = baseScannerSpeedMs * (1 + Math.min(scoreFactor, MAX_SCANNER_SPEED_INCREASE_FACTOR -1));
+      
+      if (bossScanModeActive) dynamicSpeedMs *= 1.5; // Faster scanner in boss mode
+      
       currentScannerSpeedMs = focusModeActive ? dynamicSpeedMs * FOCUS_MODE_SPEED_MULTIPLIER : dynamicSpeedMs;
       
       scannerX += currentScannerSpeedMs * deltaTime * scannerDirection;
@@ -301,182 +601,527 @@
     function createParticleExplosion(x,y,color,isError=false){ const count=isError?15:25;const s=isError?2:3;for(let i=0;i<count;i++)particles.push({x,y,vx:getRandom(-s,s),vy:getRandom(-s,s),radius:getRandom(isError?3:2,isError?5:4),color:color.replace(/, [0-9\.]+\)/,`, ${getRandom(0.5,1)})`),lifespan:getRandom(300,600),spawnTime:performance.now(),alpha:1});}
     function updateParticles(deltaTime){ for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.x+=p.vx*(deltaTime/16);p.y+=p.vy*(deltaTime/16);p.alpha=Math.max(0,1-(performance.now()-p.spawnTime)/p.lifespan);p.vy+=0.05;if(p.alpha<=0)particles.splice(i,1);}}
     function drawParticles(){ particles.forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,p.radius*p.alpha,0,Math.PI*2);ctx.fillStyle=p.color.replace(/, [0-9\.]+\)/,`, ${p.alpha*0.8})`);ctx.fill();});}
-    function drawIcon(type,x,y,radius,alpha){ ctx.save();ctx.translate(x,y);ctx.globalAlpha=alpha;const iC=EVIDENCE_BASE_COLOR.replace(/, [0-9\.]+\)/,`, ${alpha})`);ctx.lineWidth=2;ctx.strokeStyle=iC;ctx.fillStyle=iC;switch(type){case 'key':ctx.beginPath();ctx.arc(0,-radius*0.4,radius*0.3,0,Math.PI*2);ctx.moveTo(0,-radius*0.1);ctx.lineTo(0,radius*0.6);ctx.lineTo(radius*0.2,radius*0.6);ctx.moveTo(0,radius*0.3);ctx.lineTo(radius*0.2,radius*0.3);ctx.stroke();break;case 'phone':ctx.strokeRect(-radius*0.5,-radius*0.7,radius,radius*1.4);ctx.fillRect(-radius*0.3,-radius*0.55,radius*0.6,radius*0.15);ctx.beginPath();ctx.arc(0,radius*0.4,radius*0.1,0,Math.PI*2);ctx.fill();break;case 'footprint':ctx.beginPath();ctx.ellipse(0,0,radius*0.5,radius*0.8,0,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(0,-radius*0.6,radius*0.4,radius*0.3,Math.PI*0.1,0,Math.PI*2);ctx.fill();break;case 'document':ctx.strokeRect(-radius*0.6,-radius*0.7,radius*1.2,radius*1.4);for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(-radius*0.45,-radius*0.4+i*radius*0.3);ctx.lineTo(radius*0.45,-radius*0.4+i*radius*0.3);ctx.stroke();}break;case 'sample':ctx.beginPath();ctx.moveTo(-radius*0.3,-radius*0.6);ctx.lineTo(-radius*0.3,radius*0.4);ctx.quadraticCurveTo(-radius*0.3,radius*0.7,0,radius*0.7);ctx.quadraticCurveTo(radius*0.3,radius*0.7,radius*0.3,radius*0.4);ctx.lineTo(radius*0.3,-radius*0.6);ctx.closePath();ctx.stroke();ctx.fillRect(-radius*0.2,-radius*0.1,radius*0.4,radius*0.5);break;case 'powerup_focus_icon':ctx.strokeStyle=POWERUP_COLOR.replace(/, [0-9\.]+\)/,`, ${alpha})`);ctx.fillStyle=POWERUP_COLOR.replace(/, [0-9\.]+\)/,`, ${alpha*0.5})`);ctx.beginPath();ctx.arc(0,0,radius,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.arc(0,0,radius*0.5,0,Math.PI*2);ctx.lineWidth=1.5;ctx.stroke();break;case 'powerup_freeze_icon':ctx.strokeStyle=POWERUP_FREEZE_COLOR.replace(/, [0-9\.]+\)/,`, ${alpha})`);ctx.fillStyle=POWERUP_FREEZE_COLOR.replace(/, [0-9\.]+\)/,`, ${alpha*0.5})`);ctx.beginPath();for(let i=0;i<6;i++){ctx.moveTo(0,0);ctx.lineTo(Math.cos(i*Math.PI/3)*radius,Math.sin(i*Math.PI/3)*radius);ctx.moveTo(Math.cos(i*Math.PI/3+Math.PI/6)*radius*0.5,Math.sin(i*Math.PI/3+Math.PI/6)*radius*0.5);ctx.lineTo(Math.cos(i*Math.PI/3-Math.PI/6)*radius*0.5,Math.sin(i*Math.PI/3-Math.PI/6)*radius*0.5);}ctx.stroke();break;case 'distractor_icon':ctx.fillStyle=DISTRACTOR_COLOR.replace(/, [0-9\.]+\)/,`, ${alpha*0.8})`);ctx.beginPath();ctx.arc(0,0,radius,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(50,0,0,'+alpha+')';ctx.lineWidth=3;ctx.moveTo(-radius*0.5,-radius*0.5);ctx.lineTo(radius*0.5,radius*0.5);ctx.moveTo(radius*0.5,-radius*0.5);ctx.lineTo(-radius*0.5,radius*0.5);ctx.stroke();break;default:if(type==='fragment'){ctx.fillStyle=FRAGMENT_COLOR.replace(/, [0-9\.]+\)/,`, ${alpha*0.7})`);ctx.strokeStyle=FRAGMENT_COLOR.replace(/, [0-9\.]+\)/,`, ${alpha})`);}ctx.beginPath();ctx.arc(0,0,radius,0,Math.PI*2);ctx.fill();if(type==='fragment')ctx.stroke();break;}ctx.restore();}
-    function drawBackground(){ backgroundHue=(backgroundHue+0.05)%360;document.body.style.backgroundColor=`hsl(${backgroundHue},30%,5%)`;ctx.fillStyle=`hsl(${backgroundHue},30%,10%)`;ctx.fillRect(0,0,screenWidth,screenHeight);if(focusModeActive)ctx.fillStyle='rgba(70,0,70,0.15)';else if(freezeModeActive)ctx.fillStyle='rgba(0,70,70,0.25)';if(focusModeActive||freezeModeActive)ctx.fillRect(0,0,screenWidth,screenHeight);}
-    function drawScanner(){ let bC=SCANNER_COLOR_BASE;let gWM=2;if(combo>=HIGH_COMBO_THRESHOLD){bC=`rgba(255,255,0,0.8)`;gWM=3.5;}if(focusModeActive)bC=`rgba(255,0,255,0.8)`;else if(freezeModeActive)bC=`rgba(150,200,255,0.8)`;ctx.fillStyle=bC;ctx.fillRect(scannerX-SCANNER_WIDTH/2,0,SCANNER_WIDTH,screenHeight);const tSLB=performance.now()-lastBeatTime;const pP=gamePaused?0:Math.min(1,tSLB/currentBeatInterval);const pA=Math.sin(pP*Math.PI)*(focusModeActive?0.5:0.3);const pCRGB=combo>=HIGH_COMBO_THRESHOLD?'255,255,0':(focusModeActive?'255,0,255':(freezeModeActive?'150,200,255':'0,255,255'));ctx.fillStyle=`rgba(${pCRGB}, ${pA})`;ctx.fillRect(scannerX-SCANNER_WIDTH*gWM,0,SCANNER_WIDTH*gWM*2,screenHeight);}
-    function drawItems(currentTime){ items.forEach(item=>{if(item.type==='fragment_parent')return;const tTE=(item.spawnTime+currentItemActiveDurationMs)-currentTime;let sF=1;if(tTE<currentItemActiveDurationMs&&tTE>0){sF=Math.max(0.3,tTE/currentItemActiveDurationMs);}else if(tTE<=0){sF=0.3;}const p=gamePaused?0.85:Math.sin((currentTime-item.spawnTime)/(currentBeatInterval/2.5)*Math.PI)*0.15+0.85;const cR=item.radius*p*item.alpha*sF;if(cR<1)return;if(item.iconType)drawIcon(item.iconType,item.x,item.y,cR,item.alpha);else drawIcon(item.type,item.x,item.y,cR,item.alpha);});}
+    
+    function drawIcon(type,x,y,radius,alpha,itemHidden = false){ // Added itemHidden for Feature 3
+      ctx.save();
+      ctx.translate(x,y);
+      
+      let displayAlpha = alpha;
+      if (itemHidden && !flashlightModeActive) {
+          displayAlpha *= 0.2; // Barely visible if hidden and no flashlight
+      } else if (itemHidden && flashlightModeActive) {
+          displayAlpha = alpha * (1 + Math.sin(performance.now()/150)*0.2); // Pulsate when revealed by flashlight
+          ctx.shadowBlur = 15;
+          ctx.shadowColor = POWERUP_FLASHLIGHT_COLOR.replace(/, [0-9\.]+\)/,`, ${displayAlpha*0.7})`);
+      }
+
+
+      ctx.globalAlpha = displayAlpha;
+      const iC=EVIDENCE_BASE_COLOR.replace(/, [0-9\.]+\)/,`, ${displayAlpha})`);
+      ctx.lineWidth=2; ctx.strokeStyle=iC; ctx.fillStyle=iC;
+
+      // Placeholder for police-themed UI icons (Feature 14)
+      // These would ideally be small images or more complex vector drawings
+      switch(type){
+        case 'key':ctx.beginPath();ctx.arc(0,-radius*0.4,radius*0.3,0,Math.PI*2);ctx.moveTo(0,-radius*0.1);ctx.lineTo(0,radius*0.6);ctx.lineTo(radius*0.2,radius*0.6);ctx.moveTo(0,radius*0.3);ctx.lineTo(radius*0.2,radius*0.3);ctx.stroke();break;
+        case 'phone':ctx.strokeRect(-radius*0.5,-radius*0.7,radius,radius*1.4);ctx.fillRect(-radius*0.3,-radius*0.55,radius*0.6,radius*0.15);ctx.beginPath();ctx.arc(0,radius*0.4,radius*0.1,0,Math.PI*2);ctx.fill();break;
+        case 'footprint':ctx.beginPath();ctx.ellipse(0,0,radius*0.5,radius*0.8,0,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(0,-radius*0.6,radius*0.4,radius*0.3,Math.PI*0.1,0,Math.PI*2);ctx.fill();break;
+        case 'document':ctx.strokeRect(-radius*0.6,-radius*0.7,radius*1.2,radius*1.4);for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(-radius*0.45,-radius*0.4+i*radius*0.3);ctx.lineTo(radius*0.45,-radius*0.4+i*radius*0.3);ctx.stroke();}break;
+        case 'sample':ctx.beginPath();ctx.moveTo(-radius*0.3,-radius*0.6);ctx.lineTo(-radius*0.3,radius*0.4);ctx.quadraticCurveTo(-radius*0.3,radius*0.7,0,radius*0.7);ctx.quadraticCurveTo(radius*0.3,radius*0.7,radius*0.3,radius*0.4);ctx.lineTo(radius*0.3,-radius*0.6);ctx.closePath();ctx.stroke();ctx.fillRect(-radius*0.2,-radius*0.1,radius*0.4,radius*0.5);break;
+        case 'weapon_outline': // New icon example
+            ctx.beginPath();
+            ctx.moveTo(-radius * 0.7, radius * 0.3); ctx.lineTo(-radius * 0.3, radius * 0.3);
+            ctx.lineTo(-radius * 0.2, -radius * 0.5); ctx.lineTo(radius * 0.2, -radius * 0.5);
+            ctx.lineTo(radius * 0.3, radius * 0.3); ctx.lineTo(radius * 0.7, radius * 0.3);
+            ctx.lineTo(radius * 0.6, radius * 0.5); ctx.lineTo(-radius * 0.6, radius * 0.5);
+            ctx.closePath(); ctx.stroke(); break;
+        case 'datapad': // New icon example
+            ctx.beginPath();
+            ctx.roundRect(-radius*0.6, -radius*0.8, radius*1.2, radius*1.6, radius*0.1);
+            ctx.stroke();
+            ctx.fillRect(-radius*0.5, -radius*0.7, radius*1.0, radius*1.0); break;
+        case 'powerup_focus_icon':ctx.strokeStyle=POWERUP_COLOR.replace(/, [0-9\.]+\)/,`, ${displayAlpha})`);ctx.fillStyle=POWERUP_COLOR.replace(/, [0-9\.]+\)/,`, ${displayAlpha*0.5})`);ctx.beginPath();ctx.arc(0,0,radius,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.arc(0,0,radius*0.5,0,Math.PI*2);ctx.lineWidth=1.5;ctx.stroke();break;
+        case 'powerup_freeze_icon':ctx.strokeStyle=POWERUP_FREEZE_COLOR.replace(/, [0-9\.]+\)/,`, ${displayAlpha})`);ctx.fillStyle=POWERUP_FREEZE_COLOR.replace(/, [0-9\.]+\)/,`, ${displayAlpha*0.5})`);ctx.beginPath();for(let i=0;i<6;i++){ctx.moveTo(0,0);ctx.lineTo(Math.cos(i*Math.PI/3)*radius,Math.sin(i*Math.PI/3)*radius);ctx.moveTo(Math.cos(i*Math.PI/3+Math.PI/6)*radius*0.5,Math.sin(i*Math.PI/3+Math.PI/6)*radius*0.5);ctx.lineTo(Math.cos(i*Math.PI/3-Math.PI/6)*radius*0.5,Math.sin(i*Math.PI/3-Math.PI/6)*radius*0.5);}ctx.stroke();break;
+        case 'powerup_flashlight_icon': // Feature 3
+            ctx.strokeStyle = POWERUP_FLASHLIGHT_COLOR.replace(/, [0-9\.]+\)/,`, ${displayAlpha})`);
+            ctx.fillStyle = POWERUP_FLASHLIGHT_COLOR.replace(/, [0-9\.]+\)/,`, ${displayAlpha*0.5})`);
+            ctx.beginPath(); ctx.arc(0,0,radius,0,Math.PI*2); ctx.fill();ctx.stroke();
+            // Simple flashlight beam design
+            ctx.beginPath();
+            ctx.moveTo(0, -radius*0.3); ctx.lineTo(-radius*0.5, radius*0.6);
+            ctx.lineTo(radius*0.5, radius*0.6); ctx.closePath();
+            ctx.fillStyle = POWERUP_FLASHLIGHT_COLOR.replace(/, [0-9\.]+\)/,`, ${displayAlpha*0.8})`);
+            ctx.fill();
+            break;
+        case 'distractor_icon':ctx.fillStyle=DISTRACTOR_COLOR.replace(/, [0-9\.]+\)/,`, ${displayAlpha*0.8})`);ctx.beginPath();ctx.arc(0,0,radius,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(50,0,0,'+displayAlpha+')';ctx.lineWidth=3;ctx.moveTo(-radius*0.5,-radius*0.5);ctx.lineTo(radius*0.5,radius*0.5);ctx.moveTo(radius*0.5,-radius*0.5);ctx.lineTo(-radius*0.5,radius*0.5);ctx.stroke();break;
+        default:if(type==='fragment'){ctx.fillStyle=FRAGMENT_COLOR.replace(/, [0-9\.]+\)/,`, ${displayAlpha*0.7})`);ctx.strokeStyle=FRAGMENT_COLOR.replace(/, [0-9\.]+\)/,`, ${displayAlpha})`);}ctx.beginPath();ctx.arc(0,0,radius,0,Math.PI*2);ctx.fill();if(type==='fragment')ctx.stroke();break;
+      }
+      ctx.shadowBlur = 0; // Reset shadow
+      ctx.restore();
+    }
+
+    function drawBackground(){ 
+        backgroundHue=(backgroundHue+0.05)%360;
+        let baseBgColor = `hsl(${backgroundHue},30%,5%)`;
+        let midBgColor = `hsl(${backgroundHue},30%,10%)`;
+
+        if (detectiveModeActive) { // Feature 10
+            baseBgColor = `hsl(0,0%,10%)`; // Dark gray
+            midBgColor = `hsl(0,0%,20%)`; // Slightly lighter gray
+            ctx.filter = 'grayscale(100%) contrast(1.1)'; // Apply filter to whole canvas if detective mode
+        } else {
+            ctx.filter = 'none'; // Reset filter
+        }
+
+        document.body.style.backgroundColor = baseBgColor;
+        ctx.fillStyle = midBgColor;
+        ctx.fillRect(0,0,screenWidth,screenHeight);
+        
+        let overlayColor = null;
+        if (focusModeActive) overlayColor = 'rgba(100,0,100,0.15)'; // More intense purple for police tech
+        else if (freezeModeActive) overlayColor = 'rgba(0,100,100,0.25)'; // More intense cyan
+        else if (flashlightModeActive) { // Feature 3
+             // Pulsating light effect for background
+            const pulse = Math.sin(performance.now() / 300) * 0.05 + 0.05; // 0.05 to 0.1 alpha
+            overlayColor = `rgba(255, 255, 150, ${pulse})`;
+        } else if (sirenFlashActive) { // Feature 8
+            const flashCycle = Math.sin(performance.now() / 80); // Rapid cycle for siren
+            overlayColor = flashCycle > 0 ? 'rgba(255,0,0,0.3)' : 'rgba(0,0,255,0.3)';
+        } else if (bossScanModeActive) {
+            overlayColor = 'rgba(255,50,0,0.15)'; // Ominous orange/red tint for boss mode
+        }
+
+        if(overlayColor) {
+            ctx.fillStyle = overlayColor;
+            ctx.fillRect(0,0,screenWidth,screenHeight);
+        }
+        // Wanted Posters are now HTML elements, drawn via displayWantedPosters()
+    }
+
+    function displayWantedPosters(randomize = true) { // Feature 7
+        const container = document.getElementById('wantedPosterContainer');
+        if (!container) return;
+
+        if (randomize) {
+            container.innerHTML = ''; // Clear old posters
+            activeWantedPosters = [];
+            const numPosters = getRandomInt(1,3);
+            for(let i=0; i < numPosters; i++) {
+                const posterData = wantedPostersData[getRandomInt(0, wantedPostersData.length - 1)];
+                if (activeWantedPosters.find(p => p.name === posterData.name)) continue; // Avoid duplicates in one go
+
+                const posterEl = document.createElement('div');
+                posterEl.classList.add('wanted-poster');
+                posterEl.style.left = `${getRandom(5, 75)}%`; // % of container width
+                posterEl.style.top = `${getRandom(5, 75)}%`; // % of container height
+                posterEl.innerHTML = `
+                    <h3>WANTED</h3>
+                    <img src="${posterData.img}" alt="${posterData.name}">
+                    <p><strong>${posterData.name}</strong></p>
+                    <p><small>${posterData.reason}</small></p>
+                `;
+                container.appendChild(posterEl);
+                activeWantedPosters.push(posterData);
+            }
+        } else { // Just update positions/visibility if not randomizing (e.g. on resize)
+             // This part would need more logic if posters need to dynamically adjust beyond CSS
+        }
+    }
+
+
+    function drawScanner(){ 
+      let baseColor = SCANNER_COLOR_BASE;
+      let glowWidthMultiplier = 2;
+
+      if (bossScanModeActive) {
+          baseColor = 'rgba(255, 100, 0, 0.8)'; // Orange scanner for boss
+          glowWidthMultiplier = 4;
+      } else if (combo >= HIGH_COMBO_THRESHOLD){
+          baseColor =`rgba(255,255,0,0.8)`; // Gold for high combo
+          glowWidthMultiplier=3.5;
+      }
+      
+      if (focusModeActive) baseColor=`rgba(255,0,255,0.8)`;
+      else if (freezeModeActive) baseColor=`rgba(150,200,255,0.8)`;
+      
+      ctx.fillStyle=baseColor;
+      ctx.fillRect(scannerX-SCANNER_WIDTH/2,0,SCANNER_WIDTH,screenHeight);
+      
+      const timeSinceLastBeat=performance.now()-lastBeatTime;
+      const pulseProgress=gamePaused?0:Math.min(1,timeSinceLastBeat/currentBeatInterval);
+      // Feature 6: Radio static sound on scanner pulse (subtle)
+      // Can be too much if every pulse, maybe only on beat or half-beat
+      // if (pulseProgress > 0.98 && !gamePaused) playSound(sounds.radioStatic, false, 0.05); 
+
+      const pulseAlpha=Math.sin(pulseProgress*Math.PI)*(focusModeActive?0.5:0.3);
+      
+      let pulseColorRGB = '0,255,255'; // Default cyan
+      if (bossScanModeActive) pulseColorRGB = '255,100,0';
+      else if (combo >= HIGH_COMBO_THRESHOLD) pulseColorRGB = '255,255,0';
+      else if (focusModeActive) pulseColorRGB = '255,0,255';
+      else if (freezeModeActive) pulseColorRGB = '150,200,255';
+
+      ctx.fillStyle=`rgba(${pulseColorRGB}, ${pulseAlpha})`;
+      ctx.fillRect(scannerX-SCANNER_WIDTH*glowWidthMultiplier,0,SCANNER_WIDTH*glowWidthMultiplier*2,screenHeight);
+    }
+
+    function drawItems(currentTime){ 
+        items.forEach(item=>{
+            if(item.type==='fragment_parent')return;
+            const timeToExpire=(item.spawnTime+currentItemActiveDurationMs)-currentTime;
+            let scaleFactor=1;
+            if(timeToExpire<currentItemActiveDurationMs&&timeToExpire>0){
+                scaleFactor=Math.max(0.3,timeToExpire/currentItemActiveDurationMs);
+            } else if(timeToExpire<=0){
+                scaleFactor=0.3;
+            }
+            const pulse=gamePaused?0.85:Math.sin((currentTime-item.spawnTime)/(currentBeatInterval/2.5)*Math.PI)*0.15+0.85;
+            const currentRadius=item.radius*pulse*item.alpha*scaleFactor;
+            if(currentRadius<1)return;
+
+            // Feature 3: Flashlight power-up reveals/highlights hidden items
+            let isVisiblyHidden = item.hidden && !flashlightModeActive;
+
+            if(item.iconType) drawIcon(item.iconType,item.x,item.y,currentRadius,item.alpha, item.hidden); // Pass hidden status
+            else drawIcon(item.type,item.x,item.y,currentRadius,item.alpha, item.hidden);
+      });
+    }
     
     function drawUI() {
-      ctx.fillStyle = '#E0E0E0';
+      ctx.fillStyle = detectiveModeActive ? '#A0A0A0' : '#E0E0E0'; // Muted color for detective mode text
       const fontSize = Math.max(18, screenWidth * 0.025);
-      ctx.font = `${fontSize}px 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`;
+      const policeFont = `'PoliceTech', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`; // Feature 14
+      ctx.font = `${fontSize}px ${policeFont}`;
       ctx.textAlign = 'left';
+      
+      // Instead of "Lives", use a badge/shield icon (conceptual)
+      // drawIcon('life_shield_icon', 30, fontSize*2.5, fontSize*0.6, 1); // Placeholder
+      ctx.fillText(`Units: ${lives}`, 20, fontSize*3); // "Units" instead of "Lives"
       ctx.fillText(`Score: ${score}`, 20, fontSize*1.5);
-      ctx.fillText(`Lives: ${lives}`, 20, fontSize*3);
 
       const comboBarWidth = screenWidth * 0.25;
       const comboBarHeight = fontSize * 0.8;
       const comboBarX = 20;
       const comboBarY = fontSize * 4.2;
-      ctx.strokeStyle = '#E0E0E0'; ctx.lineWidth = 1;
+      ctx.strokeStyle = detectiveModeActive ? '#777' : '#E0E0E0'; ctx.lineWidth = 1;
       ctx.strokeRect(comboBarX, comboBarY, comboBarWidth, comboBarHeight);
       const comboProgress = Math.min(1, combo / MAX_COMBO_FOR_METER);
-      ctx.fillStyle = combo >= HIGH_COMBO_THRESHOLD ? 'rgba(255,255,0,0.7)' : SCANNER_COLOR_BASE;
+      ctx.fillStyle = combo >= HIGH_COMBO_THRESHOLD ? 'rgba(255,255,0,0.7)' : (bossScanModeActive ? 'rgba(255,100,0,0.7)' : SCANNER_COLOR_BASE);
       ctx.fillRect(comboBarX + 1, comboBarY + 1, comboProgress * (comboBarWidth-2), comboBarHeight-2);
 
       ctx.textAlign = 'right';
-      ctx.fillStyle = '#E0E0E0';
-      ctx.fillText(`High Score: ${highScore}`, screenWidth-20, fontSize*1.5);
+      ctx.fillStyle = detectiveModeActive ? '#A0A0A0' : '#E0E0E0';
+      ctx.fillText(`Highest Score: ${highScore}`, screenWidth-20, fontSize*1.5);
       if (combo > 1) {
         const comboAlpha = Math.min(1, 0.3 + (combo * 0.07));
-        ctx.fillStyle = `rgba(0, 255, 255, ${comboAlpha})`; 
-        ctx.fillText(`Combo: x${combo}`, screenWidth-20, fontSize*3);
+        ctx.fillStyle = bossScanModeActive ? `rgba(255,100,0, ${comboAlpha})` : `rgba(0, 255, 255, ${comboAlpha})`; 
+        ctx.fillText(`Chain: x${combo}`, screenWidth-20, fontSize*3); // "Chain" instead of "Combo"
       }
-      let bottomTextY = fontSize * 4.5;
+
+      // Feature 11: Badge Rank Progression Bar
+      const rankBarY = fontSize * 5.7;
+      const rankBarWidth = screenWidth * 0.25;
+      ctx.textAlign = 'left';
+      ctx.fillText(`Rank: ${currentRank.name}`, 20, rankBarY - fontSize * 0.3);
+      ctx.strokeStyle = detectiveModeActive ? '#777' : '#E0E0E0';
+      ctx.strokeRect(comboBarX, rankBarY, rankBarWidth, comboBarHeight * 0.8);
+      const nextRankIndex = rankThresholds.findIndex(r => r.name === currentRank.name) + 1;
+      let rankProgress = 0;
+      if (nextRankIndex < rankThresholds.length) {
+          const scoreInCurrentRank = lifetimeScore - currentRank.score;
+          const scoreNeededForNextRank = rankThresholds[nextRankIndex].score - currentRank.score;
+          rankProgress = Math.min(1, scoreInCurrentRank / scoreNeededForNextRank);
+      } else {
+          rankProgress = 1; // Max rank
+      }
+      ctx.fillStyle = 'rgba(200, 200, 255, 0.7)'; // Light blue for rank bar
+      ctx.fillRect(comboBarX + 1, rankBarY + 1, rankProgress * (rankBarWidth-2), (comboBarHeight*0.8)-2);
+
+
+      let bottomTextY = fontSize * 4.5; // Re-evaluate position based on new elements
+      ctx.textAlign = 'center';
       if (focusModeActive) { 
-          ctx.fillStyle = POWERUP_COLOR; ctx.textAlign = 'center';
-          ctx.font = `bold ${fontSize}px 'Segoe UI',Tahoma,Geneva,Verdana,sans-serif`;
-          ctx.fillText(`FOCUS MODE!`, screenWidth/2, screenHeight - fontSize * 2.5);
+          ctx.fillStyle = POWERUP_COLOR;
+          ctx.font = `bold ${fontSize}px ${policeFont}`;
+          ctx.fillText(`SCAN FOCUS ACTIVE!`, screenWidth/2, screenHeight - fontSize * 2.5);
           const timeLeft = Math.max(0, (focusModeEndTime - performance.now()) / 1000).toFixed(1);
-          ctx.font = `${fontSize*0.8}px 'Segoe UI',Tahoma,Geneva,Verdana,sans-serif`;
+          ctx.font = `${fontSize*0.8}px ${policeFont}`;
           ctx.fillText(`${timeLeft}s`, screenWidth/2, screenHeight - fontSize * 1.5);
       } else if (freezeModeActive) {
-          ctx.fillStyle = POWERUP_FREEZE_COLOR; ctx.textAlign = 'center';
-          ctx.font = `bold ${fontSize}px 'Segoe UI',Tahoma,Geneva,Verdana,sans-serif`;
-          ctx.fillText(`FROZEN!`, screenWidth/2, screenHeight - fontSize * 2.5);
+          ctx.fillStyle = POWERUP_FREEZE_COLOR;
+          ctx.font = `bold ${fontSize}px ${policeFont}`;
+          ctx.fillText(`SYSTEM FROZEN!`, screenWidth/2, screenHeight - fontSize * 2.5);
           const timeLeft = Math.max(0, (freezeModeEndTime - performance.now()) / 1000).toFixed(1);
-          ctx.font = `${fontSize*0.8}px 'Segoe UI',Tahoma,Geneva,Verdana,sans-serif`;
+          ctx.font = `${fontSize*0.8}px ${policeFont}`;
           ctx.fillText(`${timeLeft}s`, screenWidth/2, screenHeight - fontSize * 1.5);
+      } else if (flashlightModeActive) { // Feature 3
+          ctx.fillStyle = POWERUP_FLASHLIGHT_COLOR;
+          ctx.font = `bold ${fontSize}px ${policeFont}`;
+          ctx.fillText(`FLASHLIGHT SCAN!`, screenWidth/2, screenHeight - fontSize * 2.5);
+          const timeLeft = Math.max(0, (flashlightModeEndTime - performance.now()) / 1000).toFixed(1);
+          ctx.font = `${fontSize*0.8}px ${policeFont}`;
+          ctx.fillText(`${timeLeft}s`, screenWidth/2, screenHeight - fontSize * 1.5);
+      } else if (bossScanModeActive) {
+          ctx.fillStyle = 'rgba(255,50,0,0.9)';
+          ctx.font = `bold ${fontSize*1.2}px ${policeFont}`;
+          ctx.fillText(`!!! BOSS SCAN PROTOCOL !!!`, screenWidth/2, screenHeight - fontSize * 2.5);
+          const timeLeft = Math.max(0, (bossScanEndTime - performance.now()) / 1000).toFixed(1);
+          ctx.font = `${fontSize*0.9}px ${policeFont}`;
+          ctx.fillText(`Remaining: ${timeLeft}s`, screenWidth/2, screenHeight - fontSize * 1.5);
+      }
+
+
+      // Feature 15: Random Police Intercom Messages
+      if (currentIntercomMessage && performance.now() < intercomMessageEndTime) {
+          ctx.font = `${fontSize*0.9}px ${policeFont}`;
+          ctx.fillStyle = 'rgba(255, 255, 180, 0.9)'; // Yellowish for intercom text
+          ctx.textAlign = 'center';
+          ctx.fillText(currentIntercomMessage.text, screenWidth/2, fontSize*1.5);
       }
     }
 
-    function drawTapFeedback(currentTime){ for(let i=tapFeedback.length-1;i>=0;i--){const fb=tapFeedback[i];const age=currentTime-fb.spawnTime;const fadeDuration=900;if(age>fadeDuration){tapFeedback.splice(i,1);continue;}fb.alpha=1-(age/fadeDuration);const yPos=fb.y-(age/12);const currentScale=fb.scale*(1+(age/fadeDuration)*0.3);ctx.save();ctx.translate(fb.x,yPos);ctx.scale(currentScale,currentScale);ctx.font=`bold ${Math.max(18,screenWidth*0.022)}px Arial`;ctx.fillStyle=fb.color.replace(/, [0-9\.]+\)/,`, ${fb.alpha})`);ctx.textAlign='center';ctx.fillText(fb.text,0,0);ctx.restore();}}
+    function drawTapFeedback(currentTime){ for(let i=tapFeedback.length-1;i>=0;i--){const fb=tapFeedback[i];const age=currentTime-fb.spawnTime;const fadeDuration=900;if(age>fadeDuration){tapFeedback.splice(i,1);continue;}fb.alpha=1-(age/fadeDuration);const yPos=fb.y-(age/12);const currentScale=fb.scale*(1+(age/fadeDuration)*0.3);ctx.save();ctx.translate(fb.x,yPos);ctx.scale(currentScale,currentScale);ctx.font=`bold ${Math.max(18,screenWidth*0.022)}px ${detectiveModeActive ? 'Courier New' : 'Arial'}`;ctx.fillStyle=fb.color.replace(/, [0-9\.]+\)/,`, ${fb.alpha})`);ctx.textAlign='center';ctx.fillText(fb.text,0,0);ctx.restore();}}
     
     function drawStartScreen(){ 
-        drawBackground();
-        ctx.fillStyle='#E0E0E0';
+        drawBackground(); // Also handles detective mode filter
+        ctx.fillStyle= detectiveModeActive ? '#A0A0A0' : '#E0E0E0';
         ctx.textAlign='center';
-        const titleFontSize=Math.max(32,screenWidth*0.07);
+        const titleFontSize=Math.max(32,screenWidth*0.06); // Slightly smaller for new title
         const mainMessageFontSize=Math.max(22,screenWidth*0.04);
         const subFontSize=Math.max(18,screenWidth*0.035);
         const difficultyFontSize=Math.max(18,screenWidth*0.03);
         const attributionFontSize = Math.max(12, screenWidth * 0.02);
+        const policeFont = `'PoliceTech', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`;
 
-        let yPos=screenHeight*0.25; // Start title a bit higher
+        let yPos=screenHeight*0.22;
 
-        ctx.font=`bold ${titleFontSize}px 'Segoe UI',Tahoma,Geneva,Verdana,sans-serif`;
-        ctx.fillText("Evidence Lockdown V3.2",screenWidth/2,yPos);
+        ctx.font=`bold ${titleFontSize}px ${policeFont}`;
+        ctx.fillText("Evidence Lockdown: Sector Scan",screenWidth/2,yPos); // New Thematic Title
         yPos+=titleFontSize*1.3;
 
-        ctx.font=`${mainMessageFontSize}px 'Segoe UI',Tahoma,Geneva,Verdana,sans-serif`;
-        ctx.fillText("Tap Screen to Start Scan",screenWidth/2,yPos);
+        ctx.font=`${mainMessageFontSize}px ${policeFont}`;
+        ctx.fillText("Tap Screen to Initialize Scan Protocol",screenWidth/2,yPos);
         yPos+=mainMessageFontSize*1.5;
 
-        ctx.font=`${subFontSize}px 'Segoe UI',Tahoma,Geneva,Verdana,sans-serif`;
-        ctx.fillText(`High Score: ${highScore}`,screenWidth/2,yPos);
-        yPos+=subFontSize*2.2; // More space before difficulty
+        ctx.font=`${subFontSize}px ${policeFont}`;
+        ctx.fillText(`Highest Score: ${highScore}`,screenWidth/2,yPos);
+        yPos+=subFontSize*1.3;
+        ctx.fillText(`Rank: ${currentRank.name}`, screenWidth/2, yPos); // Show rank
+        yPos+=subFontSize*2.2;
 
-        ctx.font=`bold ${difficultyFontSize}px 'Segoe UI',Tahoma,Geneva,Verdana,sans-serif`;
-        ctx.fillText(`Difficulty: ${difficultySelection[selectedDifficultyIndex]}`,screenWidth/2,yPos);
+        ctx.font=`bold ${difficultyFontSize}px ${policeFont}`;
+        ctx.fillText(`Threat Level: ${difficultySelection[selectedDifficultyIndex]}`,screenWidth/2,yPos); // "Threat Level"
         yPos+=difficultyFontSize*1.0;
-        ctx.font=`${difficultyFontSize*0.8}px 'Segoe UI',Tahoma,Geneva,Verdana,sans-serif`;
-        ctx.fillText("(Tap this area to change)",screenWidth/2,yPos); // Clarified tap area
+        ctx.font=`${difficultyFontSize*0.8}px ${policeFont}`;
+        ctx.fillText("(Tap to Adjust Protocol)",screenWidth/2,yPos);
 
-        // "Made by Taylan" attribution
-        yPos = screenHeight * 0.90; // Position it towards the bottom
-        ctx.font = `${attributionFontSize}px 'Segoe UI',Tahoma,Geneva,Verdana,sans-serif`;
-        ctx.fillStyle = 'rgba(224, 224, 224, 0.6)'; // Slightly dimmer for attribution
-        ctx.fillText("Made by Taylan", screenWidth/2, yPos);
+        // Feature 9: Display Unlocked Achievement Badges (simple version)
+        yPos += difficultyFontSize * 2.5;
+        ctx.font = `${attributionFontSize*1.1}px ${policeFont}`;
+        ctx.fillText("Service Medals:", screenWidth/2, yPos);
+        yPos += attributionFontSize * 1.5;
+        let badgeX = screenWidth/2 - (Object.values(achievements).filter(a=>a.unlocked).length * (attributionFontSize*2.5))/2;
+        Object.values(achievements).forEach(ach => {
+            if (ach.unlocked) {
+                // Placeholder: draw a simple star or rect if icon not loaded/drawn
+                // Ideally: ctx.drawImage(loadedAchievementIcon, badgeX, yPos, attributionFontSize*2, attributionFontSize*2);
+                ctx.fillStyle = 'gold';
+                ctx.beginPath(); ctx.arc(badgeX + attributionFontSize, yPos + attributionFontSize, attributionFontSize*0.8, 0, Math.PI*2); ctx.fill();
+                // ctx.fillText(ach.name.split(" ")[0], badgeX, yPos); // Or draw icon
+                badgeX += attributionFontSize * 2.5;
+            }
+        });
+
+
+        yPos = screenHeight * 0.92; 
+        ctx.font = `${attributionFontSize}px ${policeFont}`;
+        ctx.fillStyle = detectiveModeActive ? 'rgba(120,120,120,0.6)' : 'rgba(224, 224, 224, 0.6)';
+        ctx.fillText("System Design: Taylan | Unit Ver. 4.0 Proto", screenWidth/2, yPos); // Updated attribution
+
+        if (detectiveModeActive) {
+            ctx.fillStyle = 'rgba(150,200,255,0.7)';
+            ctx.font = `italic ${attributionFontSize*0.9}px ${policeFont}`;
+            ctx.fillText("Detective Mode Engaged", screenWidth/2, screenHeight*0.05);
+        }
     }
     
+    // Feature 13: Game Over "Case File Report"
     function drawEndGameReport(){ 
-        drawBackground(); // So background hue is consistent
-        ctx.fillStyle='rgba(10,10,10,0.85)';
+        drawBackground(); 
+        ctx.fillStyle= detectiveModeActive ? 'rgba(30,30,30,0.9)' : 'rgba(10,10,10,0.9)'; // Darker for detective mode
         ctx.fillRect(0,0,screenWidth,screenHeight);
-        ctx.fillStyle='#E0E0E0';
+        ctx.fillStyle= detectiveModeActive ? '#A0A0A0' : '#E0E0E0';
         ctx.textAlign='center';
-        const titFS=Math.max(32,screenWidth*0.065);
-        let yP=screenHeight*0.15;
-        ctx.font=`bold ${titFS}px 'Segoe UI',Tahoma,Geneva,Verdana,sans-serif`;
-        ctx.fillText("End of Shift Report",screenWidth/2,yP);
-        yP+=titFS*1.5;
-        const headFS=Math.max(20,screenWidth*0.035);
-        ctx.font=`bold ${headFS}px 'Segoe UI',Tahoma,Geneva,Verdana,sans-serif`;
-        ctx.fillText(`Final Score: ${score}`,screenWidth/2,yP);
-        yP+=headFS*1.2;
-        const detFS=Math.max(16,screenWidth*0.03);
-        ctx.font=`${detFS}px 'Segoe UI',Tahoma,Geneva,Verdana,sans-serif`;
-        // Ensure highScore used here is the global one, which is updated in gameOver if new record
-        if(score === highScore && score > 0) { // Simplified check for new high score display
-             ctx.fillText(`New High Score!`,screenWidth/2,yP);
+        const policeFont = `'PoliceTech', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`;
+        const titleFS=Math.max(30,screenWidth*0.06); // Title: Case File Report
+        let yPos=screenHeight*0.10;
+        
+        ctx.font=`bold ${titleFS}px ${policeFont}`;
+        ctx.fillText("INCIDENT REPORT CLOSED",screenWidth/2,yPos); // Thematic Title
+        yPos+=titleFS*1.3;
+
+        const headerFS=Math.max(20,screenWidth*0.035);
+        ctx.font=`bold ${headerFS}px ${policeFont}`;
+        ctx.fillText(`FINAL ASSESSMENT: ${score}`,screenWidth/2,yPos);
+        yPos+=headerFS*1.1;
+        
+        const detailFS=Math.max(16,screenWidth*0.028);
+        ctx.font=`${detailFS}px ${policeFont}`;
+        if(score === highScore && score > 0) {
+             ctx.fillText(`NEW RECORD ESTABLISHED! PREVIOUS: ${parseInt(localStorage.getItem('evidenceLockdownHighScoreV4Proto') || "0")}`, screenWidth/2,yPos); // Show previous if new
         } else {
-            ctx.fillText(`High Score: ${highScore}`,screenWidth/2,yP);
+            ctx.fillText(`Previous High Score: ${highScore}`,screenWidth/2,yPos);
         }
-        yP+=detFS*1.5;
+        yPos+=detailFS*1.3;
+        
         let accuracy=0;
-        const successfulScans=evidenceCollectedCount+fragmentedSetsCompletedCount;
+        const successfulScans=evidenceCollectedCount+fragmentedSetsCompletedCount; // Consider fragments as successful
         const totalPossibleScans=totalEvidenceOpportunities;
         if(totalPossibleScans>0){accuracy=(successfulScans/totalPossibleScans)*100;}
-        ctx.font=`bold ${Math.max(18,screenWidth*0.032)}px 'Segoe UI',Tahoma,Geneva,Verdana,sans-serif`;
-        ctx.fillText(`Scan Accuracy: ${accuracy.toFixed(1)}%`,screenWidth/2,yP);
-        yP+=Math.max(18,screenWidth*0.032)*1.5;
-        ctx.textAlign='left';
-        const c1X=screenWidth*0.15;
-        const c2X=screenWidth*0.55;
-        const dFS2=Math.max(16,screenWidth*0.028);
-        ctx.font=`${dFS2}px 'Segoe UI',Tahoma,Geneva,Verdana,sans-serif`;
-        let rY=yP;
-        ctx.fillText(`Evidence Scanned: ${evidenceCollectedCount}`,c1X,rY);rY+=dFS2*1.5;
-        ctx.fillText(`Fragment Sets: ${fragmentedSetsCompletedCount}`,c1X,rY);rY+=dFS2*1.5;
-        ctx.fillText(`Power-Ups Used: ${powerUpsCollectedCount}`,c1X,rY);
-        rY=yP;
-        ctx.fillText(`Contaminations: ${distractorsHitCount}`,c2X,rY);rY+=dFS2*1.5;
-        ctx.fillText(`Missed Scan Ops: ${evidenceMissedCount}`,c2X,rY); // Changed "Opportunities" to "Scan Ops"
         
-        yP=Math.max(yP,rY)+dFS2*2.5;
+        ctx.font=`bold ${Math.max(18,screenWidth*0.030)}px ${policeFont}`;
+        ctx.fillText(`Operational Efficiency: ${accuracy.toFixed(1)}%`,screenWidth/2,yPos);
+        yPos+=Math.max(18,screenWidth*0.030)*1.3;
+
+        ctx.textAlign='left';
+        const col1X=screenWidth*0.1;
+        const col2X=screenWidth*0.55;
+        const statFS=Math.max(15,screenWidth*0.026);
+        ctx.font=`${statFS}px ${policeFont}`;
+        let rightColY=yPos;
+        
+        ctx.fillText(`Evidence Logged: ${evidenceCollectedCount}`,col1X,yPos); yPos+=statFS*1.3;
+        ctx.fillText(`Fragment Sets Secured: ${fragmentedSetsCompletedCount}`,col1X,yPos); yPos+=statFS*1.3;
+        ctx.fillText(`Items Missed: ${evidenceMissedCount}`,col1X,yPos); yPos+=statFS*1.3;
+        ctx.fillText(`Contaminations Hit: ${distractorsHitCount}`,col1X,yPos); yPos+=statFS*1.3;
+        
+        ctx.fillText(`Focus Power-ups: ${powerUpsStats.focus}`,col2X,rightColY); rightColY+=statFS*1.3;
+        ctx.fillText(`Freeze Power-ups: ${powerUpsStats.freeze}`,col2X,rightColY); rightColY+=statFS*1.3;
+        ctx.fillText(`Flashlight Power-ups: ${powerUpsStats.flashlight}`,col2X,rightColY); rightColY+=statFS*1.3;
+        ctx.fillText(`Total Lifetime Score: ${lifetimeScore}`, col2X, rightColY); rightColY+=statFS*1.3;
+
+
+        yPos = Math.max(yPos, rightColY) + statFS * 2.0;
         ctx.textAlign='center';
-        ctx.font=`${Math.max(18,screenWidth*0.032)}px 'Segoe UI',Tahoma,Geneva,Verdana,sans-serif`;
-        ctx.fillText("Tap Screen to Restart",screenWidth/2,screenHeight*0.9);
+        ctx.font=`${Math.max(18,screenWidth*0.032)}px ${policeFont}`;
+        ctx.fillText("Tap Screen to Debrief and Restart",screenWidth/2,screenHeight*0.9); // Thematic
     }
 
     let lastTime = 0;
     function gameLoop(currentTime) {
       if (!gameRunning && !freezeModeActive) {
-        if (lives <= 0 && score > 0) drawEndGameReport(); // Check score to avoid calling on fresh load
+        if (lives <= 0 && score > 0) drawEndGameReport();
         else if (!gameRunning && items.length === 0 && (lives > 0 || score === 0) ) drawStartScreen();
         return;
       }
       animationFrameId = requestAnimationFrame(gameLoop);
 
       const deltaTime = currentTime - lastTime;
-      if(deltaTime > 100 && !freezeModeActive) {
-          lastTime = currentTime; return;
+      if(deltaTime > 100 && !freezeModeActive) { // If tabbed out for too long, prevent large jump
+          lastTime = currentTime; 
+          // If background music is playing via Web Audio API, it continues. If <audio> tag, it might pause.
+          return; 
       }
       lastTime = currentTime;
 
       if (focusModeActive && currentTime >= focusModeEndTime) deactivateFocusMode();
       if (freezeModeActive && currentTime >= freezeModeEndTime) deactivateFreezeMode();
+      if (flashlightModeActive && currentTime >= flashlightModeEndTime) deactivateFlashlightMode(); // Feature 3
+      if (sirenFlashActive && currentTime >= sirenFlashEndTime) sirenFlashActive = false; // Feature 8
+
+      // --- Boss Scan Mode Logic (Feature 4) ---
+      if (!bossScanModeActive && gameRunning && !gamePaused) {
+          bossScanTimer += deltaTime;
+          if (bossScanTimer >= BOSS_SCAN_INTERVAL) {
+              bossScanModeActive = true;
+              bossScanEndTime = currentTime + BOSS_SCAN_DURATION;
+              bossScanTimer = 0; // Reset timer for next boss mode
+              // Store current settings to revert after boss mode (simplified approach)
+              originalDifficultyForBoss = {...currentDifficultySetting}; // Shallow copy
+              // Modify parameters for boss mode
+              currentDifficultySetting.SCANNER_SPEED_MS *= 1.5;
+              currentDifficultySetting.SPAWN_CHANCE = Math.min(1, currentDifficultySetting.SPAWN_CHANCE * 1.5);
+              currentDifficultySetting.ITEM_DURATION_BEATS *= 0.8;
+              currentBeatInterval = 60000 / currentDifficultySetting.BPM; // BPM could also change
+              currentItemActiveDurationMs = currentBeatInterval * currentDifficultySetting.ITEM_DURATION_BEATS;
+              addTapFeedback(screenWidth/2, screenHeight*0.3, "!!! BOSS SCAN INITIATED !!!", 'rgba(255,0,0,0.9)', currentTime, true);
+
+          }
+      } else if (bossScanModeActive && currentTime >= bossScanEndTime) {
+          bossScanModeActive = false;
+          // Revert to original difficulty (or a scaled up one based on progression)
+          currentDifficultySetting = {...originalDifficultyForBoss}; // Restore
+          baseScannerSpeedMs = currentDifficultySetting.SCANNER_SPEED_MS; // Important to reset base speed
+          currentBeatInterval = 60000 / currentDifficultySetting.BPM;
+          currentItemSpawnChance = currentDifficultySetting.SPAWN_CHANCE;
+          currentItemActiveDurationMs = currentBeatInterval * currentDifficultySetting.ITEM_DURATION_BEATS;
+          addTapFeedback(screenWidth/2, screenHeight*0.3, "Boss Scan Complete. Systems Normalizing.", 'rgba(0,255,0,0.9)', currentTime, true);
+      }
+
+
+      // --- Police Intercom Messages (Feature 15) ---
+      if (gameRunning && !gamePaused && currentTime >= nextIntercomMessageTime) {
+          if (Math.random() < 0.001) { // Low chance per frame to trigger message
+              const messageIndex = getRandomInt(0, intercomMessages.length - 1);
+              currentIntercomMessage = intercomMessages[messageIndex];
+              // playSound(sounds.intercomMessages[messageIndex]); // Play the audio if loaded
+              intercomMessageEndTime = currentTime + 5000; // Display for 5 seconds
+              nextIntercomMessageTime = currentTime + getRandom(20000, 40000); // Next message in 20-40s
+          }
+      }
+      if (currentTime > intercomMessageEndTime) currentIntercomMessage = null;
+
 
       if (!gamePaused) {
         if (currentTime - lastBeatTime >= currentBeatInterval) {
             lastBeatTime = currentTime - ((currentTime - lastBeatTime) % currentBeatInterval);
             beatCount++;
             if (gameRunning) spawnItem(currentTime);
+            // Could sync scanner pulse sound more directly to beat here
+            // playSound(sounds.radioStatic, false, 0.1); 
         }
         updateScanner(deltaTime);
         updateItems(currentTime, deltaTime);
       }
       updateParticles(deltaTime);
 
-      draw();
-      drawParticles();
-      drawTapFeedback(currentTime);
+      draw(); // This will handle the main drawing logic
+      // drawParticles() and drawTapFeedback() are called within draw() in this version.
     }
 
-    function draw(){ ctx.clearRect(0,0,screenWidth,screenHeight);drawBackground();drawScanner();drawItems(performance.now());drawUI();}
+    function draw(){ 
+      ctx.clearRect(0,0,screenWidth,screenHeight);
+      drawBackground(); // Includes wanted posters now indirectly, and detective mode filter
+      // Police tape border is HTML/CSS, so it's always there
+
+      if (detectiveModeActive) { // Apply filter for Detective Mode
+          ctx.save(); // Save context state before filter
+          // The filter is applied in drawBackground, this ensures it's reset for UI elements drawn after if needed
+          // However, if UI should also be grayscale, this might not be necessary here, and filter stays on.
+      }
+
+      drawScanner();
+      drawItems(performance.now());
+      drawUI(); // UI on top
+      drawParticles(); // Particles on top of items/scanner, but below UI feedback
+      drawTapFeedback(performance.now()); // Feedback on the very top
+
+      if (detectiveModeActive) {
+          // ctx.restore(); // Restore context state after filter if it was applied selectively
+      }
+    }
 
     function startGame() {
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
+
+      // Feature 1: Police Dispatch Voiceover
+      playSound(sounds.dispatchStart, false, 0.8);
+
+      // Feature 2: Background Music (BPM synced)
+      if (backgroundMusicSource) backgroundMusicSource.stop(); // Stop previous music
+      backgroundMusicSource = playSound(sounds.backgroundMusic, true, 0.3); // Loop music at a lower volume
+      // For BPM sync, ensure your music loop matches a multiple of the beat, or adjust playbackRate if possible and desired.
+      // backgroundMusicSource.playbackRate.value = currentDifficultySetting.BPM / 90; // Example if music is 90BPM native
 
       baseScannerSpeedMs = currentDifficultySetting.SCANNER_SPEED_MS;
       currentScannerSpeedMs = baseScannerSpeedMs;
@@ -488,40 +1133,77 @@
       items = []; tapFeedback = []; particles = []; beatCount = 0; itemIdCounter = 0;
       evidenceCollectedCount = 0; fragmentsCollectedCount = 0; fragmentedSetsCompletedCount = 0;
       distractorsHitCount = 0; evidenceMissedCount = 0; powerUpsCollectedCount = 0; totalEvidenceOpportunities = 0;
+      powerUpsStats = { focus: 0, freeze: 0, flashlight: 0 };
 
-      deactivateFocusMode(); deactivateFreezeMode(); gamePaused = false;
+
+      deactivateFocusMode(); deactivateFreezeMode(); deactivateFlashlightMode();
+      gamePaused = false;
       scannerX = SCANNER_WIDTH / 2; scannerDirection = 1;
       lastBeatTime = performance.now(); lastTime = performance.now();
-      gameRunning = true;
       
+      bossScanModeActive = false; // Reset boss mode
+      bossScanTimer = 0;
+      sirenFlashActive = false; // Reset siren flash
+
+      nextIntercomMessageTime = performance.now() + getRandom(5000, 10000); // First intercom message
+
+      displayWantedPosters(true); // Randomize wanted posters (Feature 7)
+
+      gameRunning = true;
       gameLoop(performance.now());
     }
 
     function gameOver() {
       gameRunning = false; gamePaused = false;
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      if (backgroundMusicSource) backgroundMusicSource.stop(); backgroundMusicSource = null;
       
-      // Update high score if current score is greater
-      const currentHighScore = parseInt(localStorage.getItem('evidenceLockdownHighScoreV3') || "0");
+      lifetimeScore += score;
+      localStorage.setItem('evidenceLockdownLifetimeScoreV4Proto', lifetimeScore.toString());
+
+      const currentHighScore = parseInt(localStorage.getItem('evidenceLockdownHighScoreV4Proto') || "0");
       if (score > currentHighScore ) {
-          localStorage.setItem('evidenceLockdownHighScoreV3', score.toString());
-          highScore = score; // Update the global highScore variable as well
+          localStorage.setItem('evidenceLockdownHighScoreV4Proto', score.toString());
+          highScore = score; 
       }
-      drawEndGameReport();
+      updateRankAndAchievements(); // Update rank and check for new badges
+      drawEndGameReport(); // Feature 13 (enhanced)
     }
 
     function init() {
-      canvas.style.touchAction = 'none';
+      // Feature 12: Custom Cursor (only on desktop)
+      if (!('ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0)) {
+        // It's likely a desktop browser
+        canvas.style.cursor = "url('images/cursors/flashlight_cursor.cur'), auto"; // Placeholder cursor path
+        // You might need a .png fallback for some browsers:
+        // canvas.style.cursor = "url('images/cursors/flashlight.png') 16 16, auto"; // 16 16 is hotspot
+      }
+
+      canvas.style.touchAction = 'none'; // Prevents pull-to-refresh, etc.
       document.body.style.touchAction = 'none';
+
+      // Load achievements from storage
+      const storedAchievements = JSON.parse(localStorage.getItem('evidenceLockdownAchievementsV4Proto'));
+      if (storedAchievements) {
+        for (const key in achievements) {
+            if (storedAchievements[key]) {
+                achievements[key].unlocked = storedAchievements[key].unlocked;
+            }
+        }
+      }
+      updateRankAndAchievements(); // Initial rank check
 
       resizeCanvas(); 
       window.addEventListener('resize', resizeCanvas);
+      // Event listeners are added on first tap to initialize audio context correctly
       canvas.addEventListener('mousedown', handleTap);
       canvas.addEventListener('touchstart', handleTap, { passive: false });
       
-      highScore = parseInt(localStorage.getItem('evidenceLockdownHighScoreV3') || "0");
+      highScore = parseInt(localStorage.getItem('evidenceLockdownHighScoreV4Proto') || "0");
       drawStartScreen(); 
     }
 
     init();
-  </script></body></html>
+  </script>
+</body>
+</html>
