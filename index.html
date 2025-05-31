@@ -244,7 +244,8 @@
             <header class="chat-header">
                 <h2>
                     <span class="title-main">AI Assistant</span>
-                    <span class="title-subtitle">by Taylan</span> </h2>
+                    <span class="title-subtitle">by Taylan</span>
+                </h2>
                 <div class="header-controls">
                     <label for="personaSelect">Persona:</label>
                     <select id="personaSelect">
@@ -274,7 +275,7 @@
         </div>
     </main>
 
-<script type="module" defer> {/* Corrected: Removed trailing comment from this line */}
+<script type="module" defer>
     const chatAppContainer = document.getElementById('chatAppContainer');
     const chatWindow = document.getElementById('chatWindow');
     const userInput = document.getElementById('userInput');
@@ -361,15 +362,10 @@
              if (persona === "sarcastic") response = "Oh, you need a list? I can listen to your inane ramblings, and occasionally grace you with a pre-programmed gem of wisdom. Or a 'fact'. Don't push it.";
              if (persona === "pirate") response = "I can spin ye a yarn, tell ye a fact from me travels, or share a hearty pirate joke, arrr! Just ask, or try /help, ye scurvy dog!";
         }
-
+        // Add many more rules here to make the bot more interactive!
 
         return response || defaultResponses[persona] || defaultResponses.helpful;
     }
-
-    // --- All other functions (initializeChat, generateGreeting, addMessageToChat, etc.) ---
-    // --- remain largely the same as in the previous "Option 1: Rule-Based" example, ---
-    // --- with the key changes being removal of API key checks for disabling input ---
-    // --- and calling fetchRuleBasedResponse. ---
 
     document.addEventListener('DOMContentLoaded', () => {
         function initializeChat() {
@@ -378,7 +374,7 @@
             loadChatThreads();
             loadConversation(currentChatThreadId);
 
-            sendButton.disabled = false;
+            sendButton.disabled = false; // Ensuring inputs are enabled by default
             userInput.disabled = false;
 
             if (conversationHistory.length === 0 && !document.querySelector('.message.bot[id^="msg"]')) {
@@ -405,12 +401,23 @@
                 default: return `${userName ? `Welcome back, ${userName}!` : 'Hello!'} I'm your rule-based AI Assistant. How can I help?`;
             }
         }
+        
+        function generateMessageId() {
+            return `msg_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+        }
 
         async function displayBotResponse(text, botMessageElement, botMessageId) {
             const thinkingTime = Math.max(300, Math.min(text.length * 15, 1000)); 
 
             await new Promise(resolve => setTimeout(resolve, thinkingTime));
 
+            // Ensure botMessageElement is still valid and part of the DOM before updating
+            if (!document.body.contains(botMessageElement)) {
+                console.warn("Bot message element was removed before response could be displayed. ID:", botMessageId);
+                // Optionally, re-add it, though this indicates a deeper issue if it happens.
+                // For now, we'll just log and proceed, assuming it's usually there.
+            }
+            
             botMessageElement.innerHTML = DOMPurify.sanitize(
                 (typeof marked !== 'undefined' ? marked.parse(text) : text.replace(/\n/g, '<br>'))
             );
@@ -431,7 +438,7 @@
         function addMessageToChat(text, sender, isLoading = false, messageId) {
             const messageElement = document.createElement('div');
             messageElement.classList.add('message', sender);
-            messageElement.id = messageId;
+            messageElement.id = messageId; // Set ID immediately
             messageElement.setAttribute('aria-atomic', 'true');
 
             if (isLoading) {
@@ -458,7 +465,7 @@
                 void chatAppContainer.offsetWidth;
                 chatAppContainer.classList.add('flash');
             }
-            return messageElement;
+            return messageElement; // Return the created element
         }
 
         function addMessageActions(messageElement, originalText, messageId) {
@@ -844,7 +851,7 @@
                     const greetingIdForReset = generateMessageId();
                     addMessageToChat(greetingForReset, 'bot', false, greetingIdForReset);
                     updateConversationHistory('assistant', greetingForReset, greetingIdForReset);
-                    saveConversation(currentChatThreadId);
+                    saveConversation(currentChatThreadId); 
                     break; 
                 default:
                     commandProcessed = false; 
@@ -887,18 +894,18 @@
             }
             
             const currentPersona = personaSelect.value;
-            const loadingIndicator = addMessageToChat('', 'bot', true, generateMessageId());
+            // Corrected logic for bot message element:
+            const botMessageId = generateMessageId();
+            const botMessageElement = addMessageToChat('', 'bot', true, botMessageId); // Pass true for isLoading
+            
             sendButton.disabled = true;
             userInput.disabled = true;
 
             const botResponseText = fetchRuleBasedResponse(messageText, currentPersona);
             
-            const botMessageId = generateMessageId();
-            const botMessageElement = document.getElementById(loadingIndicator.id); 
-            
+            // Remove loading state from the existing botMessageElement before passing to displayBotResponse
             botMessageElement.classList.remove('loading'); 
-            botMessageElement.innerHTML = ''; 
-            botMessageElement.id = botMessageId; 
+            botMessageElement.innerHTML = ''; // Clear spinner etc.
 
             await displayBotResponse(botResponseText, botMessageElement, botMessageId);
         }
@@ -938,6 +945,7 @@
             updateThemePreference();
         });
 
+        // --- INITIALIZE ---
         initializeChat();
         setupSpeechRecognition();
     });
