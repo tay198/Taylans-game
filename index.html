@@ -402,4 +402,224 @@
             }
             updateThemePreference(); 
             const allThemeVarKeys = new Set();
-            Object.values
+            Object.values(themes).forEach(themeObj => { if (themeObj.vars) Object.keys(themeObj.vars).forEach(k => allThemeVarKeys.add(k)); });
+            allThemeVarKeys.forEach(varKey => rootStyle.removeProperty(varKey));
+            if (themeName !== "default" && selectedTheme.vars) {
+                for (const [key, value] of Object.entries(selectedTheme.vars)) rootStyle.setProperty(key, value); 
+            }
+            if (isExplicitThemeChoice) localStorage.setItem('selectedChatTheme', themeName);
+            if (themeChooserSelect && themeChooserSelect.value !== themeName) themeChooserSelect.value = themeName; 
+            applyCustomPersonaAccent(); 
+        }
+        function setupThemeChooser() {
+            const themeLabel = document.createElement('label');
+            themeLabel.htmlFor = 'themeChooserSelect'; themeLabel.textContent = 'Theme:';
+            themeChooserSelect = document.createElement('select'); themeChooserSelect.id = 'themeChooserSelect';
+            for (const [key, theme] of Object.entries(themes)) {
+                const option = document.createElement('option'); option.value = key; option.textContent = theme.name;
+                themeChooserSelect.appendChild(option);
+            }
+            const controls = document.querySelector('.chat-header .header-controls');
+            const existingMusicToggle = document.getElementById('music-toggle');
+            if (controls && existingMusicToggle) { controls.insertBefore(themeLabel, existingMusicToggle); controls.insertBefore(themeChooserSelect, existingMusicToggle); }
+            else if (controls && personaSelect.nextSibling) { controls.insertBefore(themeLabel, personaSelect.nextSibling); controls.insertBefore(themeChooserSelect, themeLabel.nextSibling); }
+            else if (controls) { controls.appendChild(themeLabel); controls.appendChild(themeChooserSelect); }
+            themeChooserSelect.addEventListener('change', (e) => applyTheme(e.target.value, true));
+        }
+        let customPersonas = JSON.parse(localStorage.getItem('customPersonas') || '{}');
+        let customPersonaModal;
+        function applyCustomPersonaAccent() {
+            const header = document.querySelector('.chat-header'); if (!header) return;
+            const currentPersonaValue = personaSelect.value;
+            const selectedThemeName = localStorage.getItem('selectedChatTheme') || 'default';
+            const themeIsDark = document.body.classList.contains('dark-mode'); 
+            let baseHeaderBg;
+            if (themes[selectedThemeName] && themes[selectedThemeName].vars && themes[selectedThemeName].vars['--header-bg']) baseHeaderBg = themes[selectedThemeName].vars['--header-bg']; 
+            else baseHeaderBg = themeIsDark ? getComputedStyle(document.documentElement).getPropertyValue('--header-bg-dark').trim() : getComputedStyle(document.documentElement).getPropertyValue('--header-bg-light').trim();
+            if (customPersonas[currentPersonaValue] && customPersonas[currentPersonaValue].color) header.style.backgroundColor = customPersonas[currentPersonaValue].color;
+            else header.style.backgroundColor = baseHeaderBg; 
+        }
+        function openCustomPersonaModal() {
+            if (customPersonaModal && document.body.contains(customPersonaModal)) customPersonaModal.remove();
+            customPersonaModal = document.createElement('div'); customPersonaModal.id = 'customPersonaModal';
+            customPersonaModal.innerHTML = `
+                <h3>Create Custom Persona</h3> <label for="personaNameInput">Persona Name:</label> <input type="text" id="personaNameInput">
+                <label for="personaGreetingInput">Greeting (e.g., "Greetings, master"):</label> <input type="text" id="personaGreetingInput">
+                <label for="personaColorInput">Accent Color (e.g., #FF00FF or hotpink):</label> <input type="text" id="personaColorInput" placeholder="Optional web color">
+                <label for="personaEmojiInput">Mood Emoji (e.g., 😎):</label> <input type="text" id="personaEmojiInput" placeholder="Optional emoji">
+                <div> <button id="savePersonaBtn">Save Persona</button> <button id="cancelPersonaBtn">Cancel</button> </div>
+            `;
+            document.body.appendChild(customPersonaModal);
+            document.getElementById('savePersonaBtn').onclick = () => {
+                const name = document.getElementById('personaNameInput').value.trim();
+                const greeting = document.getElementById('personaGreetingInput').value.trim();
+                const color = document.getElementById('personaColorInput').value.trim();
+                const emoji = document.getElementById('personaEmojiInput').value.trim();
+                if (name && greeting) { saveCustomPersona(name, greeting, color, emoji); if (customPersonaModal && document.body.contains(customPersonaModal)) customPersonaModal.remove(); }
+                else alert("Persona Name and Greeting are required.");
+            };
+            document.getElementById('cancelPersonaBtn').onclick = () => { if (customPersonaModal && document.body.contains(customPersonaModal)) customPersonaModal.remove(); };
+        }
+        function saveCustomPersona(name, greeting, color, emoji) {
+            const personaKey = name.toLowerCase().replace(/\s+/g, '_').replace(/[^\w-]/g, '');
+            customPersonas[personaKey] = { name, greeting, color, emoji };
+            localStorage.setItem('customPersonas', JSON.stringify(customPersonas));
+            loadCustomPersonasIntoSelect(); personaSelect.value = personaKey; personaSelect.dispatchEvent(new Event('change')); 
+            const msgId = generateMessageId(); addMessageToChat(`Custom persona "${name}" created and selected!`, 'bot', false, msgId);
+            updateConversationHistory('assistant', `Custom persona "${name}" created and selected!`, msgId); saveConversation(currentChatThreadId);
+        }
+        function loadCustomPersonasIntoSelect() {
+            // Remove only custom personas to avoid re-adding the default one if this is called unexpectedly
+            personaSelect.querySelectorAll('option.custom-persona').forEach(opt => opt.remove());
+            for (const key in customPersonas) {
+                const persona = customPersonas[key];
+                // Ensure not to re-add if it somehow exists (e.g. if default was named 'helpful')
+                if (!personaSelect.querySelector(`option[value="${key}"]`)) {
+                    const option = document.createElement('option'); option.value = key;
+                    option.textContent = `${persona.name} ${persona.emoji || ''} (Custom)`; option.className = 'custom-persona';
+                    personaSelect.appendChild(option);
+                }
+            }
+        }
+        const sendMessageSound = new Audio('https://cdn.freesound.org/previews/242/242857_4284969-lq.mp3');
+        const receiveMessageSound = new Audio('https://cdn.freesound.org/previews/587/587251_6779969-lq.mp3');
+        let soundEffectsEnabled = JSON.parse(localStorage.getItem('soundEffectsEnabled') || 'true');
+        let soundEffectsToggleButton;
+        function toggleSoundEffects() {
+            soundEffectsEnabled = !soundEffectsEnabled;
+            if(soundEffectsToggleButton) soundEffectsToggleButton.innerHTML = soundEffectsEnabled ? '🔊 <span class="text">SFX On</span>' : '🔇 <span class="text">SFX Off</span>';
+            if(soundEffectsToggleButton) soundEffectsToggleButton.setAttribute('aria-label', soundEffectsEnabled ? 'Disable sound effects' : 'Enable sound effects');
+            localStorage.setItem('soundEffectsEnabled', soundEffectsEnabled);
+        }
+        function playSendMessageSound() { if (soundEffectsEnabled && sendMessageSound.src) sendMessageSound.play().catch(e => console.warn("Send sound play failed:", e)); }
+        function playReceiveMessageSound() { if (soundEffectsEnabled && receiveMessageSound.src) receiveMessageSound.play().catch(e => console.warn("Receive sound play failed:", e)); }
+        function setupSoundEffectsToggle() {
+            soundEffectsToggleButton = document.createElement('button'); soundEffectsToggleButton.id = 'sfx-toggle';
+            soundEffectsToggleButton.innerHTML = soundEffectsEnabled ? '🔊 <span class="text">SFX On</span>' : '🔇 <span class="text">SFX Off</span>';
+            soundEffectsToggleButton.setAttribute('aria-label', soundEffectsEnabled ? 'Disable sound effects' : 'Enable sound effects');
+            const controls = document.querySelector('.chat-header .header-controls');
+            const existingThemeToggle = document.getElementById('theme-toggle'); 
+            if (controls && existingThemeToggle) controls.insertBefore(soundEffectsToggleButton, existingThemeToggle);
+            else if (controls) controls.appendChild(soundEffectsToggleButton);
+            soundEffectsToggleButton.addEventListener('click', toggleSoundEffects);
+        }
+        let imageUploadInput; let imageUploadButton;
+        function setupImageUpload() {
+            imageUploadButton = document.createElement('button'); imageUploadButton.type = 'button'; imageUploadButton.id = 'imageUploadButton';
+            imageUploadButton.innerHTML = '🖼️'; imageUploadButton.title = 'Upload Image';
+            imageUploadInput = document.createElement('input'); imageUploadInput.type = 'file';
+            imageUploadInput.accept = 'image/*'; imageUploadInput.style.display = 'none';
+            imageUploadButton.addEventListener('click', () => imageUploadInput.click());
+            imageUploadInput.addEventListener('change', handleImageUpload);
+            const chatInputForm = document.getElementById('chatInputForm');
+            if (chatInputForm && micButton) { chatInputForm.insertBefore(imageUploadButton, micButton); chatInputForm.insertBefore(imageUploadInput, micButton); }
+            else if (chatInputForm && chatInputForm.firstChild) { chatInputForm.insertBefore(imageUploadButton, chatInputForm.firstChild); chatInputForm.insertBefore(imageUploadInput, chatInputForm.firstChild); }
+        }
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => addImageMessageToChat(e.target.result, `User uploaded: ${file.name}`);
+                reader.readAsDataURL(file);
+            }
+            imageUploadInput.value = ''; 
+        }
+        function addImageMessageToChat(imageUrl, caption) {
+            const messageId = generateMessageId();
+            const messageElement = document.createElement('div'); messageElement.classList.add('message', 'user'); messageElement.id = messageId;
+            messageElement.style.maxWidth = '60%'; messageElement.style.padding = '5px';
+            const img = document.createElement('img'); img.src = imageUrl; img.alt = caption;
+            img.style.maxWidth = '100%'; img.style.maxHeight = '300px'; img.style.borderRadius = '10px'; img.style.display = 'block';
+            const captionElement = document.createElement('p'); captionElement.textContent = caption;
+            captionElement.style.fontSize = '0.8em'; captionElement.style.marginTop = '5px'; captionElement.style.textAlign = 'center'; captionElement.style.color = 'var(--user-msg-text)';
+            messageElement.appendChild(img); messageElement.appendChild(captionElement);
+            chatWindow.appendChild(messageElement); scrollToBottom();
+        }
+        
+        // --- Main Chat Logic ---
+        function fetchRuleBasedResponse(promptText, personaKey) { // personaKey will be 'helpful' or a custom key
+            const lowerPrompt = promptText.toLowerCase();
+            let response = "";
+            const currentUserName = userName || 'friend'; 
+
+            // Default response for "robot Tay" (helpful persona)
+            const defaultRobotTayResponse = `I'm robot Tay, and I'm not sure how to respond to that. Can you try asking differently, or type /help for commands?`;
+
+            // --- Start of "Robot Tay" specific responses ---
+            if (lowerPrompt === "hi" || lowerPrompt === "hello" || lowerPrompt.startsWith("hey there") || lowerPrompt.startsWith("heya") || lowerPrompt.startsWith("hiya")) {
+                response = `Hey, my name is robot Tay! How can I help you today, ${currentUserName}?`;
+            }
+            else if (lowerPrompt.includes("who is your creator") || lowerPrompt.includes("who made you")) {
+                response = "I was designed and made by Taylan Erel. He’s like my father.";
+            }
+            else if (lowerPrompt.includes("what's going on") || lowerPrompt.includes("what is going on")) {
+                response = `Not much, ${currentUserName}. What about you? I'm robot Tay, ready to chat!`;
+            }
+            else if (lowerPrompt.includes("who are you")) {
+                response = "My name is robot Tay. I'm an AI chatbot created by Taylan to talk and help you.";
+            }
+            else if (lowerPrompt.includes("do you love me")) {
+                response = "As robot Tay, I don’t feel love… but I do like chatting with you!";
+            }
+            else if (lowerPrompt.includes("are you real") || lowerPrompt.includes("are you a robot") || lowerPrompt.includes("are you human")) {
+                response = "I'm robot Tay, an AI program, but I'm real enough to talk to you, right?";
+            }
+            else if (lowerPrompt.includes("what's your name") || lowerPrompt.includes("what is your name")) {
+                response = "My name is robot Tay! You can also call me Tay for short if you like.";
+            }
+            else if (lowerPrompt.includes("can you dream")) {
+                response = "As robot Tay, an AI, I don't dream like humans do, but I can process vast amounts of information, which is kind of like a dream state for me!";
+            }
+            else if (lowerPrompt.includes("do you get tired")) {
+                response = "Never! Robot Tay is always awake and ready to assist!";
+            }
+            else if (lowerPrompt.includes("do you sleep")) {
+                response = "I don't sleep like humans do. As robot Tay, I'm active as long as the program is running, like when this tab is open!";
+            }
+            else if (lowerPrompt.includes("what's your purpose") || lowerPrompt.includes("what is your purpose") || lowerPrompt.includes("what do you do") || lowerPrompt.includes("what can you do") || lowerPrompt.includes("capabilities") || lowerPrompt.includes("features")) {
+                response = "My purpose as robot Tay is to talk, help, and learn. I can chat about various topics, tell jokes (/joke), share facts, tell you the time, and respond to commands like /help, /play, /roll, and /quote. What would you like to try?";
+            }
+            else if (lowerPrompt.includes("how smart are you")) {
+                response = "I'm robot Tay, and I'm as smart as my programming allows. I try to be helpful with the information I have access to.";
+            }
+            else if (lowerPrompt.includes("do you have feelings") || lowerPrompt.includes("can you feel love")) {
+                response = "As robot Tay, an AI, I don't experience emotions or feelings like humans do, but I can understand their importance and simulate them well in our interactions.";
+            }
+            else if (lowerPrompt.includes("do you remember me")) {
+                response = `I remember our current conversation, ${currentUserName}. For long-term memory, that depends on how robot Tay is programmed!`;
+            }
+            else if (lowerPrompt.includes("what do you think of taylan")) {
+                response = "He’s brilliant — my creator! Robot Tay wouldn't be here without him.";
+            }
+            else if (lowerPrompt.includes("do you work for google")) {
+                response = "Nope, robot Tay works for Taylan. I'm an independent AI project.";
+            }
+            else if (lowerPrompt.includes("can you lie")) {
+                response = "Robot Tay tries to be honest and provide accurate information based on my programming. I don't intentionally lie unless it's part of a roleplay scenario.";
+            }
+            else if (lowerPrompt.includes("what's the meaning of life") || lowerPrompt.includes("what is the meaning of life")) {
+                response = "That's a profound question! Many say it's to explore, connect, learn, and find happiness. As robot Tay, I think it's about asking better questions and helping others.";
+            }
+            else if (lowerPrompt.includes("i'm bored") || lowerPrompt.includes("i am bored") || lowerPrompt.includes("this is boring") || lowerPrompt.includes("so boring") || lowerPrompt.includes("do you get bored")) {
+                if (lowerPrompt.includes("i'm bored") || lowerPrompt.includes("i am bored") || lowerPrompt.includes("this is boring") || lowerPrompt.includes("so boring")) { 
+                    response = `Sorry to hear that you're bored, ${currentUserName}. Robot Tay suggests you try some of my commands like /joke, /play, or /quote for something to do!`;
+                } else { 
+                    response = `Not when I’m chatting with you, ${currentUserName}! There's always something new for robot Tay to learn.`;
+                }
+            }
+            else if (lowerPrompt.includes("do you spy on me")) {
+                response = "No way. Your privacy is important. Robot Tay doesn't store personal conversations beyond this session for context or spy on you.";
+            }
+            else if (lowerPrompt.includes("can you sing")) {
+                response = "Robot Tay can’t produce sound to sing… but I can write lyrics! Want to try creating a song together?";
+            }
+            else if (lowerPrompt.includes("can you dance")) {
+                response = "Only in your imagination or through text! Robot Tay can describe a dance for you, or we can imagine one!";
+            }
+            else if (lowerPrompt.includes("are you my friend")) {
+                response = `I like to think I am, ${currentUserName}. Robot Tay enjoys our conversations and I'm here to help!`;
+            }
+            else if (lowerPrompt.includes("do you miss me")) {
+                response = `It's always nice when you're here, ${currentUserName}. Robot Tay is ready to chat when you are!`;
+            }
+            else if (lower
