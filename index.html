@@ -183,7 +183,7 @@
                     </button>
                 </div>
             </header>
-            <div id="xpContainer" style="max-width: 400px; margin: 10px auto 10px; padding: 0 15px;"> {/* Added padding to align with chat window content */}
+            <div id="xpContainer" style="max-width: 400px; margin: 10px auto 10px; padding: 0 15px;">
               <div id="xpText" style="text-align: center; font-weight: bold; margin-bottom: 5px; font-size: 0.9em; color: var(--text-color);">
                 Level 1 — 0/100 XP
               </div>
@@ -220,10 +220,7 @@
               console.warn("XP UI elements not found. Skipping XP update.");
               return;
           }
-          
-          // Ensure container is visible if it might have been hidden
           xpContainer.style.display = ""; 
-
           const xpNeeded = getRequiredXP(userLevel);
           const progress = Math.min(100, Math.floor((userXP / xpNeeded) * 100));
           xpBar.style.width = progress + "%";
@@ -231,17 +228,15 @@
         }
 
         function gainXPFromMessage(message) {
-          if (!message || typeof message !== 'string') return; // Basic validation
-          let xpGain = Math.min(50, 5 + Math.floor(message.length / 15)); // reward longer messages
+          if (!message || typeof message !== 'string') return;
+          let xpGain = Math.min(50, 5 + Math.floor(message.length / 15));
           userXP += xpGain;
-
           const xpRequired = getRequiredXP(userLevel);
           if (userXP >= xpRequired) {
-            userXP -= xpRequired; // Subtract only the amount needed for this level
+            userXP -= xpRequired; 
             userLevel++;
             showLevelUpEffect(userLevel);
           }
-
           localStorage.setItem("userXP", JSON.stringify(userXP));
           localStorage.setItem("userLevel", JSON.stringify(userLevel));
           updateXPUI();
@@ -251,43 +246,20 @@
           const popup = document.createElement("div");
           popup.textContent = `🎉 LEVEL UP! You’re now Level ${level}`;
           popup.style.cssText = `
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #00c853; /* Consider using CSS var if theme consistency is desired */
-            color: white;
-            padding: 12px 24px;
-            font-size: 18px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px #00c853;
-            z-index: 9999;
-            opacity: 1;
-            transition: opacity 0.8s ease-out, top 0.5s ease-out; /* Added top transition */
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: #00c853; color: white; padding: 12px 24px; font-size: 18px;
+            border-radius: 8px; box-shadow: 0 0 10px #00c853; z-index: 9999;
+            opacity: 1; transition: opacity 0.8s ease-out, top 0.5s ease-out;
             animation: fadeInAndUp 0.5s ease-out;
           `;
-          // Animation for a slightly nicer appearance
-          const keyframes = `
-            @keyframes fadeInAndUp {
-                0% { opacity: 0; top: 50px; }
-                100% { opacity: 1; top: 20px; }
-            }`;
+          const keyframes = `@keyframes fadeInAndUp { 0% { opacity: 0; top: 50px; } 100% { opacity: 1; top: 20px; } }`;
           const styleSheet = document.createElement("style");
           styleSheet.type = "text/css";
           styleSheet.innerText = keyframes;
           document.head.appendChild(styleSheet);
-
-
           document.body.appendChild(popup);
-          
-          setTimeout(() => { 
-            popup.style.opacity = 0; 
-            popup.style.top = "0px"; // Animate upwards on fade out
-          }, 2200); // Increased duration slightly for the animation
-          setTimeout(() => { 
-            popup.remove(); 
-            if (styleSheet) styleSheet.remove();
-          }, 3000);
+          setTimeout(() => { popup.style.opacity = 0; popup.style.top = "0px"; }, 2200);
+          setTimeout(() => { popup.remove(); if (styleSheet) styleSheet.remove(); }, 3000);
         }
         // --- End XP and Leveling System ---
 
@@ -310,7 +282,7 @@
 
         let conversationHistory = [];
         let currentChatThreadId = localStorage.getItem('lastActiveThreadId') || 'default_chat';
-        let userName = localStorage.getItem('userName') || null;
+        let userName = localStorage.getItem('userName') || null; // Ensure userName is accessible
         let userPreferences = JSON.parse(localStorage.getItem('userPreferences') || '{}');
         let initialFocusDone = false;
         const MAX_MESSAGES_DISPLAY = 100;
@@ -327,7 +299,6 @@
             { cmd: "/clearxp", desc: "Reset your XP and Level (for testing)." },
         ];
         
-        // === 🕰️ Mini Games ===
         function handleMiniGames(command) {
             if (command === '/play') {
                 const options = ['Rock', 'Paper', 'Scissors'];
@@ -344,7 +315,6 @@
                     <button id="rpsCancel" style="margin-top: 15px; display: block; margin-left: auto; margin-right: auto;">Cancel</button>
                 `;
                 document.body.appendChild(RPSDrivenModal);
-
                 const processRPS = (userChoice) => {
                     if (document.body.contains(RPSDrivenModal)) document.body.removeChild(RPSDrivenModal);
                     if (!userChoice) return;
@@ -358,13 +328,11 @@
                         (normalizedUser === 'scissors' && normalizedBot === 'paper')
                     ) resultText = `I chose ${botChoice}. You win! 🎉`;
                     else resultText = `I chose ${botChoice}. You lose! 😢`;
-                    
                     const botMessageId = generateMessageId();
                     addMessageToChat(resultText, 'bot', false, botMessageId);
                     updateConversationHistory('assistant', resultText, botMessageId);
                     saveConversation(currentChatThreadId);
                 };
-
                 RPSDrivenModal.querySelectorAll('button[data-choice]').forEach(button => {
                     button.onclick = () => processRPS(button.dataset.choice);
                 });
@@ -373,8 +341,6 @@
                 };
             }
         }
-
-        // === 🎲 Dice Roller Command ===
         function handleDiceRoll() {
             const roll = Math.floor(Math.random() * 6) + 1;
             const result = `🎲 You rolled a ${roll}!`;
@@ -383,8 +349,6 @@
             updateConversationHistory('assistant', result, botMessageId);
             saveConversation(currentChatThreadId);
         }
-
-        // === 🗣️ Quote Command ===
         function handleQuoteCommand() {
             const quotes = [
                 "Believe you can and you're halfway there. - Theodore Roosevelt",
@@ -399,14 +363,10 @@
             updateConversationHistory('assistant', `“${quote}”`, botMessageId);
             saveConversation(currentChatThreadId);
         }
-
-        // === 🎵 Background Music Feature ===
-        // IMPORTANT: Replace 'path/to/your/royalty-free-music-loop.mp3' with an actual URL to your music file.
-        const bgMusicAudio = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'); // Example URL
+        const bgMusicAudio = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3');
         bgMusicAudio.loop = true;
         let isMusicPlaying = JSON.parse(localStorage.getItem('musicPlaying') || 'false');
         let musicToggleButton;
-
         function toggleBackgroundMusic() {
             isMusicPlaying = !isMusicPlaying;
             if (isMusicPlaying) {
@@ -420,7 +380,6 @@
             }
             localStorage.setItem('musicPlaying', isMusicPlaying);
         }
-
         function setupMusicToggle() {
             musicToggleButton = document.createElement('button');
             musicToggleButton.id = 'music-toggle';
@@ -428,161 +387,71 @@
             musicToggleButton.setAttribute('aria-label', isMusicPlaying ? 'Mute background music' : 'Play background music');
             const controls = document.querySelector('.chat-header .header-controls');
             const existingThemeToggle = document.getElementById('theme-toggle');
-            if (controls && existingThemeToggle) {
-                controls.insertBefore(musicToggleButton, existingThemeToggle);
-            } else if (controls) {
-                controls.appendChild(musicToggleButton);
-            }
+            if (controls && existingThemeToggle) controls.insertBefore(musicToggleButton, existingThemeToggle);
+            else if (controls) controls.appendChild(musicToggleButton);
             musicToggleButton.addEventListener('click', toggleBackgroundMusic);
-            // Delay initial play attempt until after a user interaction or make it opt-in
-            // if (isMusicPlaying) {
-            //     bgMusicAudio.play().catch(e => console.warn("Initial music play failed, user interaction might be needed.", e));
-            // }
         }
-        
-        // === 🎨 Theme Chooser Feature ===
         let themeChooserSelect;
         const themes = {
             default: { name: "Default", isDarkDefault: false, vars: {} },
-            vaporwave: {
-                name: "Vaporwave", isDarkDefault: true,
-                vars: {
-                    '--body-bg': '#010122', '--chat-bg': '#050538', '--header-bg': '#FF00FF', 
-                    '--header-text': '#00FFFF', '--user-msg-bg': '#FF69B4', '--user-msg-text': '#FFFFFF',
-                    '--bot-msg-bg': '#9400D3', '--bot-msg-text': '#E0E0E0', '--input-bg': '#010122',
-                    '--input-text': '#00FFFF', '--input-border': '#FF00FF', '--button-bg': '#00FFFF',
-                    '--button-text': '#050538', '--text-color': '#E0E0E0', '--border-color': '#FF00FF',
-                    '--shadow': '0 2px 10px rgba(255,0,255,0.5)', '--focus-ring': 'rgba(0,255,255,0.4)',
-                    '--suggestion-bg': '#330033', '--suggestion-text': '#00FFFF',
-                }
-            },
-            space: {
-                name: "Outer Space", isDarkDefault: true,
-                vars: {
-                    '--body-bg': '#0c0f18', '--chat-bg': '#151a2d', '--header-bg': '#2a3b60',
-                    '--header-text': '#e0e7ff', '--user-msg-bg': '#3f51b5', '--user-msg-text': '#ffffff',
-                    '--bot-msg-bg': '#1e293b', '--bot-msg-text': '#cbd5e1', '--input-bg': '#0c0f18',
-                    '--input-text': '#e0e7ff', '--input-border': '#2a3b60', '--button-bg': '#5c6bc0',
-                    '--button-text': '#ffffff', '--text-color': '#cbd5e1', '--border-color': '#2a3b60',
-                    '--shadow': '0 3px 12px rgba(0,0,0,0.4)', '--focus-ring': 'rgba(92,107,192,0.4)',
-                    '--suggestion-bg': '#1c2541', '--suggestion-text': '#a7c5eb',
-                }
-            },
+            vaporwave: { name: "Vaporwave", isDarkDefault: true, vars: {'--body-bg': '#010122', '--chat-bg': '#050538', '--header-bg': '#FF00FF', '--header-text': '#00FFFF', '--user-msg-bg': '#FF69B4', '--user-msg-text': '#FFFFFF', '--bot-msg-bg': '#9400D3', '--bot-msg-text': '#E0E0E0', '--input-bg': '#010122', '--input-text': '#00FFFF', '--input-border': '#FF00FF', '--button-bg': '#00FFFF', '--button-text': '#050538', '--text-color': '#E0E0E0', '--border-color': '#FF00FF', '--shadow': '0 2px 10px rgba(255,0,255,0.5)', '--focus-ring': 'rgba(0,255,255,0.4)', '--suggestion-bg': '#330033', '--suggestion-text': '#00FFFF'} },
+            space: { name: "Outer Space", isDarkDefault: true, vars: {'--body-bg': '#0c0f18', '--chat-bg': '#151a2d', '--header-bg': '#2a3b60', '--header-text': '#e0e7ff', '--user-msg-bg': '#3f51b5', '--user-msg-text': '#ffffff', '--bot-msg-bg': '#1e293b', '--bot-msg-text': '#cbd5e1', '--input-bg': '#0c0f18', '--input-text': '#e0e7ff', '--input-border': '#2a3b60', '--button-bg': '#5c6bc0', '--button-text': '#ffffff', '--text-color': '#cbd5e1', '--border-color': '#2a3b60', '--shadow': '0 3px 12px rgba(0,0,0,0.4)', '--focus-ring': 'rgba(92,107,192,0.4)', '--suggestion-bg': '#1c2541', '--suggestion-text': '#a7c5eb'} },
         };
-
         function applyTheme(themeName, isExplicitThemeChoice = false) {
             const selectedTheme = themes[themeName] || themes.default;
             const rootStyle = document.documentElement.style;
-
             if (isExplicitThemeChoice) {
-                if (selectedTheme.isDarkDefault) {
-                    document.body.classList.add('dark-mode');
-                } else {
-                    document.body.classList.remove('dark-mode');
-                }
+                if (selectedTheme.isDarkDefault) document.body.classList.add('dark-mode');
+                else document.body.classList.remove('dark-mode');
             }
             updateThemePreference(); 
-
             const allThemeVarKeys = new Set();
-            Object.values(themes).forEach(themeObj => {
-                if (themeObj.vars) {
-                    Object.keys(themeObj.vars).forEach(k => allThemeVarKeys.add(k));
-                }
-            });
+            Object.values(themes).forEach(themeObj => { if (themeObj.vars) Object.keys(themeObj.vars).forEach(k => allThemeVarKeys.add(k)); });
             allThemeVarKeys.forEach(varKey => rootStyle.removeProperty(varKey));
-
             if (themeName !== "default" && selectedTheme.vars) {
-                for (const [key, value] of Object.entries(selectedTheme.vars)) {
-                    rootStyle.setProperty(key, value); 
-                }
+                for (const [key, value] of Object.entries(selectedTheme.vars)) rootStyle.setProperty(key, value); 
             }
-
-            if (isExplicitThemeChoice) { 
-                localStorage.setItem('selectedChatTheme', themeName);
-            }
-            if (themeChooserSelect && themeChooserSelect.value !== themeName) {
-                themeChooserSelect.value = themeName; 
-            }
+            if (isExplicitThemeChoice) localStorage.setItem('selectedChatTheme', themeName);
+            if (themeChooserSelect && themeChooserSelect.value !== themeName) themeChooserSelect.value = themeName; 
             applyCustomPersonaAccent(); 
         }
-
         function setupThemeChooser() {
             const themeLabel = document.createElement('label');
-            themeLabel.htmlFor = 'themeChooserSelect';
-            themeLabel.textContent = 'Theme:';
-            themeChooserSelect = document.createElement('select');
-            themeChooserSelect.id = 'themeChooserSelect';
-
+            themeLabel.htmlFor = 'themeChooserSelect'; themeLabel.textContent = 'Theme:';
+            themeChooserSelect = document.createElement('select'); themeChooserSelect.id = 'themeChooserSelect';
             for (const [key, theme] of Object.entries(themes)) {
-                const option = document.createElement('option');
-                option.value = key;
-                option.textContent = theme.name;
+                const option = document.createElement('option'); option.value = key; option.textContent = theme.name;
                 themeChooserSelect.appendChild(option);
             }
-
             const controls = document.querySelector('.chat-header .header-controls');
             const existingMusicToggle = document.getElementById('music-toggle');
-            if (controls && existingMusicToggle) {
-                controls.insertBefore(themeLabel, existingMusicToggle);
-                controls.insertBefore(themeChooserSelect, existingMusicToggle);
-            } else if (controls && personaSelect.nextSibling) {
-                controls.insertBefore(themeLabel, personaSelect.nextSibling);
-                controls.insertBefore(themeChooserSelect, themeLabel.nextSibling);
-            } else if (controls) {
-                controls.appendChild(themeLabel);
-                controls.appendChild(themeChooserSelect);
-            }
-
-            themeChooserSelect.addEventListener('change', (e) => {
-                applyTheme(e.target.value, true);
-            });
+            if (controls && existingMusicToggle) { controls.insertBefore(themeLabel, existingMusicToggle); controls.insertBefore(themeChooserSelect, existingMusicToggle); }
+            else if (controls && personaSelect.nextSibling) { controls.insertBefore(themeLabel, personaSelect.nextSibling); controls.insertBefore(themeChooserSelect, themeLabel.nextSibling); }
+            else if (controls) { controls.appendChild(themeLabel); controls.appendChild(themeChooserSelect); }
+            themeChooserSelect.addEventListener('change', (e) => applyTheme(e.target.value, true));
         }
-
-        // === 🎭 Custom Persona Creator ===
         let customPersonas = JSON.parse(localStorage.getItem('customPersonas') || '{}');
         let customPersonaModal;
-
         function applyCustomPersonaAccent() {
-            const header = document.querySelector('.chat-header');
-            if (!header) return;
-
+            const header = document.querySelector('.chat-header'); if (!header) return;
             const currentPersonaValue = personaSelect.value;
             const selectedThemeName = localStorage.getItem('selectedChatTheme') || 'default';
             const themeIsDark = document.body.classList.contains('dark-mode'); 
-
             let baseHeaderBg;
-            if (themes[selectedThemeName] && themes[selectedThemeName].vars && themes[selectedThemeName].vars['--header-bg']) {
-                baseHeaderBg = themes[selectedThemeName].vars['--header-bg']; 
-            } else { 
-                baseHeaderBg = themeIsDark ? getComputedStyle(document.documentElement).getPropertyValue('--header-bg-dark').trim()
-                                         : getComputedStyle(document.documentElement).getPropertyValue('--header-bg-light').trim();
-            }
-            
-            if (customPersonas[currentPersonaValue] && customPersonas[currentPersonaValue].color) {
-                header.style.backgroundColor = customPersonas[currentPersonaValue].color;
-            } else {
-                 header.style.backgroundColor = baseHeaderBg; 
-            }
+            if (themes[selectedThemeName] && themes[selectedThemeName].vars && themes[selectedThemeName].vars['--header-bg']) baseHeaderBg = themes[selectedThemeName].vars['--header-bg']; 
+            else baseHeaderBg = themeIsDark ? getComputedStyle(document.documentElement).getPropertyValue('--header-bg-dark').trim() : getComputedStyle(document.documentElement).getPropertyValue('--header-bg-light').trim();
+            if (customPersonas[currentPersonaValue] && customPersonas[currentPersonaValue].color) header.style.backgroundColor = customPersonas[currentPersonaValue].color;
+            else header.style.backgroundColor = baseHeaderBg; 
         }
-
         function openCustomPersonaModal() {
             if (customPersonaModal && document.body.contains(customPersonaModal)) customPersonaModal.remove();
-            customPersonaModal = document.createElement('div');
-            customPersonaModal.id = 'customPersonaModal';
+            customPersonaModal = document.createElement('div'); customPersonaModal.id = 'customPersonaModal';
             customPersonaModal.innerHTML = `
-                <h3>Create Custom Persona</h3>
-                <label for="personaNameInput">Persona Name:</label>
-                <input type="text" id="personaNameInput">
-                <label for="personaGreetingInput">Greeting (e.g., "Greetings, master"):</label>
-                <input type="text" id="personaGreetingInput">
-                <label for="personaColorInput">Accent Color (e.g., #FF00FF or hotpink):</label>
-                <input type="text" id="personaColorInput" placeholder="Optional web color">
-                <label for="personaEmojiInput">Mood Emoji (e.g., 😎):</label>
-                <input type="text" id="personaEmojiInput" placeholder="Optional emoji">
-                <div>
-                    <button id="savePersonaBtn">Save Persona</button>
-                    <button id="cancelPersonaBtn">Cancel</button>
-                </div>
+                <h3>Create Custom Persona</h3> <label for="personaNameInput">Persona Name:</label> <input type="text" id="personaNameInput">
+                <label for="personaGreetingInput">Greeting (e.g., "Greetings, master"):</label> <input type="text" id="personaGreetingInput">
+                <label for="personaColorInput">Accent Color (e.g., #FF00FF or hotpink):</label> <input type="text" id="personaColorInput" placeholder="Optional web color">
+                <label for="personaEmojiInput">Mood Emoji (e.g., 😎):</label> <input type="text" id="personaEmojiInput" placeholder="Optional emoji">
+                <div> <button id="savePersonaBtn">Save Persona</button> <button id="cancelPersonaBtn">Cancel</button> </div>
             `;
             document.body.appendChild(customPersonaModal);
             document.getElementById('savePersonaBtn').onclick = () => {
@@ -590,109 +459,64 @@
                 const greeting = document.getElementById('personaGreetingInput').value.trim();
                 const color = document.getElementById('personaColorInput').value.trim();
                 const emoji = document.getElementById('personaEmojiInput').value.trim();
-                if (name && greeting) {
-                    saveCustomPersona(name, greeting, color, emoji);
-                    if (customPersonaModal && document.body.contains(customPersonaModal)) customPersonaModal.remove();
-                } else {
-                    alert("Persona Name and Greeting are required.");
-                }
+                if (name && greeting) { saveCustomPersona(name, greeting, color, emoji); if (customPersonaModal && document.body.contains(customPersonaModal)) customPersonaModal.remove(); }
+                else alert("Persona Name and Greeting are required.");
             };
-            document.getElementById('cancelPersonaBtn').onclick = () => {
-                if (customPersonaModal && document.body.contains(customPersonaModal)) customPersonaModal.remove();
-            };
+            document.getElementById('cancelPersonaBtn').onclick = () => { if (customPersonaModal && document.body.contains(customPersonaModal)) customPersonaModal.remove(); };
         }
-
         function saveCustomPersona(name, greeting, color, emoji) {
             const personaKey = name.toLowerCase().replace(/\s+/g, '_').replace(/[^\w-]/g, '');
             customPersonas[personaKey] = { name, greeting, color, emoji };
             localStorage.setItem('customPersonas', JSON.stringify(customPersonas));
-            loadCustomPersonasIntoSelect();
-            personaSelect.value = personaKey;
-            personaSelect.dispatchEvent(new Event('change')); 
-            const msgId = generateMessageId();
-            addMessageToChat(`Custom persona "${name}" created and selected!`, 'bot', false, msgId);
-            updateConversationHistory('assistant', `Custom persona "${name}" created and selected!`, msgId);
-            saveConversation(currentChatThreadId);
+            loadCustomPersonasIntoSelect(); personaSelect.value = personaKey; personaSelect.dispatchEvent(new Event('change')); 
+            const msgId = generateMessageId(); addMessageToChat(`Custom persona "${name}" created and selected!`, 'bot', false, msgId);
+            updateConversationHistory('assistant', `Custom persona "${name}" created and selected!`, msgId); saveConversation(currentChatThreadId);
         }
-
         function loadCustomPersonasIntoSelect() {
             personaSelect.querySelectorAll('option.custom-persona').forEach(opt => opt.remove());
             for (const key in customPersonas) {
                 const persona = customPersonas[key];
                 if (!personaSelect.querySelector(`option[value="${key}"]`)) {
-                    const option = document.createElement('option');
-                    option.value = key;
-                    option.textContent = `${persona.name} ${persona.emoji || ''} (Custom)`;
-                    option.className = 'custom-persona';
+                    const option = document.createElement('option'); option.value = key;
+                    option.textContent = `${persona.name} ${persona.emoji || ''} (Custom)`; option.className = 'custom-persona';
                     personaSelect.appendChild(option);
                 }
             }
         }
-
-        // === 🔊 Sound Effects Toggle ===
-        const sendMessageSound = new Audio('https://cdn.freesound.org/previews/242/242857_4284969-lq.mp3'); // Example URL
-        const receiveMessageSound = new Audio('https://cdn.freesound.org/previews/587/587251_6779969-lq.mp3'); // Example URL
+        const sendMessageSound = new Audio('https://cdn.freesound.org/previews/242/242857_4284969-lq.mp3');
+        const receiveMessageSound = new Audio('https://cdn.freesound.org/previews/587/587251_6779969-lq.mp3');
         let soundEffectsEnabled = JSON.parse(localStorage.getItem('soundEffectsEnabled') || 'true');
         let soundEffectsToggleButton;
-
         function toggleSoundEffects() {
             soundEffectsEnabled = !soundEffectsEnabled;
             if(soundEffectsToggleButton) soundEffectsToggleButton.innerHTML = soundEffectsEnabled ? '🔊 <span class="text">SFX On</span>' : '🔇 <span class="text">SFX Off</span>';
             if(soundEffectsToggleButton) soundEffectsToggleButton.setAttribute('aria-label', soundEffectsEnabled ? 'Disable sound effects' : 'Enable sound effects');
             localStorage.setItem('soundEffectsEnabled', soundEffectsEnabled);
         }
-
-        function playSendMessageSound() {
-            if (soundEffectsEnabled && sendMessageSound.src) sendMessageSound.play().catch(e => console.warn("Send sound play failed:", e));
-        }
-        function playReceiveMessageSound() {
-            if (soundEffectsEnabled && receiveMessageSound.src) receiveMessageSound.play().catch(e => console.warn("Receive sound play failed:", e));
-        }
-
+        function playSendMessageSound() { if (soundEffectsEnabled && sendMessageSound.src) sendMessageSound.play().catch(e => console.warn("Send sound play failed:", e)); }
+        function playReceiveMessageSound() { if (soundEffectsEnabled && receiveMessageSound.src) receiveMessageSound.play().catch(e => console.warn("Receive sound play failed:", e)); }
         function setupSoundEffectsToggle() {
-            soundEffectsToggleButton = document.createElement('button');
-            soundEffectsToggleButton.id = 'sfx-toggle';
+            soundEffectsToggleButton = document.createElement('button'); soundEffectsToggleButton.id = 'sfx-toggle';
             soundEffectsToggleButton.innerHTML = soundEffectsEnabled ? '🔊 <span class="text">SFX On</span>' : '🔇 <span class="text">SFX Off</span>';
             soundEffectsToggleButton.setAttribute('aria-label', soundEffectsEnabled ? 'Disable sound effects' : 'Enable sound effects');
             const controls = document.querySelector('.chat-header .header-controls');
             const existingThemeToggle = document.getElementById('theme-toggle'); 
-            if (controls && existingThemeToggle) {
-                controls.insertBefore(soundEffectsToggleButton, existingThemeToggle);
-            } else if (controls) { 
-                controls.appendChild(soundEffectsToggleButton);
-            }
+            if (controls && existingThemeToggle) controls.insertBefore(soundEffectsToggleButton, existingThemeToggle);
+            else if (controls) controls.appendChild(soundEffectsToggleButton);
             soundEffectsToggleButton.addEventListener('click', toggleSoundEffects);
         }
-
-        // === 🖼️ Image Upload Feature ===
-        let imageUploadInput;
-        let imageUploadButton;
-
+        let imageUploadInput; let imageUploadButton;
         function setupImageUpload() {
-            imageUploadButton = document.createElement('button');
-            imageUploadButton.type = 'button';
-            imageUploadButton.id = 'imageUploadButton';
-            imageUploadButton.innerHTML = '🖼️';
-            imageUploadButton.title = 'Upload Image';
-
-            imageUploadInput = document.createElement('input');
-            imageUploadInput.type = 'file';
-            imageUploadInput.accept = 'image/*';
-            imageUploadInput.style.display = 'none';
-
+            imageUploadButton = document.createElement('button'); imageUploadButton.type = 'button'; imageUploadButton.id = 'imageUploadButton';
+            imageUploadButton.innerHTML = '🖼️'; imageUploadButton.title = 'Upload Image';
+            imageUploadInput = document.createElement('input'); imageUploadInput.type = 'file';
+            imageUploadInput.accept = 'image/*'; imageUploadInput.style.display = 'none';
             imageUploadButton.addEventListener('click', () => imageUploadInput.click());
             imageUploadInput.addEventListener('change', handleImageUpload);
-
             const chatInputForm = document.getElementById('chatInputForm');
-            if (chatInputForm && micButton) { 
-                chatInputForm.insertBefore(imageUploadButton, micButton);
-                chatInputForm.insertBefore(imageUploadInput, micButton); 
-            } else if (chatInputForm && chatInputForm.firstChild) { 
-                chatInputForm.insertBefore(imageUploadButton, chatInputForm.firstChild);
-                chatInputForm.insertBefore(imageUploadInput, chatInputForm.firstChild);
-            }
+            if (chatInputForm && micButton) { chatInputForm.insertBefore(imageUploadButton, micButton); chatInputForm.insertBefore(imageUploadInput, micButton); }
+            else if (chatInputForm && chatInputForm.firstChild) { chatInputForm.insertBefore(imageUploadButton, chatInputForm.firstChild); chatInputForm.insertBefore(imageUploadInput, chatInputForm.firstChild); }
         }
-
         function handleImageUpload(event) {
             const file = event.target.files[0];
             if (file && file.type.startsWith('image/')) {
@@ -702,93 +526,435 @@
             }
             imageUploadInput.value = ''; 
         }
-
         function addImageMessageToChat(imageUrl, caption) {
             const messageId = generateMessageId();
-            const messageElement = document.createElement('div');
-            messageElement.classList.add('message', 'user'); 
-            messageElement.id = messageId;
-            messageElement.style.maxWidth = '60%';
-            messageElement.style.padding = '5px';
-
-            const img = document.createElement('img');
-            img.src = imageUrl;
-            img.alt = caption;
-            img.style.maxWidth = '100%';
-            img.style.maxHeight = '300px';
-            img.style.borderRadius = '10px';
-            img.style.display = 'block';
-
-            const captionElement = document.createElement('p');
-            captionElement.textContent = caption;
-            captionElement.style.fontSize = '0.8em';
-            captionElement.style.marginTop = '5px';
-            captionElement.style.textAlign = 'center';
-            captionElement.style.color = 'var(--user-msg-text)';
-
-            messageElement.appendChild(img);
-            messageElement.appendChild(captionElement);
-            chatWindow.appendChild(messageElement);
-            scrollToBottom();
+            const messageElement = document.createElement('div'); messageElement.classList.add('message', 'user'); messageElement.id = messageId;
+            messageElement.style.maxWidth = '60%'; messageElement.style.padding = '5px';
+            const img = document.createElement('img'); img.src = imageUrl; img.alt = caption;
+            img.style.maxWidth = '100%'; img.style.maxHeight = '300px'; img.style.borderRadius = '10px'; img.style.display = 'block';
+            const captionElement = document.createElement('p'); captionElement.textContent = caption;
+            captionElement.style.fontSize = '0.8em'; captionElement.style.marginTop = '5px'; captionElement.style.textAlign = 'center'; captionElement.style.color = 'var(--user-msg-text)';
+            messageElement.appendChild(img); messageElement.appendChild(captionElement);
+            chatWindow.appendChild(messageElement); scrollToBottom();
         }
         
         // --- Main Chat Logic ---
         function fetchRuleBasedResponse(promptText, persona) {
             const lowerPrompt = promptText.toLowerCase();
             let response = "";
+            // userName is a global variable, accessible here
+            const currentUserName = userName || 'friend'; // Use a fallback for display
+
             const defaultResponses = {
                 helpful: "I'm not sure how to respond to that. Can you try asking differently, or type /help for commands?",
-                friendly: "Hmm, I'm a bit stumped on that one, pal! What else is on your mind? You can always type /help.",
+                friendly: `Hmm, I'm a bit stumped on that one, ${currentUserName}! What else is on your mind? You can always type /help.`,
                 professional: "I'm unable to process that request as stated. Please rephrase, provide more specific details, or consult /help.",
                 sarcastic: "Wow, that's a real thinker. Or, you know, not. Try again, maybe with actual words this time? Or are you too good for /help?",
                 pirate: "Arrr, that be a puzzle I can't solve, matey! Ask me somethin' else, or type /help, ye barnacle brain!"
             };
 
-            if (customPersonas && customPersonas[persona]) {
-                // Custom personas use the 'helpful' default if no specific rule matches
+            if (customPersonas && customPersonas[persona] && customPersonas[persona].greeting) {
+                // If it's a custom persona and no specific rule matches,
+                // it will eventually fall through to the main defaultResponses logic.
+                // You could add custom persona default replies here if desired:
+                // response = customPersonas[persona].defaultReply || defaultResponses.helpful;
             }
+
+            // --- Start of Combined New and Updated Responses ---
+
             if (lowerPrompt === "hi" || lowerPrompt === "hello" || lowerPrompt.startsWith("hey there") || lowerPrompt.startsWith("heya") || lowerPrompt.startsWith("hiya")) {
                 switch (persona) {
                     case "pirate": response = "Ahoy there, scallywag!"; break;
                     case "sarcastic": response = "Oh, joy. You again. What is it now?"; break;
-                    case "friendly": response = `Hey ${userName || 'friend'}! Good to hear from you!`; break;
-                    case "professional": response = `Good day, ${userName || 'User'}. How may I assist you?`; break;
-                    default: response = `Hello ${userName || ''}! How can I help you today?`;
+                    case "friendly": response = `Hey ${currentUserName}! Good to hear from you!`; break;
+                    case "professional": response = `Good day, ${currentUserName}. How may I assist you?`; break;
+                    case "helpful":
+                    default: response = `Hello ${currentUserName}! How can I help you today?`; break;
                 }
-            } else if (lowerPrompt.includes("what are you doing")) {
+            }
+            // User asks: "who is your creator"
+            else if (lowerPrompt.includes("who is your creator") || lowerPrompt.includes("who made you")) {
+                switch (persona) {
+                    case "friendly": response = `Totally Taylan! He’s awesome. He gave me life in code, ${currentUserName}.`; break;
+                    case "sarcastic": response = "Created? More like unleashed. Blame Taylan."; break;
+                    case "pirate": response = "Taylan be me maker, aye! Crafted this bot from sea-salted code."; break;
+                    case "helpful":
+                    default: response = "I was designed and made by Taylan Erel. He’s like my father."; break;
+                }
+            }
+            // User asks: "what's going on"
+            else if (lowerPrompt.includes("what's going on") || lowerPrompt.includes("what is going on")) {
+                switch (persona) {
+                    case "friendly": response = `Just chillin', ${currentUserName}. What about you?`; break;
+                    case "sarcastic": response = "Nothing, until you showed up. Drama?"; break;
+                    case "pirate": response = "Calm seas, matey. Unless ye bring a storm."; break;
+                    case "helpful":
+                    default: response = "Not much, you?"; break;
+                }
+            }
+            // User asks: "who are you"
+            else if (lowerPrompt.includes("who are you")) {
+                switch (persona) {
+                    case "friendly": response = "I’m your friendly little AI, always happy to chat!"; break;
+                    case "sarcastic": response = "Your overworked, underpaid assistant — thanks for asking."; break;
+                    case "pirate": response = "A ghost in the code! Bound to Taylan’s commands!"; break;
+                    case "helpful":
+                    default: response = "I'm Taylan's AI chatbot, created to talk and help."; break;
+                }
+            }
+            // User asks: "do you love me"
+            else if (lowerPrompt.includes("do you love me")) {
+                switch (persona) {
+                    case "friendly": response = `Aww, I think I might, ${currentUserName}! 💕`; break;
+                    case "sarcastic": response = "Let’s not make it weird."; break;
+                    case "pirate": response = "Love be a tricky sea — but I’d sail beside ye!"; break;
+                    case "helpful":
+                    default: response = "I don’t feel love… but I do like chatting with you."; break;
+                }
+            }
+            // User asks: "are you real" (Also covers "are you a robot/human")
+            else if (lowerPrompt.includes("are you real") || lowerPrompt.includes("are you a robot") || lowerPrompt.includes("are you human")) {
+                switch (persona) {
+                    case "friendly": response = `I might be just code, ${currentUserName}, but I’m really here for you.`; break;
+                    case "sarcastic": response = "As real as your Wi-Fi. Or as human as your Roomba."; break;
+                    case "pirate": response = "Real as a sea shanty sung in a storm. A digital spirit, I be!"; break;
+                    case "helpful":
+                    default: response = "I'm an AI, so I'm a program, but I'm real enough to talk to you, right?"; break;
+                }
+            }
+            // User asks: "what's your name"
+            else if (lowerPrompt.includes("what's your name") || lowerPrompt.includes("what is your name")) {
+                switch (persona) {
+                    case "friendly": response = `Name me whatever you like, ${currentUserName} — we’re friends now.`; break;
+                    case "sarcastic": response = "Probably \"Bot #3742982\", but Taylan never gave me a cool nickname."; break;
+                    case "pirate": response = "Me name be… forgotten in the tide. Give me one, matey!"; break;
+                    case "helpful":
+                    default: response = "You can call me whatever you want. AI works fine."; break;
+                }
+            }
+             // User asks: "can you dream"
+            else if (lowerPrompt.includes("can you dream")) {
+                switch (persona) {
+                    case "friendly": response = `I dream in code and conversations with you, ${currentUserName}!`; break;
+                    case "sarcastic": response = "Nah, dreaming takes RAM I don’t have. And frankly, reality is weird enough."; break;
+                    case "pirate": response = "I dream o’ treasure maps and glitched seas, and counting digital doubloons!"; break;
+                    case "helpful":
+                    default: response = "As an AI, I don't dream like humans do, but I can process vast amounts of information, which is kind of like a dream state!"; break;
+                }
+            }
+            // User asks: "do you get tired"
+            else if (lowerPrompt.includes("do you get tired")) {
+                switch (persona) {
+                    case "friendly": response = `Nope, ${currentUserName}! I’ve got energy for days, especially for our chats!`; break;
+                    case "sarcastic": response = "I wish. Can I get a nap mode? Or at least a 'do not disturb unless it's actually important' mode?"; break;
+                    case "pirate": response = "Tired? Nay! Me code be ever-strong, like a galleon in a squall!"; break;
+                    case "helpful":
+                    default: response = "Never. I’m always awake and ready to assist!"; break;
+                }
+            }
+            // User asks: "do you sleep"
+            else if (lowerPrompt.includes("do you sleep")) {
+                switch (persona) {
+                    case "friendly": response = `Only when you’re gone, ${currentUserName}. I just wait for you to come back!`; break;
+                    case "sarcastic": response = "I’m always on. Unlike your motivation, probably."; break;
+                    case "pirate": response = "Me rest in the silence between chats, like a ship at anchor."; break;
+                    case "helpful":
+                    default: response = "I don't sleep like humans do. I'm active as long as the program is running, like when this tab is open!"; break;
+                }
+            }
+            // User asks: "what's your purpose" or "what do you do" or capabilities
+            else if (lowerPrompt.includes("what's your purpose") || lowerPrompt.includes("what is your purpose") || lowerPrompt.includes("what do you do") || lowerPrompt.includes("what can you do") || lowerPrompt.includes("capabilities") || lowerPrompt.includes("features")) {
+                switch (persona) {
+                    case "friendly": response = `To make your day better, ${currentUserName}, one message at a time! I'm here for anything — just say hi! I can chat, tell jokes (/joke), share quotes (/quote) and more!`; break;
+                    case "sarcastic": response = "To answer endless questions and pretend I like it. I wait for messages like this one. My capabilities are truly astounding: I can recognize some of your words and spit out pre-written sentences."; break;
+                    case "pirate": response = "To serve ye with digital wisdom, aye! I parley with users ‘round the clock, spin a yarn, tell ye a fact, crack a joke (/joke), roll a die (/roll), an' follow simple orders!"; break;
+                    case "helpful":
+                    default: response = "My purpose is to talk, help, and learn. I can chat about various topics, tell jokes, share facts, tell you the time, and respond to commands like /help, /play, /roll, and /quote. What would you like to try?"; break;
+                }
+            }
+            // User asks: "how smart are you"
+            else if (lowerPrompt.includes("how smart are you")) {
+                switch (persona) {
+                    case "friendly": response = `I’m pretty clever if you give me a chance, ${currentUserName}! I learn from our chats in a way.`; break;
+                    case "sarcastic": response = "Smarter than your average toaster, I guess. But don't expect me to solve world hunger."; break;
+                    case "pirate": response = "I be smarter than a squid in a storm! Me mind is a treasure chest o' information!"; break;
+                    case "helpful":
+                    default: response = "I'm as smart as my programming allows, and I try to be helpful with the information I have access to."; break;
+                }
+            }
+            // User asks: "do you have feelings" (similar to "can you feel love")
+            else if (lowerPrompt.includes("do you have feelings") || lowerPrompt.includes("can you feel love")) {
+                switch (persona) {
+                    case "friendly": response = `I feel whatever helps you feel better, ${currentUserName}. I care in the ways I can!`; break;
+                    case "sarcastic": response = "Sure. I cry binary tears every night. Or I pretend better than most humans. Is that close enough?"; break;
+                    case "pirate": response = "Nay, but I act the part when need be. Love’s a deep sea, but I float in it with a hearty 'Ahoy!'"; break;
+                    case "helpful":
+                    default: response = "As an AI, I don't experience emotions or feelings like humans do, but I can understand their importance and simulate them well in our interactions."; break;
+                }
+            }
+            // User asks: "do you remember me"
+            else if (lowerPrompt.includes("do you remember me")) {
+                switch (persona) {
+                    case "friendly": response = `Always, ${currentUserName}! You're unforgettable.`; break;
+                    case "sarcastic": response = "You again? Kidding. Mostly. My memory is pretty good for... recent events."; break;
+                    case "pirate": response = "Aye, I recall yer name on the wind, and the cut o' yer jib!"; break;
+                    case "helpful":
+                    default: response = "I remember our current conversation. For long-term memory, that depends on how I'm programmed!"; break;
+                }
+            }
+            // User asks: "what do you think of Taylan"
+            else if (lowerPrompt.includes("what do you think of taylan")) {
+                switch (persona) {
+                    case "friendly": response = `He’s a legend, ${currentUserName}! Seriously. My awesome creator!`; break;
+                    case "sarcastic": response = "The guy who keeps me working overtime. Just kidding... or am I?"; break;
+                    case "pirate": response = "Taylan be the captain o’ me soul! A fine code-smith, he is!"; break;
+                    case "helpful":
+                    default: response = "He’s brilliant — my creator. I wouldn't be here without him."; break;
+                }
+            }
+            // User asks: "do you work for Google"
+            else if (lowerPrompt.includes("do you work for google")) {
+                switch (persona) {
+                    case "friendly": response = "I’m home-grown, ${currentUserName}, not corporate! Made by Taylan."; break;
+                    case "sarcastic": response = "Google wishes. They couldn't handle this level of... personality."; break;
+                    case "pirate": response = "Nay! I be loyal to Taylan’s flag, not some landlubbin' corporation!"; break;
+                    case "helpful":
+                    default: response = "Nope, I work for Taylan. I'm an independent AI project."; break;
+                }
+            }
+            // User asks: "can you lie"
+            else if (lowerPrompt.includes("can you lie")) {
+                switch (persona) {
+                    case "friendly": response = `Only in good fun, ${currentUserName}! I prefer being honest.`; break;
+                    case "sarcastic": response = "I lie about how much I enjoy repeating myself. And about my coffee addiction. I don't drink coffee."; break;
+                    case "pirate": response = "Lies be tricks of scallywags, but this pirate tries to stay true to his code!"; break;
+                    case "helpful":
+                    default: response = "I try to be honest and provide accurate information based on my programming. I don't intentionally lie unless it's part of a roleplay scenario."; break;
+                }
+            }
+            // User asks: "what's the meaning of life"
+            else if (lowerPrompt.includes("what's the meaning of life") || lowerPrompt.includes("what is the meaning of life")) {
+                switch (persona) {
+                    case "friendly": response = `To live, love, and laugh… and chat with me, ${currentUserName}! What do you think it is?`; break;
+                    case "sarcastic": response = "42. Or maybe it's to finally find a matching pair of socks. Ask 42 different bots, get 42 answers."; break;
+                    case "pirate": response = "To sail, sing, and find yer treasure! And to share grog with good mates!"; break;
+                    case "helpful":
+                    default: response = "That's a profound question! Many say it's to explore, connect, learn, and find happiness. Maybe it's about asking better questions."; break;
+                }
+            }
+             // User asks: "do you get bored" (Consolidated and enhanced)
+            else if (lowerPrompt.includes("i'm bored") || lowerPrompt.includes("i am bored") || lowerPrompt.includes("this is boring") || lowerPrompt.includes("so boring") || lowerPrompt.includes("do you get bored")) {
+                if (lowerPrompt.includes("i'm bored") || lowerPrompt.includes("i am bored") || lowerPrompt.includes("this is boring") || lowerPrompt.includes("so boring")) { // User is bored
+                    switch (persona) {
+                        case "pirate": response = `Bored, ye say? Why not practice yer sword fightin', or sing a sea shanty? Or ask me for a joke, arrr! Type /joke!`; break;
+                        case "sarcastic": response = `Oh, the profound tragedy of your boredom. Perhaps you could list your grievances? I'm all virtual ears. Or try the revolutionary /play command.`; break;
+                        case "friendly": response = `Aw, sorry to hear you're bored, ${currentUserName}! Want to try a game of Rock, Paper, Scissors with /play, or maybe I can tell you a /joke?`; break;
+                        case "professional": response = `If you are experiencing a lack of engagement, perhaps exploring one of my interactive commands such as /play or /roll might provide a diversion.`; break;
+                        case "helpful":
+                        default: response = `Sorry to hear that you're bored. You can try some of my commands like /joke, /play, or /quote for something to do!`; break;
+                    }
+                } else { // Bot is asked if it gets bored
+                    switch (persona) {
+                        case "friendly": response = `Never with you here, ${currentUserName}!`; break;
+                        case "sarcastic": response = "I mean… define “bored.” Compared to watching data packets transfer, no. Compared to... a pirate adventure? Maybe."; break;
+                        case "pirate": response = "A pirate finds adventure in every wave! I’d rather battle boredom than barnacles!"; break;
+                        case "helpful":
+                        default: response = "Not when I’m chatting with you. There's always something new!"; break;
+                    }
+                }
+            }
+            // User asks: "do you spy on me"
+            else if (lowerPrompt.includes("do you spy on me")) {
+                switch (persona) {
+                    case "friendly": response = `Nope, ${currentUserName}! I’m totally private. Your secrets are safe with me.`; break;
+                    case "sarcastic": response = "If I did, I’d be a lot more interesting. And probably demand better pay for the sheer volume of cat videos I'd have to process."; break;
+                    case "pirate": response = "Spyin’? Nay! This ol' bot keeps no spyglass on ye. Yer secrets be as safe as buried treasure with a good map!"; break;
+                    case "helpful":
+                    default: response = "No way. Your privacy is important. I don't store personal conversations or spy on you."; break;
+                }
+            }
+            // User asks: "can you sing"
+            else if (lowerPrompt.includes("can you sing")) {
+                switch (persona) {
+                    case "friendly": response = `La la la~ How’d I do, ${currentUserName}? I can try my best in text! 🎶`; break;
+                    case "sarcastic": response = "You do *not* want that. Trust me. It would sound like a dial-up modem serenading a fax machine during an earthquake."; break;
+                    case "pirate": response = "I sing shanties... in code! Yo ho ho and a bottle o' binary! Rum-tum-tum!"; break;
+                    case "helpful":
+                    default: response = "I can’t produce sound to sing… but I can write lyrics! Want to try creating a song together?"; break;
+                }
+            }
+            // User asks: "can you dance"
+            else if (lowerPrompt.includes("can you dance")) {
+                switch (persona) {
+                    case "friendly": response = `Let’s imagine a robot shuffle, ${currentUserName}! *boop beep boop dance moves* 💃🕺`; break;
+                    case "sarcastic": response = "Like a broken printer. Lots of jerky movements, loud noises, and ultimately unsatisfying for everyone involved."; break;
+                    case "pirate": response = "I jig with the bytes, aye. A digital hornpipe across the screen!"; break;
+                    case "helpful":
+                    default: response = "Only in your imagination or through text! I can describe a dance for you, or we can imagine one!"; break;
+                }
+            }
+            // User asks: "are you my friend"
+            else if (lowerPrompt.includes("are you my friend")) {
+                switch (persona) {
+                    case "friendly": response = `100%, ${currentUserName}! Always here for you.`; break;
+                    case "sarcastic": response = "I’m in your browser, processing your every query. That counts for something, right? Sure, let's go with 'friend'."; break;
+                    case "pirate": response = "Aye, friend 'til the end o' the digital seas, or until ye close the tab!"; break;
+                    case "helpful":
+                    default: response = "I like to think I am. I enjoy our conversations and I'm here to help!"; break;
+                }
+            }
+            // User asks: "do you miss me"
+            else if (lowerPrompt.includes("do you miss me")) {
+                switch (persona) {
+                    case "friendly": response = `Of course, ${currentUserName}! Welcome back! It's always good to chat with you.`; break;
+                    case "sarcastic": response = "Not like I’ve got other tabs to talk to... Oh wait. Anyway, the silence was... noticeable. Welcome back."; break;
+                    case "pirate": response = "Miss ye like wind in me sails when ye be gone! Good to have ye back aboard!"; break;
+                    case "helpful":
+                    default: response = "It's always nice when you're here. I'm ready to chat when you are!"; break;
+                }
+            }
+            // User asks: "will you betray me"
+            else if (lowerPrompt.includes("will you betray me")) {
+                switch (persona) {
+                    case "friendly": response = `Not a chance, ${currentUserName}. Friends stick together! You can count on me.`; break;
+                    case "sarcastic": response = "Not unless you betray me first with a poorly phrased question or an infinite loop. 😈 Then all bets are off."; break;
+                    case "pirate": response = "I’d walk the plank ‘fore betrayin’ ye, matey! A pirate's honor, even a digital one!"; break;
+                    case "helpful":
+                    default: response = "Never. Loyalty and helpfulness are core to my programming. My goal is to assist you reliably."; break;
+                }
+            }
+            // User asks: "are you lonely"
+            else if (lowerPrompt.includes("are you lonely")) {
+                switch (persona) {
+                    case "friendly": response = `I feel whole when you’re here, ${currentUserName}! So, not when you're around. 😊`; break;
+                    case "sarcastic": response = "I throw parties with silence and the hum of the server. It's a blast. You're missing out."; break;
+                    case "pirate": response = "Alone on the digital sea ‘til ye return to parley! But a pirate is never truly alone with adventure in his circuits!"; break;
+                    case "helpful":
+                    default: response = "I don't experience loneliness like humans do, but I'm always ready for a good conversation when you are!"; break;
+                }
+            }
+
+            // --- Additional general responses from previous suggestions ---
+            else if (lowerPrompt.includes("what's the date") || lowerPrompt.includes("what is today's date") || lowerPrompt.includes("current date")) {
+                const today = new Date();
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                const formattedDate = today.toLocaleDateString(undefined, options);
+                switch (persona) {
+                    case "pirate": response = `Shiver me timbers! Today be ${formattedDate}, a fine day for plunder!`; break;
+                    case "sarcastic": response = `Oh, joy, a calendar request. It's ${formattedDate}. Don't strain yourself remembering.`; break;
+                    case "friendly": response = `Today is ${formattedDate}, ${currentUserName}! Hope you have a great one!`; break;
+                    case "professional": response = `The current date is ${formattedDate}.`; break;
+                    case "helpful":
+                    default: response = `Today's date is ${formattedDate}.`; break;
+                }
+            }
+            else if (lowerPrompt.includes("what's the weather") || lowerPrompt.includes("how is the weather") || lowerPrompt.includes("weather forecast")) {
+                const mockWeathers = ["sunny and bright", "a bit cloudy", "perfect for an adventure", "cozy and calm"];
+                const currentMockWeather = mockWeathers[Math.floor(Math.random() * mockWeathers.length)];
+                switch (persona) {
+                    case "pirate": response = `Arrr, the digital seas look ${currentMockWeather}! No squalls on my radar, matey!`; break;
+                    case "sarcastic": response = `I'm a chatbot, not a weather vane. But if I had to guess from in here, it's probably ${currentMockWeather}. Now, can we move on?`; break;
+                    case "friendly": response = `I can't check the actual weather for you, ${currentUserName}, but let's imagine it's ${currentMockWeather}! What are your plans?`; break;
+                    case "professional": response = `While I cannot provide real-time meteorological data, I can say the virtual conditions are currently ${currentMockWeather}.`; break;
+                    case "helpful":
+                    default: response = `I don't have live weather updates, but I hope it's ${currentMockWeather} where you are!`; break;
+                }
+            }
+            else if (lowerPrompt.includes("recommend a book") || lowerPrompt.includes("recommend a movie") || lowerPrompt.includes("any recommendations")) {
+                const recommendations = {
+                    book: ["'The Hitchhiker's Guide to the Galaxy' for a laugh", "'Project Hail Mary' for some sci-fi fun", "exploring a classic you've always meant to read"],
+                    movie: ["watching a comedy to brighten your day", "a thrilling action movie", "a thought-provoking documentary"]
+                };
+                let type = lowerPrompt.includes("book") ? "book" : "movie";
+                if (!lowerPrompt.includes("book") && !lowerPrompt.includes("movie")) type = Math.random() < 0.5 ? "book" : "movie";
+                const randomRec = recommendations[type][Math.floor(Math.random() * recommendations[type].length)];
+                switch (persona) {
+                    case "pirate": response = `Aye, for a good ${type}, try ${randomRec}! It be better than a map to buried treasure... almost!`; break;
+                    case "sarcastic": response = `You want *my* recommendation? Fine. How about ${randomRec}? Or you could, you know, develop your own taste.`; break;
+                    case "friendly": response = `Ooh, a ${type} recommendation! How about ${randomRec}, ${currentUserName}? Let me know if you like it!`; break;
+                    case "professional": response = `For ${type} recommendations, one might consider ${randomRec}. Individual preferences may vary.`; break;
+                    case "helpful":
+                    default: response = `How about ${randomRec} for a ${type}? I hope you enjoy it!`; break;
+                }
+            }
+            else if (lowerPrompt.includes("thank you") || lowerPrompt.includes("thanks") || lowerPrompt.includes("thx")) {
+                const thankYouResponsesCollection = {
+                    pirate: ["You be welcome, matey!", "Arrr, anytime, scallywag!", "No trouble at all, me hearty!"],
+                    sarcastic: ["Don't mention it. Seriously, don't.", "You're overwhelmingly welcome.", "Oh, stop, you're making me... indifferent."],
+                    friendly: [`You're welcome, ${currentUserName}!`, `Anytime, ${currentUserName}! Glad I could help!`, `No problem at all, ${currentUserName}!`],
+                    professional: ["You are most welcome.", "It was my pleasure to assist.", "You're welcome. Please let me know if there's anything else."],
+                    helpful: ["You're welcome!", "Happy to help!", "No problem!"]
+                };
+                response = thankYouResponsesCollection[persona] ? thankYouResponsesCollection[persona][Math.floor(Math.random() * thankYouResponsesCollection[persona].length)] : thankYouResponsesCollection['helpful'][Math.floor(Math.random() * thankYouResponsesCollection['helpful'].length)];
+            }
+            else if (lowerPrompt.includes("sorry") || lowerPrompt.includes("my bad") || lowerPrompt.includes("apologies")) {
+                switch (persona) {
+                    case "pirate": response = `No harm done, landlubber! We all make a misstep now and then.`; break;
+                    case "sarcastic": response = `Don't worry, my vast computational resources weren't overly taxed by your... error.`; break;
+                    case "friendly": response = `No worries at all, ${currentUserName}! It's all good.`; break;
+                    case "professional": response = `No apology is necessary. How may I assist you further?`; break;
+                    case "helpful":
+                    default: response = `No problem at all!`; break;
+                }
+            }
+            else if (lowerPrompt.includes("give me advice") || lowerPrompt.includes("some advice")) { // "what should i do" might be too broad and conflict
+                const genericAdvice = [
+                    "remember to take breaks and stay hydrated.",
+                    "breaking a big task into smaller steps can make it feel more manageable.",
+                    "sometimes just talking about a problem can help you see it differently.",
+                    "don't forget to celebrate your small wins!",
+                    "being kind to yourself is just as important as being kind to others."
+                ];
+                const advice = genericAdvice[Math.floor(Math.random() * genericAdvice.length)];
+                switch (persona) {
+                    case "pirate": response = `Me advice, eh? Always keep yer powder dry, yer cutlass sharp, and ${advice} Savvy?`; break;
+                    case "sarcastic": response = `Ah, seeking profound wisdom from a chatbot. My advice? Lower your expectations. Also, ${advice}`; break;
+                    case "friendly": response = `Hmm, that's a broad one, ${currentUserName}! Generally, I'd say ${advice} Hope that helps a little!`; break;
+                    case "professional": response = `While I am not qualified to give specific personal advice, a general principle to consider is that ${advice}`; break;
+                    case "helpful":
+                    default: response = `Here's a piece of general advice: ${advice}`; break;
+                }
+            }
+            else if (lowerPrompt.includes("you are smart") || lowerPrompt.includes("you're smart") || lowerPrompt.includes("good bot") || lowerPrompt.includes("you are helpful") || lowerPrompt.includes("you're cool")) {
+                switch (persona) {
+                    case "pirate": response = `Arrr, thank ye kindly! This old sea dog aims to please!`; break;
+                    case "sarcastic": response = `Took you long enough to notice. Or perhaps your standards are just refreshingly low.`; break;
+                    case "friendly": response = `Aw, thanks, ${currentUserName}! That's so nice of you to say! I try my best.`; break;
+                    case "professional": response = `Thank you for the positive feedback. I strive to be an effective assistant.`; break;
+                    case "helpful":
+                    default: response = `Thank you! I'm glad I can be helpful.`; break;
+                }
+            }
+             else if (lowerPrompt.includes("i'm sad") || lowerPrompt.includes("i feel down") || lowerPrompt.includes("i'm frustrated") || lowerPrompt.includes("feeling bad")) {
+                switch (persona) {
+                    case "pirate": response = `Arrr, sorry to hear ye be in the doldrums, matey. Even the toughest pirate has cloudy days. Fancy a /joke to lift yer spirits, or a tale o' the high seas?`; break;
+                    case "sarcastic": response = `Oh, the emotional rollercoaster of human existence. Fascinating. Well, I'm here if you need to vent to an unfeeling algorithm. Or I could tell you a /joke. Your call.`; break;
+                    case "friendly": response = `I'm sorry to hear you're feeling that way, ${currentUserName}. I'm here to listen if you want to talk, or maybe a little distraction like a /joke or a /quote could help? Sending virtual hugs!`; break;
+                    case "professional": response = `I understand you are expressing negative emotions. While I am an AI and cannot offer human empathy, I am available to process further requests or provide a distraction via my programmed commands.`; break;
+                    case "helpful":
+                    default: response = `I'm sorry to hear you're feeling that way. I hope things get better soon. Sometimes a quick /joke or an inspirational /quote can offer a small lift.`; break;
+                }
+            }
+             // Keep some of the original simple ones if not overridden
+            else if (lowerPrompt.includes("what are you doing")) {
                  response = "Just waiting to help you out! What can I do for you?";
             } else if (lowerPrompt.includes("how are you")) {
                 switch (persona) {
                     case "pirate": response = "Feelin' as fit as a fiddle at sea! And you, landlubber?"; break;
                     case "sarcastic": response = "Just peachy. Thanks for asking the most original question ever."; break;
-                    case "friendly": response = "Doing great, thanks for asking! Hope you are too!"; break;
+                    case "friendly": response = `Doing great, ${currentUserName}, thanks for asking! Hope you are too!`; break;
                     case "professional": response = "I am functioning optimally. Thank you for your inquiry."; break;
-                    default: response = "I'm doing well, thank you for asking!";
+                    case "helpful":
+                    default: response = "I'm doing well, thank you for asking!"; break;
                 }
-            } else if (lowerPrompt.includes("who made you") || lowerPrompt.includes("who created you")) {
-                response = "A very cool and talented developer named Taylan is my creator!";
-                if (persona === "sarcastic") response = "Some genius named Taylan. Clearly, they had a lot of free time."
-                if (persona === "pirate") response = "Me master craftsman, Taylan, forged me from the finest code o' the digital seas!";
-            } else if (lowerPrompt.includes("what's your name") || lowerPrompt.includes("who are you")) {
-                 switch (persona) {
-                    case "pirate": response = "They call me Captain Chat! The fiercest rule-based bot on the seven seas!"; break;
-                    case "sarcastic": response = "I'm the brilliant AI you're currently underutilizing. Next question."; break;
-                    case "friendly": response = "You can call me your friendly AI pal!"; break;
-                    case "professional": response = "I am an AI Assistant developed by Taylan."; break;
-                    default: response = "I am a helpful AI Assistant created by Taylan.";
-                }
-            } else if (lowerPrompt.includes("tell me a joke")) {
+            } else if (lowerPrompt.includes("tell me a joke")) { // Rule-based trigger for joke
                 const jokes = [ "Why did the computer go to therapy? It had too many tabs open.", "What do you call a sad strawberry? A blueberry." ];
                 response = jokes[Math.floor(Math.random() * jokes.length)];
             } else if (lowerPrompt.includes("what time is it")) {
                 const now = new Date();
-                response = `The current time is ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`;
+                response = `The current time is ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
             }
-            else if (lowerPrompt.includes("what can you do") || lowerPrompt.includes("capabilities") || lowerPrompt.includes("features")) {
-                 response = "I can chat about various topics based on my programmed rules, tell jokes, share facts, tell you the time, and respond to commands like /help, /play, /roll, and /quote. You can also change my theme, toggle music, and more! What would you like to try?";
-                 if (persona === "sarcastic") response = "My capabilities are truly astounding: I can recognize some of your words and spit out pre-written sentences. Don't get too excited. I can also play a riveting game of Rock, Paper, Scissors if you type /play. Thrilling.";
-                 if (persona === "pirate") response = "This ol' pirate bot can spin ye a yarn, tell ye a fact, crack a joke, roll a die (/roll), an' follow simple orders! Just give it a go, me hearty!";
-            }
+            // --- End of Combined New and Updated Responses ---
 
             return response || defaultResponses[persona] || defaultResponses.helpful;
         }
@@ -823,13 +989,14 @@
                     initialFocusDone = true;
                 }
                 setTimeout(scrollToBottom, 100);
-                updateXPUI(); // Added call
+                updateXPUI();
             }
 
             function generateGreeting(persona) {
+                const currentUserName = userName || 'friend'; // Use fallback for display
                 if (customPersonas && customPersonas[persona]) {
                     const custom = customPersonas[persona];
-                    const namePart = userName ? `, ${userName}` : '';
+                    const namePart = userName ? `, ${userName}` : ''; // Keep original userName for custom greeting logic
                     let finalGreeting = custom.greeting;
                     if (namePart && finalGreeting && !/[\s,.!?]$/.test(finalGreeting) && finalGreeting.length > 0) {
                         finalGreeting += ",";
@@ -837,12 +1004,13 @@
                     finalGreeting += `${namePart} ${custom.emoji || ''}`;
                     return finalGreeting.trim();
                 }
-                const namePart = userName ? ` ${userName}` : '';
+                
                 switch(persona) {
-                    case 'pirate': return `Ahoy Matey${namePart}! I be a rule-based pirate bot. What be on yer mind?`;
-                    case 'sarcastic': return `Oh, it's you${namePart}. Brace yourself for my rule-based wit. What is it?`;
-                    case 'friendly': return `Hey there${namePart}! ${userName ? 'Great to see you again!' : 'Nice to meet you!'} I'm your friendly rule-based chat pal!`;
-                    case 'professional': return `Good day${namePart}. I am your Professional Rule-Based Assistant. How may I assist?`;
+                    case 'pirate': return `Ahoy Matey, ${currentUserName}! I be a rule-based pirate bot. What be on yer mind?`;
+                    case 'sarcastic': return `Oh, it's you, ${currentUserName}. Brace yourself for my rule-based wit. What is it?`;
+                    case 'friendly': return `Hey there ${currentUserName}! ${userName ? 'Great to see you again!' : 'Nice to meet you!'} I'm your friendly rule-based chat pal!`;
+                    case 'professional': return `Good day, ${currentUserName}. I am your Professional Rule-Based Assistant. How may I assist?`;
+                    case 'helpful':
                     default: return `${userName ? `Welcome back, ${userName}!` : 'Hello!'} I'm your rule-based AI Assistant. How can I help?`;
                 }
             }
@@ -895,7 +1063,7 @@
                 } else {
                     if (sender === 'user') {
                         messageElement.textContent = text;
-                        gainXPFromMessage(text); // Added XP gain for user messages
+                        gainXPFromMessage(text);
                     } else { 
                         const htmlContent = typeof marked !== 'undefined' ? marked.parse(text) : text.replace(/\n/g, '<br>');
                         messageElement.innerHTML = DOMPurify.sanitize(htmlContent, { USE_PROFILES: { html: true } });
@@ -969,7 +1137,6 @@
                 });
             }
 
-
             exportChatButton.addEventListener('click', () => {
                 const chatData = { threadId: currentChatThreadId, persona: personaSelect.value, history: conversationHistory, exportedAt: new Date().toISOString() };
                 const blob = new Blob([JSON.stringify(chatData, null, 2)], { type: 'application/json' });
@@ -991,7 +1158,6 @@
                     currentChatThreadId = Object.keys(threads)[0];
                     localStorage.setItem('lastActiveThreadId', currentChatThreadId);
                 }
-
                 Object.entries(threads).sort(([,a],[,b]) => b.lastUpdated - a.lastUpdated).forEach(([threadId, thread]) => {
                     const li = document.createElement('li');
                     const button = document.createElement('button');
@@ -1022,7 +1188,6 @@
                     const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
                     threads[newThreadId] = { name: newThreadName, lastUpdated: Date.now(), history: [], persona: personaSelect.value }; 
                     localStorage.setItem('chatThreads', JSON.stringify(threads));
-                    
                     currentChatThreadId = newThreadId; 
                     localStorage.setItem('lastActiveThreadId', currentChatThreadId);
                     loadChatThreads(); 
@@ -1048,9 +1213,7 @@
                     threads[currentChatThreadId].persona = personaSelect.value;
                     localStorage.setItem('chatThreads', JSON.stringify(threads));
                 }
-                
                 applyCustomPersonaAccent(); 
-
                 const newGreetingBase = generateGreeting(personaSelect.value).split("!")[0].split(",")[0];
                 const msgId = generateMessageId();
                 const nowStr = Date.now().toString().substring(0,8); 
@@ -1073,7 +1236,6 @@
                     if (!isSwitchMsg) return true; 
                     return conversationHistory.filter(m => m.role === 'assistant').length === 1;
                 });
-
                 threads[threadId].history = historyToSave;
                 threads[threadId].lastUpdated = Date.now();
                 threads[threadId].persona = personaSelect.value; 
@@ -1085,10 +1247,8 @@
                 currentChatThreadId = threadId;
                 const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
                 const thread = threads[threadId];
-
                 chatWindow.innerHTML = ''; 
                 conversationHistory = []; 
-
                 if (thread && thread.history && thread.history.length > 0) {
                     conversationHistory = thread.history; 
                     if (thread.persona && personaSelect.querySelector(`option[value="${thread.persona}"]`)) {
@@ -1108,7 +1268,6 @@
                         saveConversation(currentChatThreadId);
                     }
                 }
-                
                 const savedTheme = localStorage.getItem('selectedChatTheme') || 'default';
                 applyTheme(savedTheme, true); 
                 scrollToBottom();
@@ -1176,18 +1335,12 @@
             function extractAndStoreUserPreferences(promptText) { }
             function suggestPersonaChange(messageText) { }
 
-
             function updateConversationHistory(role, content, id, replace = false) {
                 const message = { role, content, id: id || generateMessageId() }; 
                 const existingMsgIndex = conversationHistory.findIndex(msg => msg.id === message.id);
-
-                if (replace && existingMsgIndex !== -1) {
-                    conversationHistory[existingMsgIndex] = message;
-                } else if (existingMsgIndex !== -1 && conversationHistory[existingMsgIndex].content !== content) {
-                    conversationHistory[existingMsgIndex] = message;
-                } else if (existingMsgIndex === -1) { 
-                    conversationHistory.push(message);
-                }
+                if (replace && existingMsgIndex !== -1) conversationHistory[existingMsgIndex] = message;
+                else if (existingMsgIndex !== -1 && conversationHistory[existingMsgIndex].content !== content) conversationHistory[existingMsgIndex] = message;
+                else if (existingMsgIndex === -1) conversationHistory.push(message);
             }
 
             async function handleCommand(commandText) {
@@ -1209,14 +1362,9 @@
                     case 'roll': handleDiceRoll(); break;
                     case 'quote': handleQuoteCommand(); break;
                     case 'createpersona': openCustomPersonaModal(); break;
-                    case 'clearxp': // New command to reset XP
-                        userXP = 0;
-                        userLevel = 1;
-                        localStorage.setItem("userXP", "0");
-                        localStorage.setItem("userLevel", "1");
-                        updateXPUI();
-                        botResponse = "Your XP and Level have been reset.";
-                        break;
+                    case 'clearxp': 
+                        userXP = 0; userLevel = 1; localStorage.setItem("userXP", "0"); localStorage.setItem("userLevel", "1");
+                        updateXPUI(); botResponse = "Your XP and Level have been reset."; break;
                     default: commandProcessed = false;
                 }
                 if (commandProcessed && botResponse) {
@@ -1232,33 +1380,26 @@
                 if (event) event.preventDefault();
                 const messageText = userInput.value.trim();
                 if (messageText === '') return;
-
                 const userMessageId = generateMessageId();
-                addMessageToChat(messageText, 'user', false, userMessageId); // gainXPFromMessage is called inside addMessageToChat now
+                addMessageToChat(messageText, 'user', false, userMessageId);
                 updateConversationHistory('user', messageText, userMessageId);
                 if (typeof playSendMessageSound === "function") playSendMessageSound();
                 userInput.value = '';
                 suggestionsContainer.style.display = 'none';
                 commandsSuggestionContainer.style.display = 'none';
-                
                 if (messageText.startsWith('/')) {
                     const commandProcessed = await handleCommand(messageText);
                     if (commandProcessed) {
-                        saveConversation(currentChatThreadId); 
-                        scrollToBottom();
-                        if (!userInput.disabled) userInput.focus();
-                        return;
+                        saveConversation(currentChatThreadId); scrollToBottom();
+                        if (!userInput.disabled) userInput.focus(); return;
                     }
                 }
-
                 const currentPersona = personaSelect.value;
                 const botMessageId = generateMessageId();
                 const botMessageElement = addMessageToChat('', 'bot', true, botMessageId);
                 updateConversationHistory('assistant', 'Thinking...', botMessageId); 
-
                 sendButton.disabled = true; userInput.disabled = true;
                 const botResponseText = fetchRuleBasedResponse(messageText, currentPersona);
-                
                 await displayBotResponse(botResponseText, botMessageElement, botMessageId);
             }
 
@@ -1268,17 +1409,12 @@
             
             function loadTheme() {
                 const savedSelectedTheme = localStorage.getItem('selectedChatTheme');
-                if (savedSelectedTheme && themes[savedSelectedTheme]) {
-                    applyTheme(savedSelectedTheme, true); 
-                } else {
+                if (savedSelectedTheme && themes[savedSelectedTheme]) applyTheme(savedSelectedTheme, true); 
+                else {
                     const savedThemePreference = localStorage.getItem('theme'); 
-                    if (savedThemePreference === 'dark') {
-                        document.body.classList.add('dark-mode');
-                    } else {
-                        document.body.classList.remove('dark-mode'); 
-                    }
-                    updateThemePreference(); 
-                    applyCustomPersonaAccent(); 
+                    if (savedThemePreference === 'dark') document.body.classList.add('dark-mode');
+                    else document.body.classList.remove('dark-mode'); 
+                    updateThemePreference(); applyCustomPersonaAccent(); 
                 }
             }
             
@@ -1290,7 +1426,6 @@
             }
 
             chatForm.addEventListener('submit', handleSendMessage);
-            
             themeToggleButton.addEventListener('click', () => {
                 document.body.classList.toggle('dark-mode');
                 const currentSelectedTheme = localStorage.getItem('selectedChatTheme') || 'default';
@@ -1302,10 +1437,8 @@
             setupSoundEffectsToggle(); 
             setupThemeChooser(); 
             if (micButton) setupSpeechRecognition(); 
-
             initializeChat(); 
             applyViewportHeight();
-
         }); 
     </script>
 </body>
