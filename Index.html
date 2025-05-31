@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tay Loves Thea</title>
+  <style>
+    body {
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      background: linear-gradient(to bottom, #fff0f5, #ffe4e1);
+      text-align: center;
+      padding: 50px;
+      animation: fadeIn 2s ease;
+      overflow: hidden;
+    }
+
+    h1 {
+      font-size: 32px;
+      color: #d63384;
+      animation: slideDown 1s ease;
+    }
+
+    #message {
+      font-size: 20px;
+      margin-top: 20px;
+      color: #c2185b;
+      white-space: pre-wrap;
+    }
+
+    input, button {
+      padding: 10px;
+      font-size: 18px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin: 10px;
+    }
+
+    button {
+      background-color: #ff69b4;
+      color: white;
+      border: none;
+    }
+
+    button:hover {
+      background-color: #ff85c1;
+    }
+
+    .dancer {
+      width: 150px;
+      margin-top: 30px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideDown {
+      from { transform: translateY(-30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .heart {
+      position: absolute;
+      color: red;
+      animation: float 6s infinite;
+      font-size: 24px;
+      opacity: 0.6;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-800px) scale(1.5);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Hi, what is your name?</h1>
+
+  <input type="text" id="nameInput" placeholder="Enter your name" />
+  <br>
+  <button onclick="sayHello()">Greet Me</button>
+
+  <div id="message"></div>
+  <div id="dancerArea"></div>
+
+  <script>
+    function sayHello() {
+      const name = document.getElementById("nameInput").value.trim().toLowerCase();
+      const msgBox = document.getElementById("message");
+      const dancerArea = document.getElementById("dancerArea");
+      msgBox.innerHTML = "";
+      dancerArea.innerHTML = "";
+
+      if (name === "thea") {
+        msgBox.innerText = "Hello Thea, welcome to my page.\nTaylan loves you 💖💘💕💞💓❤️";
+        createHearts();
+        showLoopingDancer();
+      } else if (name) {
+        const prettyName = name.charAt(0).toUpperCase() + name.slice(1);
+        msgBox.innerText = `Hello, ${prettyName}!`;
+      } else {
+        msgBox.innerText = "Please enter your name!";
+      }
+    }
+
+    function createHearts() {
+      for (let i = 0; i < 20; i++) {
+        const heart = document.createElement("div");
+        heart.className = "heart";
+        heart.innerHTML = "❤️";
+        heart.style.left = Math.random() * 100 + "vw";
+        heart.style.fontSize = (Math.random() * 20 + 20) + "px";
+        document.body.appendChild(heart);
+        setTimeout(() => heart.remove(), 6000);
+      }
+    }
+
+    function showLoopingDancer() {
+      const gif = document.createElement("img");
+      gif.src = "https://media.tenor.com/2roX3uxz_68AAAAC/dance-party.gif"; // loops forever!
+      gif.className = "dancer";
+      document.getElementById("dancerArea").appendChild(gif);
+    }
+  </script>
+</body>
+</html>
