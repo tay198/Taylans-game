@@ -183,6 +183,14 @@
                     </button>
                 </div>
             </header>
+            <div id="xpContainer" style="max-width: 400px; margin: 10px auto 10px; padding: 0 15px;"> {/* Added padding to align with chat window content */}
+              <div id="xpText" style="text-align: center; font-weight: bold; margin-bottom: 5px; font-size: 0.9em; color: var(--text-color);">
+                Level 1 — 0/100 XP
+              </div>
+              <div style="background: var(--input-border); height: 14px; border-radius: 7px; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);">
+                <div id="xpBar" style="height: 100%; width: 0%; background: linear-gradient(to right, #00e676, #00c853); transition: width 0.4s ease-in-out;"></div>
+              </div>
+            </div>
             <div class="suggestions-container" id="suggestionsContainer"></div>
             <div class="commands-suggestion-container" id="commandsSuggestionContainer" style="display: none;"></div>
             <div class="chat-window" id="chatWindow" role="log" aria-live="polite"></div>
@@ -195,6 +203,94 @@
     </main>
 
     <script type="module" defer>
+        // --- XP and Leveling System ---
+        let userXP = parseInt(localStorage.getItem('userXP')) || 0;
+        let userLevel = parseInt(localStorage.getItem('userLevel')) || 1;
+
+        function getRequiredXP(level) {
+          return 100 + (level - 1) * 20; // XP required grows per level
+        }
+
+        function updateXPUI() {
+          const xpBar = document.getElementById("xpBar");
+          const xpText = document.getElementById("xpText");
+          const xpContainer = document.getElementById("xpContainer");
+
+          if (!xpBar || !xpText || !xpContainer) {
+              console.warn("XP UI elements not found. Skipping XP update.");
+              return;
+          }
+          
+          // Ensure container is visible if it might have been hidden
+          xpContainer.style.display = ""; 
+
+          const xpNeeded = getRequiredXP(userLevel);
+          const progress = Math.min(100, Math.floor((userXP / xpNeeded) * 100));
+          xpBar.style.width = progress + "%";
+          xpText.textContent = `Level ${userLevel} — ${userXP}/${xpNeeded} XP`;
+        }
+
+        function gainXPFromMessage(message) {
+          if (!message || typeof message !== 'string') return; // Basic validation
+          let xpGain = Math.min(50, 5 + Math.floor(message.length / 15)); // reward longer messages
+          userXP += xpGain;
+
+          const xpRequired = getRequiredXP(userLevel);
+          if (userXP >= xpRequired) {
+            userXP -= xpRequired; // Subtract only the amount needed for this level
+            userLevel++;
+            showLevelUpEffect(userLevel);
+          }
+
+          localStorage.setItem("userXP", JSON.stringify(userXP));
+          localStorage.setItem("userLevel", JSON.stringify(userLevel));
+          updateXPUI();
+        }
+
+        function showLevelUpEffect(level) {
+          const popup = document.createElement("div");
+          popup.textContent = `🎉 LEVEL UP! You’re now Level ${level}`;
+          popup.style.cssText = `
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #00c853; /* Consider using CSS var if theme consistency is desired */
+            color: white;
+            padding: 12px 24px;
+            font-size: 18px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px #00c853;
+            z-index: 9999;
+            opacity: 1;
+            transition: opacity 0.8s ease-out, top 0.5s ease-out; /* Added top transition */
+            animation: fadeInAndUp 0.5s ease-out;
+          `;
+          // Animation for a slightly nicer appearance
+          const keyframes = `
+            @keyframes fadeInAndUp {
+                0% { opacity: 0; top: 50px; }
+                100% { opacity: 1; top: 20px; }
+            }`;
+          const styleSheet = document.createElement("style");
+          styleSheet.type = "text/css";
+          styleSheet.innerText = keyframes;
+          document.head.appendChild(styleSheet);
+
+
+          document.body.appendChild(popup);
+          
+          setTimeout(() => { 
+            popup.style.opacity = 0; 
+            popup.style.top = "0px"; // Animate upwards on fade out
+          }, 2200); // Increased duration slightly for the animation
+          setTimeout(() => { 
+            popup.remove(); 
+            if (styleSheet) styleSheet.remove();
+          }, 3000);
+        }
+        // --- End XP and Leveling System ---
+
         const chatAppContainer = document.getElementById('chatAppContainer');
         const chatWindow = document.getElementById('chatWindow');
         const userInput = document.getElementById('userInput');
@@ -228,8 +324,9 @@
             { cmd: "/roll", desc: "Roll a 6-sided die." },
             { cmd: "/quote", desc: "Get an inspirational quote." },
             { cmd: "/createpersona", desc: "Create a new custom persona." },
+            { cmd: "/clearxp", desc: "Reset your XP and Level (for testing)." },
         ];
-
+        
         // === 🕰️ Mini Games ===
         function handleMiniGames(command) {
             if (command === '/play') {
@@ -305,7 +402,7 @@
 
         // === 🎵 Background Music Feature ===
         // IMPORTANT: Replace 'path/to/your/royalty-free-music-loop.mp3' with an actual URL to your music file.
-        const bgMusicAudio = new Audio('path/to/your/royalty-free-music-loop.mp3'); 
+        const bgMusicAudio = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'); // Example URL
         bgMusicAudio.loop = true;
         let isMusicPlaying = JSON.parse(localStorage.getItem('musicPlaying') || 'false');
         let musicToggleButton;
@@ -337,9 +434,10 @@
                 controls.appendChild(musicToggleButton);
             }
             musicToggleButton.addEventListener('click', toggleBackgroundMusic);
-            if (isMusicPlaying) {
-                bgMusicAudio.play().catch(e => console.warn("Initial music play failed, user interaction might be needed.", e));
-            }
+            // Delay initial play attempt until after a user interaction or make it opt-in
+            // if (isMusicPlaying) {
+            //     bgMusicAudio.play().catch(e => console.warn("Initial music play failed, user interaction might be needed.", e));
+            // }
         }
         
         // === 🎨 Theme Chooser Feature ===
@@ -349,7 +447,7 @@
             vaporwave: {
                 name: "Vaporwave", isDarkDefault: true,
                 vars: {
-                    '--body-bg': '#010122', '--chat-bg': '#050538', '--header-bg': '#FF00FF', // Simplified: themes directly set final vars
+                    '--body-bg': '#010122', '--chat-bg': '#050538', '--header-bg': '#FF00FF', 
                     '--header-text': '#00FFFF', '--user-msg-bg': '#FF69B4', '--user-msg-text': '#FFFFFF',
                     '--bot-msg-bg': '#9400D3', '--bot-msg-text': '#E0E0E0', '--input-bg': '#010122',
                     '--input-text': '#00FFFF', '--input-border': '#FF00FF', '--button-bg': '#00FFFF',
@@ -383,11 +481,8 @@
                     document.body.classList.remove('dark-mode');
                 }
             }
-            // If not explicit, body.dark-mode is assumed to be set by the toggle button already.
+            updateThemePreference(); 
 
-            updateThemePreference(); // Update icon & save 'theme' (light/dark basic preference)
-
-            // Clear all potentially previously set theme variables from any theme
             const allThemeVarKeys = new Set();
             Object.values(themes).forEach(themeObj => {
                 if (themeObj.vars) {
@@ -396,21 +491,19 @@
             });
             allThemeVarKeys.forEach(varKey => rootStyle.removeProperty(varKey));
 
-            // Apply new theme variables if not 'default' theme
             if (themeName !== "default" && selectedTheme.vars) {
                 for (const [key, value] of Object.entries(selectedTheme.vars)) {
-                    rootStyle.setProperty(key, value); // Custom themes override --body-bg etc. directly
+                    rootStyle.setProperty(key, value); 
                 }
             }
-            // If themeName is "default", clearing the vars above is enough for CSS to take over.
 
-            if (isExplicitThemeChoice) { // Only save theme choice if explicitly chosen
+            if (isExplicitThemeChoice) { 
                 localStorage.setItem('selectedChatTheme', themeName);
             }
             if (themeChooserSelect && themeChooserSelect.value !== themeName) {
-                themeChooserSelect.value = themeName; // Sync dropdown
+                themeChooserSelect.value = themeName; 
             }
-            applyCustomPersonaAccent(); // Re-apply persona accent over the theme
+            applyCustomPersonaAccent(); 
         }
 
         function setupThemeChooser() {
@@ -441,10 +534,8 @@
             }
 
             themeChooserSelect.addEventListener('change', (e) => {
-                applyTheme(e.target.value, true); // Explicit theme change
+                applyTheme(e.target.value, true);
             });
-
-            // Initial load will be handled by initializeChat calling loadTheme
         }
 
         // === 🎭 Custom Persona Creator ===
@@ -457,13 +548,12 @@
 
             const currentPersonaValue = personaSelect.value;
             const selectedThemeName = localStorage.getItem('selectedChatTheme') || 'default';
-            const themeIsDark = document.body.classList.contains('dark-mode'); // Check current mode
+            const themeIsDark = document.body.classList.contains('dark-mode'); 
 
             let baseHeaderBg;
-            // Determine base header background from the currently applied theme and mode
             if (themes[selectedThemeName] && themes[selectedThemeName].vars && themes[selectedThemeName].vars['--header-bg']) {
-                baseHeaderBg = themes[selectedThemeName].vars['--header-bg']; // Theme directly sets --header-bg
-            } else { // Default theme
+                baseHeaderBg = themes[selectedThemeName].vars['--header-bg']; 
+            } else { 
                 baseHeaderBg = themeIsDark ? getComputedStyle(document.documentElement).getPropertyValue('--header-bg-dark').trim()
                                          : getComputedStyle(document.documentElement).getPropertyValue('--header-bg-light').trim();
             }
@@ -471,7 +561,7 @@
             if (customPersonas[currentPersonaValue] && customPersonas[currentPersonaValue].color) {
                 header.style.backgroundColor = customPersonas[currentPersonaValue].color;
             } else {
-                 header.style.backgroundColor = baseHeaderBg; // Revert to theme or default header color
+                 header.style.backgroundColor = baseHeaderBg; 
             }
         }
 
@@ -518,7 +608,7 @@
             localStorage.setItem('customPersonas', JSON.stringify(customPersonas));
             loadCustomPersonasIntoSelect();
             personaSelect.value = personaKey;
-            personaSelect.dispatchEvent(new Event('change')); // Triggers greeting update and accent
+            personaSelect.dispatchEvent(new Event('change')); 
             const msgId = generateMessageId();
             addMessageToChat(`Custom persona "${name}" created and selected!`, 'bot', false, msgId);
             updateConversationHistory('assistant', `Custom persona "${name}" created and selected!`, msgId);
@@ -540,9 +630,8 @@
         }
 
         // === 🔊 Sound Effects Toggle ===
-        // IMPORTANT: Replace with actual paths to your sound files
-        const sendMessageSound = new Audio('path/to/send-sound.mp3');
-        const receiveMessageSound = new Audio('path/to/receive-sound.mp3');
+        const sendMessageSound = new Audio('https://cdn.freesound.org/previews/242/242857_4284969-lq.mp3'); // Example URL
+        const receiveMessageSound = new Audio('https://cdn.freesound.org/previews/587/587251_6779969-lq.mp3'); // Example URL
         let soundEffectsEnabled = JSON.parse(localStorage.getItem('soundEffectsEnabled') || 'true');
         let soundEffectsToggleButton;
 
@@ -554,10 +643,10 @@
         }
 
         function playSendMessageSound() {
-            if (soundEffectsEnabled) sendMessageSound.play().catch(e => console.warn("Send sound play failed:", e));
+            if (soundEffectsEnabled && sendMessageSound.src) sendMessageSound.play().catch(e => console.warn("Send sound play failed:", e));
         }
         function playReceiveMessageSound() {
-            if (soundEffectsEnabled) receiveMessageSound.play().catch(e => console.warn("Receive sound play failed:", e));
+            if (soundEffectsEnabled && receiveMessageSound.src) receiveMessageSound.play().catch(e => console.warn("Receive sound play failed:", e));
         }
 
         function setupSoundEffectsToggle() {
@@ -566,10 +655,10 @@
             soundEffectsToggleButton.innerHTML = soundEffectsEnabled ? '🔊 <span class="text">SFX On</span>' : '🔇 <span class="text">SFX Off</span>';
             soundEffectsToggleButton.setAttribute('aria-label', soundEffectsEnabled ? 'Disable sound effects' : 'Enable sound effects');
             const controls = document.querySelector('.chat-header .header-controls');
-            const existingThemeToggle = document.getElementById('theme-toggle'); // Insert before theme toggle
+            const existingThemeToggle = document.getElementById('theme-toggle'); 
             if (controls && existingThemeToggle) {
                 controls.insertBefore(soundEffectsToggleButton, existingThemeToggle);
-            } else if (controls) { // Fallback
+            } else if (controls) { 
                 controls.appendChild(soundEffectsToggleButton);
             }
             soundEffectsToggleButton.addEventListener('click', toggleSoundEffects);
@@ -595,10 +684,10 @@
             imageUploadInput.addEventListener('change', handleImageUpload);
 
             const chatInputForm = document.getElementById('chatInputForm');
-            if (chatInputForm && micButton) { // Insert before mic button
+            if (chatInputForm && micButton) { 
                 chatInputForm.insertBefore(imageUploadButton, micButton);
-                chatInputForm.insertBefore(imageUploadInput, micButton); // Hidden
-            } else if (chatInputForm && chatInputForm.firstChild) { // Fallback
+                chatInputForm.insertBefore(imageUploadInput, micButton); 
+            } else if (chatInputForm && chatInputForm.firstChild) { 
                 chatInputForm.insertBefore(imageUploadButton, chatInputForm.firstChild);
                 chatInputForm.insertBefore(imageUploadInput, chatInputForm.firstChild);
             }
@@ -611,13 +700,13 @@
                 reader.onload = (e) => addImageMessageToChat(e.target.result, `User uploaded: ${file.name}`);
                 reader.readAsDataURL(file);
             }
-            imageUploadInput.value = ''; // Reset file input
+            imageUploadInput.value = ''; 
         }
 
         function addImageMessageToChat(imageUrl, caption) {
             const messageId = generateMessageId();
             const messageElement = document.createElement('div');
-            messageElement.classList.add('message', 'user'); // Style as user message
+            messageElement.classList.add('message', 'user'); 
             messageElement.id = messageId;
             messageElement.style.maxWidth = '60%';
             messageElement.style.padding = '5px';
@@ -641,10 +730,9 @@
             messageElement.appendChild(captionElement);
             chatWindow.appendChild(messageElement);
             scrollToBottom();
-            // Note: Image messages are not saved to conversationHistory for simplicity here.
         }
         
-        // --- Main Chat Logic (Original functions modified as needed) ---
+        // --- Main Chat Logic ---
         function fetchRuleBasedResponse(promptText, persona) {
             const lowerPrompt = promptText.toLowerCase();
             let response = "";
@@ -659,7 +747,6 @@
             if (customPersonas && customPersonas[persona]) {
                 // Custom personas use the 'helpful' default if no specific rule matches
             }
-            // --- Common Greetings & Small Talk ---
             if (lowerPrompt === "hi" || lowerPrompt === "hello" || lowerPrompt.startsWith("hey there") || lowerPrompt.startsWith("heya") || lowerPrompt.startsWith("hiya")) {
                 switch (persona) {
                     case "pirate": response = "Ahoy there, scallywag!"; break;
@@ -695,41 +782,37 @@
                 response = jokes[Math.floor(Math.random() * jokes.length)];
             } else if (lowerPrompt.includes("what time is it")) {
                 const now = new Date();
-                response = `The current time is ${now.toLocaleTimeString()}.`;
+                response = `The current time is ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`;
             }
-            // ... (Add many more of your rule-based responses here) ...
             else if (lowerPrompt.includes("what can you do") || lowerPrompt.includes("capabilities") || lowerPrompt.includes("features")) {
                  response = "I can chat about various topics based on my programmed rules, tell jokes, share facts, tell you the time, and respond to commands like /help, /play, /roll, and /quote. You can also change my theme, toggle music, and more! What would you like to try?";
                  if (persona === "sarcastic") response = "My capabilities are truly astounding: I can recognize some of your words and spit out pre-written sentences. Don't get too excited. I can also play a riveting game of Rock, Paper, Scissors if you type /play. Thrilling.";
                  if (persona === "pirate") response = "This ol' pirate bot can spin ye a yarn, tell ye a fact, crack a joke, roll a die (/roll), an' follow simple orders! Just give it a go, me hearty!";
             }
 
-
             return response || defaultResponses[persona] || defaultResponses.helpful;
         }
         
         document.addEventListener('DOMContentLoaded', () => {
             function initializeChat() {
-                loadChatThreads(); // Load threads first
-                loadCustomPersonasIntoSelect(); // Then custom personas for dropdown
-                loadTheme(); // Apply saved theme and mode preference
+                loadChatThreads(); 
+                loadCustomPersonasIntoSelect(); 
+                loadTheme(); 
 
-                chatWindow.innerHTML = ''; // Clear chat window
-                // conversationHistory = []; // Reset history (loadConversation will populate it)
-
+                chatWindow.innerHTML = ''; 
                 const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
                 currentChatThreadId = localStorage.getItem('lastActiveThreadId') || (Object.keys(threads).length > 0 ? Object.keys(threads)[0] : 'default_chat');
                 
-                if (!threads[currentChatThreadId]) { // Fallback if saved ID is invalid
+                if (!threads[currentChatThreadId]) { 
                      currentChatThreadId = Object.keys(threads).length > 0 ? Object.keys(threads)[0] : 'default_chat';
-                     if (!threads[currentChatThreadId] && currentChatThreadId === 'default_chat') { // Still no thread, create default
+                     if (!threads[currentChatThreadId] && currentChatThreadId === 'default_chat') { 
                         threads['default_chat'] = { name: 'General Chat', lastUpdated: Date.now(), history: [], persona: 'helpful' };
                         localStorage.setItem('chatThreads', JSON.stringify(threads));
                      }
                      localStorage.setItem('lastActiveThreadId', currentChatThreadId);
                 }
                 
-                loadConversation(currentChatThreadId); // Loads history and sets persona from thread
+                loadConversation(currentChatThreadId); 
 
                 sendButton.disabled = false;
                 userInput.disabled = false;
@@ -740,6 +823,7 @@
                     initialFocusDone = true;
                 }
                 setTimeout(scrollToBottom, 100);
+                updateXPUI(); // Added call
             }
 
             function generateGreeting(persona) {
@@ -777,8 +861,8 @@
                     userInput.focus();
                     return;
                 }
-                botMessageElement.classList.remove('loading'); // Ensure loading is removed
-                botMessageElement.innerHTML = ''; // Clear spinner
+                botMessageElement.classList.remove('loading'); 
+                botMessageElement.innerHTML = ''; 
 
                 const htmlContent = (typeof marked !== 'undefined' ? marked.parse(text) : text.replace(/\n/g, '<br>'));
                 botMessageElement.innerHTML = DOMPurify.sanitize(htmlContent, { USE_PROFILES: { html: true } });
@@ -787,7 +871,7 @@
                 addMessageActions(botMessageElement, text, botMessageId);
                 if (typeof playReceiveMessageSound === "function") playReceiveMessageSound();
                 
-                updateConversationHistory('assistant', text, botMessageId); // Ensure history is updated with final content
+                updateConversationHistory('assistant', text, botMessageId); 
                 saveConversation(currentChatThreadId);
                 enableInputs();
                 userInput.focus();
@@ -811,7 +895,8 @@
                 } else {
                     if (sender === 'user') {
                         messageElement.textContent = text;
-                    } else { // Bot messages
+                        gainXPFromMessage(text); // Added XP gain for user messages
+                    } else { 
                         const htmlContent = typeof marked !== 'undefined' ? marked.parse(text) : text.replace(/\n/g, '<br>');
                         messageElement.innerHTML = DOMPurify.sanitize(htmlContent, { USE_PROFILES: { html: true } });
                         if (typeof Prism !== 'undefined') Prism.highlightAllUnder(messageElement);
@@ -874,7 +959,7 @@
                     micButton.style.display = 'none'; console.warn("Speech recognition not supported.");
                 }
             }
-            if (micButton) { // Ensure micButton exists
+            if (micButton) { 
                 micButton.addEventListener('click', () => {
                     if (userInput.disabled || !speechRecognition) return;
                     try {
@@ -902,7 +987,7 @@
                     localStorage.setItem('chatThreads', JSON.stringify(threads));
                 }
                 currentChatThreadId = localStorage.getItem('lastActiveThreadId') || Object.keys(threads)[0];
-                 if (!threads[currentChatThreadId]) { // Fallback if stored ID is invalid
+                 if (!threads[currentChatThreadId]) { 
                     currentChatThreadId = Object.keys(threads)[0];
                     localStorage.setItem('lastActiveThreadId', currentChatThreadId);
                 }
@@ -920,29 +1005,28 @@
             }
 
             function switchChatThread(threadId) {
-                saveConversation(currentChatThreadId); // Save current before switching
+                saveConversation(currentChatThreadId); 
                 currentChatThreadId = threadId;
                 localStorage.setItem('lastActiveThreadId', currentChatThreadId);
-                loadConversation(threadId); // Load new thread's history and persona
+                loadConversation(threadId); 
                 document.querySelectorAll('#threadList button').forEach(btn => {
                     btn.classList.toggle('active', btn.dataset.threadId === threadId);
                 });
-                // applyCustomPersonaAccent(); // loadConversation calls applyTheme which calls this
             }
 
             newThreadButton.addEventListener('click', () => {
                 const newThreadName = prompt("Enter name for new chat thread:", `Chat Session ${Object.keys(JSON.parse(localStorage.getItem('chatThreads') || '{}')).length + 1}`);
                 if (newThreadName) {
-                    saveConversation(currentChatThreadId); // Save old
+                    saveConversation(currentChatThreadId); 
                     const newThreadId = `thread_${Date.now()}`;
                     const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
-                    threads[newThreadId] = { name: newThreadName, lastUpdated: Date.now(), history: [], persona: personaSelect.value }; // Start with current persona
+                    threads[newThreadId] = { name: newThreadName, lastUpdated: Date.now(), history: [], persona: personaSelect.value }; 
                     localStorage.setItem('chatThreads', JSON.stringify(threads));
                     
-                    currentChatThreadId = newThreadId; // Switch to new
+                    currentChatThreadId = newThreadId; 
                     localStorage.setItem('lastActiveThreadId', currentChatThreadId);
-                    loadChatThreads(); // Refresh sidebar
-                    loadConversation(newThreadId); // Load new empty conversation
+                    loadChatThreads(); 
+                    loadConversation(newThreadId); 
                 }
             });
 
@@ -956,7 +1040,6 @@
                     currentThread.persona = 'helpful';
                     localStorage.setItem('chatThreads', JSON.stringify(threads));
                 }
-                 // applyTheme (called by loadConversation) will handle accents.
             }
             
             personaSelect.addEventListener('change', () => {
@@ -966,7 +1049,7 @@
                     localStorage.setItem('chatThreads', JSON.stringify(threads));
                 }
                 
-                applyCustomPersonaAccent(); // Update header color immediately for new persona
+                applyCustomPersonaAccent(); 
 
                 const newGreetingBase = generateGreeting(personaSelect.value).split("!")[0].split(",")[0];
                 const msgId = generateMessageId();
@@ -982,20 +1065,18 @@
             function saveConversation(threadId) {
                 if (!threadId) return;
                 const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
-                if (!threads[threadId]) { // Should not happen if created properly
+                if (!threads[threadId]) { 
                     threads[threadId] = { name: `Chat ${threadId.substring(0,5)}`, history: [], persona: personaSelect.value };
                 }
-                // Filter out transient "Switched to persona" messages if they are not the initial greeting
                 const historyToSave = conversationHistory.filter(msg => {
                     const isSwitchMsg = msg.content.startsWith("Switched to") && msg.role === 'assistant';
-                    if (!isSwitchMsg) return true; // Keep non-switch messages
-                    // Keep switch message if it's the only one (initial greeting after switch)
+                    if (!isSwitchMsg) return true; 
                     return conversationHistory.filter(m => m.role === 'assistant').length === 1;
                 });
 
                 threads[threadId].history = historyToSave;
                 threads[threadId].lastUpdated = Date.now();
-                threads[threadId].persona = personaSelect.value; // Save current persona with the thread
+                threads[threadId].persona = personaSelect.value; 
                 localStorage.setItem('chatThreads', JSON.stringify(threads));
             }
 
@@ -1005,33 +1086,31 @@
                 const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
                 const thread = threads[threadId];
 
-                chatWindow.innerHTML = ''; // Clear window
-                conversationHistory = []; // Reset global history
+                chatWindow.innerHTML = ''; 
+                conversationHistory = []; 
 
                 if (thread && thread.history && thread.history.length > 0) {
-                    conversationHistory = thread.history; // Load from storage
+                    conversationHistory = thread.history; 
                     if (thread.persona && personaSelect.querySelector(`option[value="${thread.persona}"]`)) {
                         personaSelect.value = thread.persona;
                     } else {
-                        personaSelect.value = 'helpful'; // Default if stored persona invalid
+                        personaSelect.value = 'helpful'; 
                     }
                     conversationHistory.forEach(msg => addMessageToChat(msg.content, msg.role === 'user' ? 'user' : 'assistant', false, msg.id || generateMessageId()));
-                } else { // No history or new thread
+                } else { 
                     const initialPersona = (thread && thread.persona && personaSelect.querySelector(`option[value="${thread.persona}"]`)) ? thread.persona : 'helpful';
                     personaSelect.value = initialPersona;
                     const greeting = generateGreeting(initialPersona);
                     const greetingId = generateMessageId();
                     addMessageToChat(greeting, 'bot', false, greetingId);
                     updateConversationHistory('assistant', greeting, greetingId);
-                    // Save this initial state if it's a new or empty thread
                     if (!thread || !thread.history || thread.history.length === 0) {
                         saveConversation(currentChatThreadId);
                     }
                 }
                 
-                // Apply theme and accent for loaded thread (persona might have changed)
                 const savedTheme = localStorage.getItem('selectedChatTheme') || 'default';
-                applyTheme(savedTheme, true); // Treat as explicit choice for isDarkDefault on load
+                applyTheme(savedTheme, true); 
                 scrollToBottom();
             }
 
@@ -1074,10 +1153,10 @@
                     commands.forEach(cmdObj => {
                         const btn = document.createElement('button'); btn.textContent = `${cmdObj.cmd} - ${cmdObj.desc}`;
                         btn.onclick = () => {
-                            userInput.value = cmdObj.cmd + (cmdObj.cmd.includes('<') ? ' ' : ''); // Add space if placeholder
+                            userInput.value = cmdObj.cmd + (cmdObj.cmd.includes('<') ? ' ' : ''); 
                             commandsSuggestionContainer.style.display = 'none';
                             if (!userInput.disabled) userInput.focus();
-                            if (!cmdObj.cmd.includes('<')) handleSendMessage(); // Auto-send if no args needed
+                            if (!cmdObj.cmd.includes('<')) handleSendMessage(); 
                         };
                         commandsSuggestionContainer.appendChild(btn);
                     });
@@ -1085,27 +1164,30 @@
                 } else { commandsSuggestionContainer.style.display = 'none'; }
             }
             
-            function detectEmotion(text) { /* ... your emotion detection ... */ return "neutral"; }
-            function handleEmotionalResponse(emotion, userMessage) { /* ... */ }
-            function addInfoTooltipsToMessage(messageElement, text) { /* ... */ }
-            async function handleRephraseMessage(originalText, originalMessageId) { /* ... */ }
-            function extractAndStoreUserPreferences(promptText) { /* ... */ }
-            function suggestPersonaChange(messageText) { /* ... */ }
+            function detectEmotion(text) { return "neutral"; }
+            function handleEmotionalResponse(emotion, userMessage) { }
+            function addInfoTooltipsToMessage(messageElement, text) { }
+            async function handleRephraseMessage(originalText, originalMessageId) { 
+                const botMessageId = generateMessageId();
+                addMessageToChat(`Rephrasing is a planned feature! For now, I heard: "${originalText}"`, 'bot', false, botMessageId);
+                updateConversationHistory('assistant', `Rephrasing is a planned feature! For now, I heard: "${originalText}"`, botMessageId);
+                saveConversation(currentChatThreadId);
+             }
+            function extractAndStoreUserPreferences(promptText) { }
+            function suggestPersonaChange(messageText) { }
 
 
             function updateConversationHistory(role, content, id, replace = false) {
-                const message = { role, content, id: id || generateMessageId() }; // Ensure ID exists
+                const message = { role, content, id: id || generateMessageId() }; 
                 const existingMsgIndex = conversationHistory.findIndex(msg => msg.id === message.id);
 
                 if (replace && existingMsgIndex !== -1) {
                     conversationHistory[existingMsgIndex] = message;
                 } else if (existingMsgIndex !== -1 && conversationHistory[existingMsgIndex].content !== content) {
-                    // ID conflict but different content (e.g. bot correcting itself for same placeholder)
                     conversationHistory[existingMsgIndex] = message;
-                } else if (existingMsgIndex === -1) { // New message
+                } else if (existingMsgIndex === -1) { 
                     conversationHistory.push(message);
                 }
-                // Implicitly, if ID and content match, do nothing to prevent duplicates.
             }
 
             async function handleCommand(commandText) {
@@ -1121,12 +1203,20 @@
                         const greetingIdForReset = generateMessageId();
                         addMessageToChat(greetingForReset, 'bot', false, greetingIdForReset);
                         updateConversationHistory('assistant', greetingForReset, greetingIdForReset);
-                        saveConversation(currentChatThreadId); // Save cleared state
+                        saveConversation(currentChatThreadId); 
                         break;
                     case 'play': handleMiniGames('/play'); break;
                     case 'roll': handleDiceRoll(); break;
                     case 'quote': handleQuoteCommand(); break;
                     case 'createpersona': openCustomPersonaModal(); break;
+                    case 'clearxp': // New command to reset XP
+                        userXP = 0;
+                        userLevel = 1;
+                        localStorage.setItem("userXP", "0");
+                        localStorage.setItem("userLevel", "1");
+                        updateXPUI();
+                        botResponse = "Your XP and Level have been reset.";
+                        break;
                     default: commandProcessed = false;
                 }
                 if (commandProcessed && botResponse) {
@@ -1144,22 +1234,17 @@
                 if (messageText === '') return;
 
                 const userMessageId = generateMessageId();
-                addMessageToChat(messageText, 'user', false, userMessageId);
+                addMessageToChat(messageText, 'user', false, userMessageId); // gainXPFromMessage is called inside addMessageToChat now
                 updateConversationHistory('user', messageText, userMessageId);
                 if (typeof playSendMessageSound === "function") playSendMessageSound();
                 userInput.value = '';
                 suggestionsContainer.style.display = 'none';
                 commandsSuggestionContainer.style.display = 'none';
                 
-                // extractAndStoreUserPreferences(messageText); // Uncomment if using
-                // suggestPersonaChange(messageText); // Uncomment if using
-                // const userEmotion = detectEmotion(messageText); // Uncomment if using
-                // handleEmotionalResponse(userEmotion, messageText); // Uncomment if using
-
                 if (messageText.startsWith('/')) {
                     const commandProcessed = await handleCommand(messageText);
                     if (commandProcessed) {
-                        saveConversation(currentChatThreadId); // Save state after command
+                        saveConversation(currentChatThreadId); 
                         scrollToBottom();
                         if (!userInput.disabled) userInput.focus();
                         return;
@@ -1168,14 +1253,12 @@
 
                 const currentPersona = personaSelect.value;
                 const botMessageId = generateMessageId();
-                // Add placeholder for bot thinking, then update it
                 const botMessageElement = addMessageToChat('', 'bot', true, botMessageId);
-                updateConversationHistory('assistant', 'Thinking...', botMessageId); // Temporary content
+                updateConversationHistory('assistant', 'Thinking...', botMessageId); 
 
                 sendButton.disabled = true; userInput.disabled = true;
                 const botResponseText = fetchRuleBasedResponse(messageText, currentPersona);
                 
-                // displayBotResponse will remove loading, set final content, and save.
                 await displayBotResponse(botResponseText, botMessageElement, botMessageId);
             }
 
@@ -1186,17 +1269,16 @@
             function loadTheme() {
                 const savedSelectedTheme = localStorage.getItem('selectedChatTheme');
                 if (savedSelectedTheme && themes[savedSelectedTheme]) {
-                    applyTheme(savedSelectedTheme, true); // Treat as explicit choice for isDarkDefault on load
+                    applyTheme(savedSelectedTheme, true); 
                 } else {
-                    // No specific theme saved, just use light/dark preference for default theme
-                    const savedThemePreference = localStorage.getItem('theme'); // 'light' or 'dark'
+                    const savedThemePreference = localStorage.getItem('theme'); 
                     if (savedThemePreference === 'dark') {
                         document.body.classList.add('dark-mode');
                     } else {
-                        document.body.classList.remove('dark-mode'); // Default to light
+                        document.body.classList.remove('dark-mode'); 
                     }
-                    updateThemePreference(); // Update icon based on current class
-                    applyCustomPersonaAccent(); // Apply accent for default theme
+                    updateThemePreference(); 
+                    applyCustomPersonaAccent(); 
                 }
             }
             
@@ -1204,29 +1286,27 @@
                 const isDarkMode = document.body.classList.contains('dark-mode');
                 if (themeToggleIcon) themeToggleIcon.textContent = isDarkMode ? '☀️' : '🌙';
                 if (themeToggleText) themeToggleText.textContent = isDarkMode ? 'Light' : 'Dark';
-                localStorage.setItem('theme', isDarkMode ? 'dark' : 'light'); // Store basic light/dark
+                localStorage.setItem('theme', isDarkMode ? 'dark' : 'light'); 
             }
 
             chatForm.addEventListener('submit', handleSendMessage);
             
             themeToggleButton.addEventListener('click', () => {
                 document.body.classList.toggle('dark-mode');
-                // applyTheme will call updateThemePreference and applyCustomPersonaAccent
                 const currentSelectedTheme = localStorage.getItem('selectedChatTheme') || 'default';
-                applyTheme(currentSelectedTheme, false); // Apply current theme to new mode, not an explicit theme change
+                applyTheme(currentSelectedTheme, false); 
             });
 
-            // Initialize features that add UI elements to header/input
-            setupImageUpload(); // Adds button to input form
-            setupMusicToggle(); // Adds button to header
-            setupSoundEffectsToggle(); // Adds button to header
-            setupThemeChooser(); // Adds dropdown to header
-            if (micButton) setupSpeechRecognition(); // Setup mic if button exists
+            setupImageUpload(); 
+            setupMusicToggle(); 
+            setupSoundEffectsToggle(); 
+            setupThemeChooser(); 
+            if (micButton) setupSpeechRecognition(); 
 
-            initializeChat(); // Main initialization
+            initializeChat(); 
             applyViewportHeight();
 
-        }); // End DOMContentLoaded
+        }); 
     </script>
 </body>
 </html>
