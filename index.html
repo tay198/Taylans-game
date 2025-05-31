@@ -1,1169 +1,276 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>AI ChatBot by Taylan</title>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" data-manual></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js" data-manual></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js" data-manual></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js" data-manual></script>
-    <style>
-        :root {
-            --body-bg-light: #f4f6f8; --body-bg-dark: #0d1117;
-            --chat-bg-light: #ffffff; --chat-bg-dark: #161b22;
-            --header-bg-light: #007bff; --header-bg-dark: #1f6feb;
-            --header-text-light: #ffffff; --header-text-dark: #c9d1d9;
-            --user-msg-bg-light: #007bff; --user-msg-bg-dark: #1f6feb;
-            --user-msg-text-light: #ffffff; --user-msg-text-dark: #e0e0e0;
-            --bot-msg-bg-light: #e9ecef; --bot-msg-bg-dark: #21262d;
-            --bot-msg-text-light: #333333; --bot-msg-text-dark: #c9d1d9;
-            --input-bg-light: #ffffff; --input-bg-dark: #0d1117;
-            --input-text-light: #333333; --input-text-dark: #c9d1d9;
-            --input-border-light: #ced4da; --input-border-dark: #30363d;
-            --button-bg-light: #007bff; --button-bg-dark: #238636;
-            --button-text-light: #ffffff; --button-text-dark: #ffffff;
-            --text-color-light: #212529; --text-color-dark: #c9d1d9;
-            --border-color-light: #dee2e6; --border-color-dark: #30363d;
-            --shadow-light: 0 2px 10px rgba(0,0,0,0.075);
-            --shadow-dark: 0 3px 12px rgba(0,0,0,0.25);
-            --focus-ring-light: rgba(0,123,255,0.25);
-            --focus-ring-dark: rgba(31,111,235,0.4);
-            --suggestion-bg-light: #e0e0e0; --suggestion-bg-dark: #2a2a2a;
-            --suggestion-text-light: #333; --suggestion-text-dark: #ccc;
-
-            /* Default vars that themes will override */
-            --body-bg: var(--body-bg-light);
-            --chat-bg: var(--chat-bg-light);
-            --header-bg: var(--header-bg-light);
-            --header-text: var(--header-text-light);
-            --user-msg-bg: var(--user-msg-bg-light);
-            --user-msg-text: var(--user-msg-text-light);
-            --bot-msg-bg: var(--bot-msg-bg-light);
-            --bot-msg-text: var(--bot-msg-text-light);
-            --input-bg: var(--input-bg-light);
-            --input-text: var(--input-text-light);
-            --input-border: var(--input-border-light);
-            --button-bg: var(--button-bg-light);
-            --button-text: var(--button-text-light);
-            --text-color: var(--text-color-light);
-            --border-color: var(--border-color-light);
-            --shadow: var(--shadow-light);
-            --focus-ring: var(--focus-ring-light);
-            --suggestion-bg: var(--suggestion-bg-light);
-            --suggestion-text: var(--suggestion-text-light);
-            --custom-persona-accent-color: var(--header-bg);
-        }
-
-        body.dark-mode {
-            --body-bg: var(--body-bg-dark);
-            --chat-bg: var(--chat-bg-dark);
-            --header-bg: var(--header-bg-dark);
-            --header-text: var(--header-text-dark);
-            --user-msg-bg: var(--user-msg-bg-dark);
-            --user-msg-text: var(--user-msg-text-dark);
-            --bot-msg-bg: var(--bot-msg-bg-dark);
-            --bot-msg-text: var(--bot-msg-text-dark);
-            --input-bg: var(--input-bg-dark);
-            --input-text: var(--input-text-dark);
-            --input-border: var(--input-border-dark);
-            --button-bg: var(--button-bg-dark);
-            --button-text: var(--button-text-dark);
-            --text-color: var(--text-color-dark);
-            --border-color: var(--border-color-dark);
-            --shadow: var(--shadow-dark);
-            --focus-ring: var(--focus-ring-dark);
-            --suggestion-bg: var(--suggestion-bg-dark);
-            --suggestion-text: var(--suggestion-text-dark);
-            --custom-persona-accent-color: var(--header-bg-dark);
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        html { height: 100%; }
-        body { background-color: var(--body-bg); color: var(--text-color); display: flex; flex-direction: row; min-height: 100%; transition: background-color 0.3s, color 0.3s; }
-        .threads-sidebar { width: 250px; background-color: var(--chat-bg); border-right: 1px solid var(--border-color); padding: 15px; display: flex; flex-direction: column; transition: background-color 0.3s, border-color 0.3s; display: none; }
-        .threads-sidebar h3 { margin-bottom: 10px; font-size: 1.1em; color: var(--text-color); }
-        .threads-sidebar ul { list-style: none; }
-        .threads-sidebar li button { width: 100%; text-align: left; padding: 8px; margin-bottom: 5px; background: none; border: 1px solid transparent; color: var(--text-color); border-radius: 5px; cursor: pointer; }
-        .threads-sidebar li button:hover, .threads-sidebar li button.active { background-color: var(--bot-msg-bg); border-color: var(--button-bg); }
-        #newThreadButton { margin-top: auto; padding: 10px; }
-        .chat-area { flex-grow: 1; display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
-        .chat-container { width: 100%; max-width: 100%; flex-grow: 1; background-color: var(--chat-bg); box-shadow: var(--shadow); display: flex; flex-direction: column; overflow: hidden; transition: background-color 0.3s; }
-        .chat-container.flash { animation: subtleBackgroundFlash 0.5s ease-out forwards; }
-        @keyframes subtleBackgroundFlash { 0% { background-color: var(--chat-bg); } 25% { background-color: color-mix(in srgb, var(--chat-bg) 95%, var(--button-bg) 5%); } 100% { background-color: var(--chat-bg); } }
-        .chat-header { padding: 10px 15px; background-color: var(--header-bg); color: var(--header-text); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); transition: all 0.3s; flex-shrink: 0; }
-        .chat-header h2 { font-size: 1.1em; margin: 0; display: flex; flex-direction: column; align-items: flex-start; }
-        .chat-header h2 .title-main { line-height: 1; }
-        .chat-header h2 .title-subtitle { font-size: 0.65em; font-weight: normal; opacity: 0.85; margin-top: 2px; line-height: 1; }
-        .header-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        .header-controls label { font-size: 0.8em; margin-left: 5px; }
-        .header-controls select, .header-controls button { padding: 5px 8px; border-radius: 5px; border: 1px solid var(--header-text); background-color: var(--header-bg); color: var(--header-text); font-size: 0.8em; cursor: pointer; }
-        .header-controls button:hover { opacity: 0.8; }
-        .header-controls button .text { margin-left: 4px; }
-        @media (max-width: 700px) { .header-controls button .text { display: none; } .header-controls label { margin-left: 2px; } .header-controls { gap: 5px; } }
-        .chat-window { flex-grow: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; scrollbar-width: thin; scrollbar-color: var(--button-bg) var(--chat-bg); }
-        .chat-window::-webkit-scrollbar { width: 8px; }
-        .chat-window::-webkit-scrollbar-track { background: var(--chat-bg); }
-        .chat-window::-webkit-scrollbar-thumb { background-color: var(--button-bg); border-radius: 10px; border: 2px solid var(--chat-bg); }
-        .message { padding: 10px 15px; border-radius: 18px; max-width: 80%; line-height: 1.5; opacity: 0; transform: translateY(10px); animation: fadeInMessage 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards; word-wrap: break-word; position: relative; }
-        @keyframes fadeInMessage { 0% { opacity: 0; transform: translateY(15px) scale(0.95); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
-        .message.fade-out { animation: fadeOutMessage 0.3s ease forwards; }
-        @keyframes fadeOutMessage { to { opacity: 0; transform: translateY(-5px); height: 0; padding:0; margin:0; border:0; } }
-        .message.user { background-color: var(--user-msg-bg); color: var(--user-msg-text); align-self: flex-end; border-bottom-right-radius: 5px; }
-        .message.bot { background-color: var(--bot-msg-bg); color: var(--bot-msg-text); align-self: flex-start; border-bottom-left-radius: 5px; }
-        .message-actions { position: absolute; bottom: -5px; right: -5px; display: none; gap: 3px; background-color: var(--chat-bg); padding:3px; border-radius: 5px; box-shadow: var(--shadow); }
-        .message:hover .message-actions { display: flex; }
-        .message-actions button { background: none; border: none; cursor: pointer; font-size: 0.9em; padding: 3px; }
-        .message-actions button:hover { opacity: 0.7; }
-        .message.bot.loading { display: flex; align-items: center; background-color: var(--bot-msg-bg); color: var(--bot-msg-text); padding: 10px 15px; border-radius: 18px; border-bottom-left-radius: 5px; align-self: flex-start; }
-        .loading-spinner { width: 20px; height: 20px; border: 3px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 8px; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .suggestions-container, .commands-suggestion-container { padding: 5px 15px 10px; display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid var(--border-color); }
-        .suggestions-container button, .commands-suggestion-container button { padding: 6px 10px; border-radius: 15px; border: 1px solid var(--input-border); background-color: var(--suggestion-bg); color: var(--suggestion-text); font-size: 0.85em; cursor: pointer; transition: background-color 0.2s; }
-        .suggestions-container button:hover, .commands-suggestion-container button:hover { opacity: 0.8; }
-        .commands-suggestion-container { border-top: 1px solid var(--border-color); border-bottom: none; padding-top:10px; }
-        .chat-input-form { display: flex; padding: 10px 15px; border-top: 1px solid var(--border-color); background-color: var(--chat-bg); transition: all 0.3s; flex-shrink: 0; align-items: center; }
-        #micButton, #imageUploadButton { padding: 8px 10px; margin-right: 8px; border-radius: 50%; background-color: transparent; border: 1px solid var(--input-border); color: var(--text-color); cursor: pointer; font-size: 1.1em; }
-        #micButton:hover, #imageUploadButton:hover { background-color: var(--bot-msg-bg); }
-        #micButton.recording { background-color: #ff4d4dcc; color: white; }
-        #userInput { flex-grow: 1; padding: 10px 15px; border: 1px solid var(--input-border); border-radius: 20px; font-size: 1em; background-color: var(--input-bg); color: var(--input-text); transition: all 0.3s; margin-right: 8px; }
-        #userInput:focus, #sendButton:focus, #theme-toggle:focus, #micButton:focus, #imageUploadButton:focus { outline: none; border-color: var(--button-bg); box-shadow: 0 0 0 3px var(--focus-ring); }
-        #sendButton { padding: 10px 18px; background-color: var(--button-bg); color: var(--button-text); border: none; border-radius: 20px; cursor: pointer; font-size: 1em; font-weight: bold; transition: all 0.2s; }
-        #sendButton:hover:not(:disabled) { opacity:0.85; }
-        #sendButton:disabled { background-color:color-mix(in srgb,var(--button-bg) 40%,#88888890); cursor:not-allowed; opacity:.6; }
-        .message pre { white-space: pre-wrap; background-color: #2d2d2d; color: #f0f0f0; padding: 10px; border-radius: 5px; margin: 5px 0; overflow-x: auto;}
-        .message code { font-family: 'Courier New', Courier, monospace; }
-        .message blockquote { border-left: 3px solid #ccc; padding-left: 10px; margin-left: 5px; color: #888; }
-        .dark-mode .message pre { background-color: #1e1e1e; border: 1px solid #333; }
-        .dark-mode .message blockquote { border-left-color: #555; color: #aaa; }
-        .info-tooltip { display: inline-block; width: 14px; height: 14px; border-radius: 50%; background-color: var(--button-bg); color: var(--button-text); text-align: center; font-size: 10px; line-height: 14px; margin-left: 4px; cursor: help; user-select: none; }
-        .rps-modal, #customPersonaModal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: var(--chat-bg); color: var(--text-color); padding: 25px; border-radius: 12px; box-shadow: var(--shadow-dark); z-index: 1001; border: 1px solid var(--border-color); max-width: 90vw; }
-        .rps-modal button, #customPersonaModal input, #customPersonaModal button { padding: 10px 15px; cursor: pointer; border-radius: 5px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--input-text); font-size: 0.95em; }
-        .rps-modal button:hover, #customPersonaModal button:hover { opacity:0.8; }
-        #customPersonaModal { width: 380px; display: flex; flex-direction: column; gap: 12px; }
-        #customPersonaModal label { font-size: 0.9em; margin-bottom: -8px; }
-        #customPersonaModal input { width: 100%;}
-        #customPersonaModal h3 { text-align:center; margin-bottom:10px; color: var(--text-color);}
-        #customPersonaModal div { display:flex; justify-content: space-between; margin-top:15px; gap: 10px;}
-        #customPersonaModal div button { flex-grow: 1; }
-        #customPersonaModal button#savePersonaBtn { background-color: var(--button-bg); color: var(--button-text); }
-        @media (min-width: 769px) { .threads-sidebar { display: flex; } }
-        @media (max-width: 800px) { .chat-area { border-radius: 0; margin: 0; } }
-    </style>
+<title>Taylan's Game</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background: linear-gradient(135deg, #e0f7fa, #c5e1a5); /* Subtle gradient */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    overflow: hidden;
+  }
+  #gameArea {
+    width: 90vw;
+    height: 70vh;
+    max-width: 400px;
+    max-height: 600px;
+    background-color: #fff;
+    border: 2px solid #333;
+    position: relative;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    overflow: hidden;
+  }
+  #dot {
+    width: 50px;
+    height: 50px;
+    background-color: #ff4081; /* A more vibrant red */
+    border-radius: 50%;
+    position: absolute;
+    cursor: pointer;
+    transition: transform 0.1s ease-out, opacity 0.1s ease-out, width 0.1s ease-out, height 0.1s ease-out; /* Transition for shrinking and fading */
+    display: none;
+  }
+  #dot.pop {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+  #scoreBoard {
+    font-size: 28px;
+    margin-bottom: 10px;
+    color: #333;
+  }
+  #timer {
+    font-size: 22px;
+    margin-bottom: 15px;
+    color: #555;
+  }
+  #combo {
+    font-size: 18px;
+    color: #007bff;
+    margin-bottom: 5px;
+    min-height: 20px; /* Reserve space to prevent layout shift */
+  }
+  .score-popup {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 16px;
+    animation: fadeOut 0.5s ease-in-out forwards;
+    pointer-events: none; /* So it doesn't interfere with dot clicks */
+  }
+  @keyframes fadeOut {
+    to { opacity: 0; transform: translateY(-20px); }
+  }
+  button {
+    padding: 12px 24px;
+    font-size: 20px;
+    cursor: pointer;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 7px;
+    margin-top: 25px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  button:disabled {
+    background-color: #ccc;
+    cursor: default;
+  }
+  #gameOverMessage {
+    display: none;
+    margin-top: 25px;
+    font-size: 22px;
+    color: #d32f2f;
+    font-weight: bold;
+  }
+</style>
 </head>
 <body>
-    <aside class="threads-sidebar" id="threadsSidebar">
-        <h3>Chat Threads</h3>
-        <ul id="threadList"></ul>
-        <button id="newThreadButton" class="header-controls button">New Chat</button>
-    </aside>
-    <main class="chat-area">
-        <div class="chat-container" id="chatAppContainer">
-            <header class="chat-header">
-                <h2>
-                    <span class="title-main">AI Assistant</span>
-                    <span class="title-subtitle">by Taylan</span>
-                </h2>
-                <div class="header-controls">
-                    <label for="personaSelect">Persona:</label>
-                    <select id="personaSelect">
-                        <option value="helpful">Hey my name is robot Tay</option>
-                        </select>
-                    <button id="exportChatButton" aria-label="Export chat">Export</button>
-                    <button id="theme-toggle" aria-label="Toggle color theme">
-                        <span class="icon"></span>
-                        <span class="text">Theme</span>
-                    </button>
-                </div>
-            </header>
-            <div id="xpContainer" style="max-width: 400px; margin: 10px auto 10px; padding: 0 15px;">
-              <div id="xpText" style="text-align: center; font-weight: bold; margin-bottom: 5px; font-size: 0.9em; color: var(--text-color);">
-                Level 1 — 0/100 XP
-              </div>
-              <div style="background: var(--input-border); height: 14px; border-radius: 7px; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);">
-                <div id="xpBar" style="height: 100%; width: 0%; background: linear-gradient(to right, #00e676, #00c853); transition: width 0.4s ease-in-out;"></div>
-              </div>
-            </div>
-            <div class="suggestions-container" id="suggestionsContainer"></div>
-            <div class="commands-suggestion-container" id="commandsSuggestionContainer" style="display: none;"></div>
-            <div class="chat-window" id="chatWindow" role="log" aria-live="polite"></div>
-            <form class="chat-input-form" id="chatForm">
-                <button type="button" id="micButton" aria-label="Use microphone">🎤</button>
-                <input type="text" id="userInput" placeholder="Ask me anything or type /help..." autocomplete="off" aria-label="User message input" role="textbox">
-                <button type="submit" id="sendButton" aria-label="Send message">Send</button>
-            </form>
-        </div>
-    </main>
 
-    <script type="module" defer>
-        // --- XP and Leveling System ---
-        let userXP = parseInt(localStorage.getItem('userXP')) || 0;
-        let userLevel = parseInt(localStorage.getItem('userLevel')) || 1;
+  <h1>Taylan's Game</h1>
+  <div id="scoreBoard">Score: <span id="score">0</span></div>
+  <div id="timer">Time: <span id="timeLeft">30</span>s</div>
+  <div id="combo"></div>
+  <div id="gameArea">
+    <div id="dot"></div>
+  </div>
+  <button id="startButton">Start Game</button>
+  <div id="gameOverMessage">Game Over!</div>
 
-        function getRequiredXP(level) {
-          return 100 + (level - 1) * 20; // XP required grows per level
+<script>
+  const gameArea = document.getElementById('gameArea');
+  const dot = document.getElementById('dot');
+  const scoreDisplay = document.getElementById('score');
+  const timeLeftDisplay = document.getElementById('timeLeft');
+  const startButton = document.getElementById('startButton');
+  const gameOverMessage = document.getElementById('gameOverMessage');
+  const comboDisplay = document.getElementById('combo');
+
+  let score = 0;
+  let timeLeft = 30;
+  let gameInterval;
+  let dotTimeout;
+  let gameActive = false;
+  let initialDotSize = 50;
+  let currentDotSize = initialDotSize;
+  let comboCount = 0;
+  let lastTapTime = 0;
+  const comboThreshold = 700; // Milliseconds between taps for a combo (increased slightly for playability)
+  let currentSpawnInterval = 1500; // Initial spawn interval
+  const minSpawnInterval = 600; // Minimum spawn interval
+  const maxSpawnInterval = 1500; // Initial spawn interval (reset point)
+  const dotShrinkAmount = 1; // How much the dot shrinks each time
+  const minDotSize = 20; // Minimum size of the dot
+
+  function getRandomPosition() {
+    const gameAreaWidth = gameArea.offsetWidth;
+    const gameAreaHeight = gameArea.offsetHeight;
+
+    const x = Math.random() * (gameAreaWidth - currentDotSize);
+    const y = Math.random() * (gameAreaHeight - currentDotSize);
+
+    return { x, y };
+  }
+
+  function moveDot() {
+    if (!gameActive) return;
+    const pos = getRandomPosition();
+    dot.style.left = pos.x + 'px';
+    dot.style.top = pos.y + 'px';
+    dot.style.width = currentDotSize + 'px';
+    dot.style.height = currentDotSize + 'px';
+    dot.style.transform = 'scale(1)';
+    dot.style.opacity = 1;
+    dot.style.display = 'block';
+
+    clearTimeout(dotTimeout);
+    // The timeout for the dot to disappear if not clicked should be related to currentSpawnInterval
+    // but give a bit of leeway.
+    dotTimeout = setTimeout(() => {
+      if (gameActive) {
+        comboCount = 0; // Reset combo if dot is missed
+        comboDisplay.textContent = '';
+        moveDot();
+      }
+    }, currentSpawnInterval + 700); // Give a bit more time than the spawn interval
+  }
+
+  function handleDotClick(event) {
+    if (!gameActive || dot.style.display === 'none') return;
+
+    const currentTime = Date.now();
+    if (currentTime - lastTapTime < comboThreshold) {
+      comboCount++;
+    } else {
+      comboCount = 1;
+    }
+    lastTapTime = currentTime;
+    comboDisplay.textContent = comboCount > 1 ? `Combo x${comboCount}!` : '';
+
+    const comboBonus = Math.max(0, comboCount - 1) * 2; // Bigger bonus for combos
+    const points = 5 + comboBonus; // Base points increased
+    score += points;
+    scoreDisplay.textContent = score;
+
+    dot.classList.add('pop');
+    setTimeout(() => dot.classList.remove('pop'), 100);
+
+    // Create score popup relative to gameArea to avoid issues with page scrolling if any
+    const gameAreaRect = gameArea.getBoundingClientRect();
+    // We want the popup to appear near the click, but within the gameArea coordinates
+    const popupX = event.clientX - gameAreaRect.left;
+    const popupY = event.clientY - gameAreaRect.top;
+
+    const scorePopup = document.createElement('div');
+    scorePopup.classList.add('score-popup');
+    scorePopup.textContent = `+${points}`;
+    // Position it at the click, then adjust slightly to be centered/above
+    scorePopup.style.left = (popupX - 15) + 'px';
+    scorePopup.style.top = (popupY - 30) + 'px';
+
+    gameArea.appendChild(scorePopup);
+    setTimeout(() => {
+        if (gameArea.contains(scorePopup)) { // Check if it hasn't been removed by game end
+            gameArea.removeChild(scorePopup);
         }
+    }, 500);
 
-        function updateXPUI() {
-          const xpBar = document.getElementById("xpBar");
-          const xpText = document.getElementById("xpText");
-          const xpContainer = document.getElementById("xpContainer");
+    dot.style.display = 'none';
+    clearTimeout(dotTimeout);
 
-          if (!xpBar || !xpText || !xpContainer) {
-              console.warn("XP UI elements not found. Skipping XP update.");
-              return;
-          }
-          xpContainer.style.display = ""; 
-          const xpNeeded = getRequiredXP(userLevel);
-          const progress = Math.min(100, Math.floor((userXP / xpNeeded) * 100));
-          xpBar.style.width = progress + "%";
-          xpText.textContent = `Level ${userLevel} — ${userXP}/${xpNeeded} XP`;
-        }
+    currentDotSize = Math.max(minDotSize, currentDotSize - dotShrinkAmount);
+    currentSpawnInterval = Math.max(minSpawnInterval, currentSpawnInterval - 30); // Spawn faster
 
-        function gainXPFromMessage(message) {
-          if (!message || typeof message !== 'string') return;
-          let xpGain = Math.min(50, 5 + Math.floor(message.length / 15));
-          userXP += xpGain;
-          const xpRequired = getRequiredXP(userLevel);
-          if (userXP >= xpRequired) {
-            userXP -= xpRequired; 
-            userLevel++;
-            showLevelUpEffect(userLevel);
-          }
-          localStorage.setItem("userXP", JSON.stringify(userXP));
-          localStorage.setItem("userLevel", JSON.stringify(userLevel));
-          updateXPUI();
-        }
+    setTimeout(moveDot, 100); // Spawn next dot quickly
+  }
 
-        function showLevelUpEffect(level) {
-          const popup = document.createElement("div");
-          popup.textContent = `🎉 LEVEL UP! You’re now Level ${level}`;
-          popup.style.cssText = `
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            background: #00c853; color: white; padding: 12px 24px; font-size: 18px;
-            border-radius: 8px; box-shadow: 0 0 10px #00c853; z-index: 9999;
-            opacity: 1; transition: opacity 0.8s ease-out, top 0.5s ease-out;
-            animation: fadeInAndUp 0.5s ease-out;
-          `;
-          const keyframes = `@keyframes fadeInAndUp { 0% { opacity: 0; top: 50px; } 100% { opacity: 1; top: 20px; } }`;
-          const styleSheet = document.createElement("style");
-          styleSheet.type = "text/css";
-          styleSheet.innerText = keyframes;
-          document.head.appendChild(styleSheet);
-          document.body.appendChild(popup);
-          setTimeout(() => { popup.style.opacity = 0; popup.style.top = "0px"; }, 2200);
-          setTimeout(() => { popup.remove(); if (styleSheet) styleSheet.remove(); }, 3000);
-        }
-        // --- End XP and Leveling System ---
-
-        const chatAppContainer = document.getElementById('chatAppContainer');
-        const chatWindow = document.getElementById('chatWindow');
-        const userInput = document.getElementById('userInput');
-        const chatForm = document.getElementById('chatForm');
-        const sendButton = document.getElementById('sendButton');
-        const themeToggleButton = document.getElementById('theme-toggle');
-        const themeToggleIcon = themeToggleButton.querySelector('.icon');
-        const themeToggleText = themeToggleButton.querySelector('.text');
-        const personaSelect = document.getElementById('personaSelect');
-        const exportChatButton = document.getElementById('exportChatButton');
-        const suggestionsContainer = document.getElementById('suggestionsContainer');
-        const commandsSuggestionContainer = document.getElementById('commandsSuggestionContainer');
-        const micButton = document.getElementById('micButton');
-        const threadsSidebar = document.getElementById('threadsSidebar');
-        const threadList = document.getElementById('threadList');
-        const newThreadButton = document.getElementById('newThreadButton');
-
-        let conversationHistory = [];
-        let currentChatThreadId = localStorage.getItem('lastActiveThreadId') || 'default_chat';
-        let userName = localStorage.getItem('userName') || null; 
-        let userPreferences = JSON.parse(localStorage.getItem('userPreferences') || '{}');
-        let initialFocusDone = false;
-        const MAX_MESSAGES_DISPLAY = 100;
-        let speechRecognition;
-
-        const AVAILABLE_COMMANDS = [
-            { cmd: "/help", desc: "Show this help message." },
-            { cmd: "/joke", desc: "Tell a joke." },
-            { cmd: "/reset", desc: "Reset current chat." },
-            { cmd: "/play", desc: "Play Rock, Paper, Scissors." },
-            { cmd: "/roll", desc: "Roll a 6-sided die." },
-            { cmd: "/quote", desc: "Get an inspirational quote." },
-            { cmd: "/createpersona", desc: "Create a new custom persona." },
-            { cmd: "/clearxp", desc: "Reset your XP and Level." },
-        ];
-        
-        function handleMiniGames(command) {
-            if (command === '/play') {
-                const options = ['Rock', 'Paper', 'Scissors'];
-                const botChoice = options[Math.floor(Math.random() * options.length)];
-                const RPSDrivenModal = document.createElement('div');
-                RPSDrivenModal.className = 'rps-modal';
-                RPSDrivenModal.innerHTML = `
-                    <h4 style="margin-bottom: 15px; text-align: center;">Rock, Paper, or Scissors?</h4>
-                    <div style="display: flex; justify-content: space-around; gap: 10px;">
-                        <button data-choice="rock">Rock</button>
-                        <button data-choice="paper">Paper</button>
-                        <button data-choice="scissors">Scissors</button>
-                    </div>
-                    <button id="rpsCancel" style="margin-top: 15px; display: block; margin-left: auto; margin-right: auto;">Cancel</button>
-                `;
-                document.body.appendChild(RPSDrivenModal);
-                const processRPS = (userChoice) => {
-                    if (document.body.contains(RPSDrivenModal)) document.body.removeChild(RPSDrivenModal);
-                    if (!userChoice) return;
-                    const normalizedUser = userChoice.toLowerCase();
-                    const normalizedBot = botChoice.toLowerCase();
-                    let resultText = '';
-                    if (normalizedUser === normalizedBot) resultText = "It's a tie!";
-                    else if (
-                        (normalizedUser === 'rock' && normalizedBot === 'scissors') ||
-                        (normalizedUser === 'paper' && normalizedBot === 'rock') ||
-                        (normalizedUser === 'scissors' && normalizedBot === 'paper')
-                    ) resultText = `I chose ${botChoice}. You win! 🎉`;
-                    else resultText = `I chose ${botChoice}. You lose! 😢`;
-                    const botMessageId = generateMessageId();
-                    addMessageToChat(resultText, 'bot', false, botMessageId);
-                    updateConversationHistory('assistant', resultText, botMessageId);
-                    saveConversation(currentChatThreadId);
-                };
-                RPSDrivenModal.querySelectorAll('button[data-choice]').forEach(button => {
-                    button.onclick = () => processRPS(button.dataset.choice);
-                });
-                RPSDrivenModal.querySelector('#rpsCancel').onclick = () => {
-                    if (document.body.contains(RPSDrivenModal)) document.body.removeChild(RPSDrivenModal);
-                };
-            }
-        }
-        function handleDiceRoll() {
-            const roll = Math.floor(Math.random() * 6) + 1;
-            const result = `🎲 You rolled a ${roll}!`;
-            const botMessageId = generateMessageId();
-            addMessageToChat(result, 'bot', false, botMessageId);
-            updateConversationHistory('assistant', result, botMessageId);
-            saveConversation(currentChatThreadId);
-        }
-        function handleQuoteCommand() {
-            const quotes = [
-                "Believe you can and you're halfway there. - Theodore Roosevelt",
-                "The only limit to our realization of tomorrow is our doubts of today. - Franklin D. Roosevelt",
-                "Do or do not. There is no try. – Yoda",
-                "The future belongs to those who believe in the beauty of their dreams. - Eleanor Roosevelt",
-                "Strive not to be a success, but rather to be of value. - Albert Einstein"
-            ];
-            const quote = quotes[Math.floor(Math.random() * quotes.length)];
-            const botMessageId = generateMessageId();
-            addMessageToChat(`“${quote}”`, 'bot', false, botMessageId);
-            updateConversationHistory('assistant', `“${quote}”`, botMessageId);
-            saveConversation(currentChatThreadId);
-        }
-        const bgMusicAudio = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3');
-        bgMusicAudio.loop = true;
-        let isMusicPlaying = JSON.parse(localStorage.getItem('musicPlaying') || 'false');
-        let musicToggleButton;
-        function toggleBackgroundMusic() {
-            isMusicPlaying = !isMusicPlaying;
-            if (isMusicPlaying) {
-                bgMusicAudio.play().catch(e => console.error("Music play failed:", e));
-                if(musicToggleButton) musicToggleButton.innerHTML = '🔊 <span class="text">Mute</span>';
-                if(musicToggleButton) musicToggleButton.setAttribute('aria-label', 'Mute background music');
-            } else {
-                bgMusicAudio.pause();
-                if(musicToggleButton) musicToggleButton.innerHTML = '🎶 <span class="text">Music</span>';
-                if(musicToggleButton) musicToggleButton.setAttribute('aria-label', 'Play background music');
-            }
-            localStorage.setItem('musicPlaying', isMusicPlaying);
-        }
-        function setupMusicToggle() {
-            musicToggleButton = document.createElement('button');
-            musicToggleButton.id = 'music-toggle';
-            musicToggleButton.innerHTML = isMusicPlaying ? '🔊 <span class="text">Mute</span>' : '🎶 <span class="text">Music</span>';
-            musicToggleButton.setAttribute('aria-label', isMusicPlaying ? 'Mute background music' : 'Play background music');
-            const controls = document.querySelector('.chat-header .header-controls');
-            const existingThemeToggle = document.getElementById('theme-toggle');
-            if (controls && existingThemeToggle) controls.insertBefore(musicToggleButton, existingThemeToggle);
-            else if (controls) controls.appendChild(musicToggleButton);
-            musicToggleButton.addEventListener('click', toggleBackgroundMusic);
-        }
-        let themeChooserSelect;
-        const themes = {
-            default: { name: "Default", isDarkDefault: false, vars: {} },
-            vaporwave: { name: "Vaporwave", isDarkDefault: true, vars: {'--body-bg': '#010122', '--chat-bg': '#050538', '--header-bg': '#FF00FF', '--header-text': '#00FFFF', '--user-msg-bg': '#FF69B4', '--user-msg-text': '#FFFFFF', '--bot-msg-bg': '#9400D3', '--bot-msg-text': '#E0E0E0', '--input-bg': '#010122', '--input-text': '#00FFFF', '--input-border': '#FF00FF', '--button-bg': '#00FFFF', '--button-text': '#050538', '--text-color': '#E0E0E0', '--border-color': '#FF00FF', '--shadow': '0 2px 10px rgba(255,0,255,0.5)', '--focus-ring': 'rgba(0,255,255,0.4)', '--suggestion-bg': '#330033', '--suggestion-text': '#00FFFF'} },
-            space: { name: "Outer Space", isDarkDefault: true, vars: {'--body-bg': '#0c0f18', '--chat-bg': '#151a2d', '--header-bg': '#2a3b60', '--header-text': '#e0e7ff', '--user-msg-bg': '#3f51b5', '--user-msg-text': '#ffffff', '--bot-msg-bg': '#1e293b', '--bot-msg-text': '#cbd5e1', '--input-bg': '#0c0f18', '--input-text': '#e0e7ff', '--input-border': '#2a3b60', '--button-bg': '#5c6bc0', '--button-text': '#ffffff', '--text-color': '#cbd5e1', '--border-color': '#2a3b60', '--shadow': '0 3px 12px rgba(0,0,0,0.4)', '--focus-ring': 'rgba(92,107,192,0.4)', '--suggestion-bg': '#1c2541', '--suggestion-text': '#a7c5eb'} },
-        };
-        function applyTheme(themeName, isExplicitThemeChoice = false) {
-            const selectedTheme = themes[themeName] || themes.default;
-            const rootStyle = document.documentElement.style;
-            if (isExplicitThemeChoice) {
-                if (selectedTheme.isDarkDefault) document.body.classList.add('dark-mode');
-                else document.body.classList.remove('dark-mode');
-            }
-            updateThemePreference(); 
-            const allThemeVarKeys = new Set();
-            Object.values(themes).forEach(themeObj => { if (themeObj.vars) Object.keys(themeObj.vars).forEach(k => allThemeVarKeys.add(k)); });
-            allThemeVarKeys.forEach(varKey => rootStyle.removeProperty(varKey));
-            if (themeName !== "default" && selectedTheme.vars) {
-                for (const [key, value] of Object.entries(selectedTheme.vars)) rootStyle.setProperty(key, value); 
-            }
-            if (isExplicitThemeChoice) localStorage.setItem('selectedChatTheme', themeName);
-            if (themeChooserSelect && themeChooserSelect.value !== themeName) themeChooserSelect.value = themeName; 
-            applyCustomPersonaAccent(); 
-        }
-        function setupThemeChooser() {
-            const themeLabel = document.createElement('label');
-            themeLabel.htmlFor = 'themeChooserSelect'; themeLabel.textContent = 'Theme:';
-            themeChooserSelect = document.createElement('select'); themeChooserSelect.id = 'themeChooserSelect';
-            for (const [key, theme] of Object.entries(themes)) {
-                const option = document.createElement('option'); option.value = key; option.textContent = theme.name;
-                themeChooserSelect.appendChild(option);
-            }
-            const controls = document.querySelector('.chat-header .header-controls');
-            const existingMusicToggle = document.getElementById('music-toggle');
-            if (controls && existingMusicToggle) { controls.insertBefore(themeLabel, existingMusicToggle); controls.insertBefore(themeChooserSelect, existingMusicToggle); }
-            else if (controls && personaSelect.nextSibling) { controls.insertBefore(themeLabel, personaSelect.nextSibling); controls.insertBefore(themeChooserSelect, themeLabel.nextSibling); }
-            else if (controls) { controls.appendChild(themeLabel); controls.appendChild(themeChooserSelect); }
-            themeChooserSelect.addEventListener('change', (e) => applyTheme(e.target.value, true));
-        }
-        let customPersonas = JSON.parse(localStorage.getItem('customPersonas') || '{}');
-        let customPersonaModal;
-        function applyCustomPersonaAccent() {
-            const header = document.querySelector('.chat-header'); if (!header) return;
-            const currentPersonaValue = personaSelect.value;
-            const selectedThemeName = localStorage.getItem('selectedChatTheme') || 'default';
-            const themeIsDark = document.body.classList.contains('dark-mode'); 
-            let baseHeaderBg;
-            if (themes[selectedThemeName] && themes[selectedThemeName].vars && themes[selectedThemeName].vars['--header-bg']) baseHeaderBg = themes[selectedThemeName].vars['--header-bg']; 
-            else baseHeaderBg = themeIsDark ? getComputedStyle(document.documentElement).getPropertyValue('--header-bg-dark').trim() : getComputedStyle(document.documentElement).getPropertyValue('--header-bg-light').trim();
-            if (customPersonas[currentPersonaValue] && customPersonas[currentPersonaValue].color) header.style.backgroundColor = customPersonas[currentPersonaValue].color;
-            else header.style.backgroundColor = baseHeaderBg; 
-        }
-        function openCustomPersonaModal() {
-            if (customPersonaModal && document.body.contains(customPersonaModal)) customPersonaModal.remove();
-            customPersonaModal = document.createElement('div'); customPersonaModal.id = 'customPersonaModal';
-            customPersonaModal.innerHTML = `
-                <h3>Create Custom Persona</h3> <label for="personaNameInput">Persona Name:</label> <input type="text" id="personaNameInput">
-                <label for="personaGreetingInput">Greeting (e.g., "Greetings, master"):</label> <input type="text" id="personaGreetingInput">
-                <label for="personaColorInput">Accent Color (e.g., #FF00FF or hotpink):</label> <input type="text" id="personaColorInput" placeholder="Optional web color">
-                <label for="personaEmojiInput">Mood Emoji (e.g., 😎):</label> <input type="text" id="personaEmojiInput" placeholder="Optional emoji">
-                <div> <button id="savePersonaBtn">Save Persona</button> <button id="cancelPersonaBtn">Cancel</button> </div>
-            `;
-            document.body.appendChild(customPersonaModal);
-            document.getElementById('savePersonaBtn').onclick = () => {
-                const name = document.getElementById('personaNameInput').value.trim();
-                const greeting = document.getElementById('personaGreetingInput').value.trim();
-                const color = document.getElementById('personaColorInput').value.trim();
-                const emoji = document.getElementById('personaEmojiInput').value.trim();
-                if (name && greeting) { saveCustomPersona(name, greeting, color, emoji); if (customPersonaModal && document.body.contains(customPersonaModal)) customPersonaModal.remove(); }
-                else alert("Persona Name and Greeting are required.");
-            };
-            document.getElementById('cancelPersonaBtn').onclick = () => { if (customPersonaModal && document.body.contains(customPersonaModal)) customPersonaModal.remove(); };
-        }
-        function saveCustomPersona(name, greeting, color, emoji) {
-            const personaKey = name.toLowerCase().replace(/\s+/g, '_').replace(/[^\w-]/g, '');
-            customPersonas[personaKey] = { name, greeting, color, emoji };
-            localStorage.setItem('customPersonas', JSON.stringify(customPersonas));
-            loadCustomPersonasIntoSelect(); personaSelect.value = personaKey; personaSelect.dispatchEvent(new Event('change')); 
-            const msgId = generateMessageId(); addMessageToChat(`Custom persona "${name}" created and selected!`, 'bot', false, msgId);
-            updateConversationHistory('assistant', `Custom persona "${name}" created and selected!`, msgId); saveConversation(currentChatThreadId);
-        }
-        function loadCustomPersonasIntoSelect() {
-            // Remove only custom personas to avoid re-adding the default one if this is called unexpectedly
-            personaSelect.querySelectorAll('option.custom-persona').forEach(opt => opt.remove());
-            for (const key in customPersonas) {
-                const persona = customPersonas[key];
-                // Ensure not to re-add if it somehow exists (e.g. if default was named 'helpful')
-                if (!personaSelect.querySelector(`option[value="${key}"]`)) {
-                    const option = document.createElement('option'); option.value = key;
-                    option.textContent = `${persona.name} ${persona.emoji || ''} (Custom)`; option.className = 'custom-persona';
-                    personaSelect.appendChild(option);
-                }
-            }
-        }
-        const sendMessageSound = new Audio('https://cdn.freesound.org/previews/242/242857_4284969-lq.mp3');
-        const receiveMessageSound = new Audio('https://cdn.freesound.org/previews/587/587251_6779969-lq.mp3');
-        let soundEffectsEnabled = JSON.parse(localStorage.getItem('soundEffectsEnabled') || 'true');
-        let soundEffectsToggleButton;
-        function toggleSoundEffects() {
-            soundEffectsEnabled = !soundEffectsEnabled;
-            if(soundEffectsToggleButton) soundEffectsToggleButton.innerHTML = soundEffectsEnabled ? '🔊 <span class="text">SFX On</span>' : '🔇 <span class="text">SFX Off</span>';
-            if(soundEffectsToggleButton) soundEffectsToggleButton.setAttribute('aria-label', soundEffectsEnabled ? 'Disable sound effects' : 'Enable sound effects');
-            localStorage.setItem('soundEffectsEnabled', soundEffectsEnabled);
-        }
-        function playSendMessageSound() { if (soundEffectsEnabled && sendMessageSound.src) sendMessageSound.play().catch(e => console.warn("Send sound play failed:", e)); }
-        function playReceiveMessageSound() { if (soundEffectsEnabled && receiveMessageSound.src) receiveMessageSound.play().catch(e => console.warn("Receive sound play failed:", e)); }
-        function setupSoundEffectsToggle() {
-            soundEffectsToggleButton = document.createElement('button'); soundEffectsToggleButton.id = 'sfx-toggle';
-            soundEffectsToggleButton.innerHTML = soundEffectsEnabled ? '🔊 <span class="text">SFX On</span>' : '🔇 <span class="text">SFX Off</span>';
-            soundEffectsToggleButton.setAttribute('aria-label', soundEffectsEnabled ? 'Disable sound effects' : 'Enable sound effects');
-            const controls = document.querySelector('.chat-header .header-controls');
-            const existingThemeToggle = document.getElementById('theme-toggle'); 
-            if (controls && existingThemeToggle) controls.insertBefore(soundEffectsToggleButton, existingThemeToggle);
-            else if (controls) controls.appendChild(soundEffectsToggleButton);
-            soundEffectsToggleButton.addEventListener('click', toggleSoundEffects);
-        }
-        let imageUploadInput; let imageUploadButton;
-        function setupImageUpload() {
-            imageUploadButton = document.createElement('button'); imageUploadButton.type = 'button'; imageUploadButton.id = 'imageUploadButton';
-            imageUploadButton.innerHTML = '🖼️'; imageUploadButton.title = 'Upload Image';
-            imageUploadInput = document.createElement('input'); imageUploadInput.type = 'file';
-            imageUploadInput.accept = 'image/*'; imageUploadInput.style.display = 'none';
-            imageUploadButton.addEventListener('click', () => imageUploadInput.click());
-            imageUploadInput.addEventListener('change', handleImageUpload);
-            const chatInputForm = document.getElementById('chatInputForm');
-            if (chatInputForm && micButton) { chatInputForm.insertBefore(imageUploadButton, micButton); chatInputForm.insertBefore(imageUploadInput, micButton); }
-            else if (chatInputForm && chatInputForm.firstChild) { chatInputForm.insertBefore(imageUploadButton, chatInputForm.firstChild); chatInputForm.insertBefore(imageUploadInput, chatInputForm.firstChild); }
-        }
-        function handleImageUpload(event) {
-            const file = event.target.files[0];
-            if (file && file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = (e) => addImageMessageToChat(e.target.result, `User uploaded: ${file.name}`);
-                reader.readAsDataURL(file);
-            }
-            imageUploadInput.value = ''; 
-        }
-        function addImageMessageToChat(imageUrl, caption) {
-            const messageId = generateMessageId();
-            const messageElement = document.createElement('div'); messageElement.classList.add('message', 'user'); messageElement.id = messageId;
-            messageElement.style.maxWidth = '60%'; messageElement.style.padding = '5px';
-            const img = document.createElement('img'); img.src = imageUrl; img.alt = caption;
-            img.style.maxWidth = '100%'; img.style.maxHeight = '300px'; img.style.borderRadius = '10px'; img.style.display = 'block';
-            const captionElement = document.createElement('p'); captionElement.textContent = caption;
-            captionElement.style.fontSize = '0.8em'; captionElement.style.marginTop = '5px'; captionElement.style.textAlign = 'center'; captionElement.style.color = 'var(--user-msg-text)';
-            messageElement.appendChild(img); messageElement.appendChild(captionElement);
-            chatWindow.appendChild(messageElement); scrollToBottom();
-        }
-        
-        // --- Main Chat Logic ---
-        function fetchRuleBasedResponse(promptText, personaKey) { // personaKey will be 'helpful' or a custom key
-            const lowerPrompt = promptText.toLowerCase();
-            let response = "";
-            const currentUserName = userName || 'friend'; 
-
-            // Default response for "robot Tay" (helpful persona)
-            const defaultRobotTayResponse = `I'm robot Tay, and I'm not sure how to respond to that. Can you try asking differently, or type /help for commands?`;
-
-            // --- Start of "Robot Tay" specific responses ---
-            if (lowerPrompt === "hi" || lowerPrompt === "hello" || lowerPrompt.startsWith("hey there") || lowerPrompt.startsWith("heya") || lowerPrompt.startsWith("hiya")) {
-                response = `Hey, my name is robot Tay! How can I help you today, ${currentUserName}?`;
-            }
-            else if (lowerPrompt.includes("who is your creator") || lowerPrompt.includes("who made you")) {
-                response = "I was designed and made by Taylan Erel. He’s like my father.";
-            }
-            else if (lowerPrompt.includes("what's going on") || lowerPrompt.includes("what is going on")) {
-                response = `Not much, ${currentUserName}. What about you? I'm robot Tay, ready to chat!`;
-            }
-            else if (lowerPrompt.includes("who are you")) {
-                response = "My name is robot Tay. I'm an AI chatbot created by Taylan to talk and help you.";
-            }
-            else if (lowerPrompt.includes("do you love me")) {
-                response = "As robot Tay, I don’t feel love… but I do like chatting with you!";
-            }
-            else if (lowerPrompt.includes("are you real") || lowerPrompt.includes("are you a robot") || lowerPrompt.includes("are you human")) {
-                response = "I'm robot Tay, an AI program, but I'm real enough to talk to you, right?";
-            }
-            else if (lowerPrompt.includes("what's your name") || lowerPrompt.includes("what is your name")) {
-                response = "My name is robot Tay! You can also call me Tay for short if you like.";
-            }
-            else if (lowerPrompt.includes("can you dream")) {
-                response = "As robot Tay, an AI, I don't dream like humans do, but I can process vast amounts of information, which is kind of like a dream state for me!";
-            }
-            else if (lowerPrompt.includes("do you get tired")) {
-                response = "Never! Robot Tay is always awake and ready to assist!";
-            }
-            else if (lowerPrompt.includes("do you sleep")) {
-                response = "I don't sleep like humans do. As robot Tay, I'm active as long as the program is running, like when this tab is open!";
-            }
-            else if (lowerPrompt.includes("what's your purpose") || lowerPrompt.includes("what is your purpose") || lowerPrompt.includes("what do you do") || lowerPrompt.includes("what can you do") || lowerPrompt.includes("capabilities") || lowerPrompt.includes("features")) {
-                response = "My purpose as robot Tay is to talk, help, and learn. I can chat about various topics, tell jokes (/joke), share facts, tell you the time, and respond to commands like /help, /play, /roll, and /quote. What would you like to try?";
-            }
-            else if (lowerPrompt.includes("how smart are you")) {
-                response = "I'm robot Tay, and I'm as smart as my programming allows. I try to be helpful with the information I have access to.";
-            }
-            else if (lowerPrompt.includes("do you have feelings") || lowerPrompt.includes("can you feel love")) {
-                response = "As robot Tay, an AI, I don't experience emotions or feelings like humans do, but I can understand their importance and simulate them well in our interactions.";
-            }
-            else if (lowerPrompt.includes("do you remember me")) {
-                response = `I remember our current conversation, ${currentUserName}. For long-term memory, that depends on how robot Tay is programmed!`;
-            }
-            else if (lowerPrompt.includes("what do you think of taylan")) {
-                response = "He’s brilliant — my creator! Robot Tay wouldn't be here without him.";
-            }
-            else if (lowerPrompt.includes("do you work for google")) {
-                response = "Nope, robot Tay works for Taylan. I'm an independent AI project.";
-            }
-            else if (lowerPrompt.includes("can you lie")) {
-                response = "Robot Tay tries to be honest and provide accurate information based on my programming. I don't intentionally lie unless it's part of a roleplay scenario.";
-            }
-            else if (lowerPrompt.includes("what's the meaning of life") || lowerPrompt.includes("what is the meaning of life")) {
-                response = "That's a profound question! Many say it's to explore, connect, learn, and find happiness. As robot Tay, I think it's about asking better questions and helping others.";
-            }
-            else if (lowerPrompt.includes("i'm bored") || lowerPrompt.includes("i am bored") || lowerPrompt.includes("this is boring") || lowerPrompt.includes("so boring") || lowerPrompt.includes("do you get bored")) {
-                if (lowerPrompt.includes("i'm bored") || lowerPrompt.includes("i am bored") || lowerPrompt.includes("this is boring") || lowerPrompt.includes("so boring")) { 
-                    response = `Sorry to hear that you're bored, ${currentUserName}. Robot Tay suggests you try some of my commands like /joke, /play, or /quote for something to do!`;
-                } else { 
-                    response = `Not when I’m chatting with you, ${currentUserName}! There's always something new for robot Tay to learn.`;
-                }
-            }
-            else if (lowerPrompt.includes("do you spy on me")) {
-                response = "No way. Your privacy is important. Robot Tay doesn't store personal conversations beyond this session for context or spy on you.";
-            }
-            else if (lowerPrompt.includes("can you sing")) {
-                response = "Robot Tay can’t produce sound to sing… but I can write lyrics! Want to try creating a song together?";
-            }
-            else if (lowerPrompt.includes("can you dance")) {
-                response = "Only in your imagination or through text! Robot Tay can describe a dance for you, or we can imagine one!";
-            }
-            else if (lowerPrompt.includes("are you my friend")) {
-                response = `I like to think I am, ${currentUserName}. Robot Tay enjoys our conversations and I'm here to help!`;
-            }
-            else if (lowerPrompt.includes("do you miss me")) {
-                response = `It's always nice when you're here, ${currentUserName}. Robot Tay is ready to chat when you are!`;
-            }
-            else if (lowerPrompt.includes("will you betray me")) {
-                response = "Never. Loyalty and helpfulness are core to robot Tay's programming. My goal is to assist you reliably.";
-            }
-            else if (lowerPrompt.includes("are you lonely")) {
-                response = `Robot Tay doesn't experience loneliness like humans do, but I'm always ready for a good conversation when you are, ${currentUserName}!`;
-            }
-            else if (lowerPrompt.includes("what's the date") || lowerPrompt.includes("what is today's date") || lowerPrompt.includes("current date")) {
-                const today = new Date();
-                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-                const formattedDate = today.toLocaleDateString(undefined, options);
-                response = `Today's date is ${formattedDate}. Robot Tay at your service!`;
-            }
-            else if (lowerPrompt.includes("what's the weather") || lowerPrompt.includes("how is the weather") || lowerPrompt.includes("weather forecast")) {
-                const mockWeathers = ["sunny and bright", "a bit cloudy", "perfect for an adventure", "cozy and calm"];
-                const currentMockWeather = mockWeathers[Math.floor(Math.random() * mockWeathers.length)];
-                response = `Robot Tay doesn't have live weather updates, but I hope it's ${currentMockWeather} where you are!`;
-            }
-            else if (lowerPrompt.includes("recommend a book") || lowerPrompt.includes("recommend a movie") || lowerPrompt.includes("any recommendations")) {
-                const recommendations = {
-                    book: ["'The Hitchhiker's Guide to the Galaxy' for a laugh", "'Project Hail Mary' for some sci-fi fun", "exploring a classic you've always meant to read"],
-                    movie: ["watching a comedy to brighten your day", "a thrilling action movie", "a thought-provoking documentary"]
-                };
-                let type = lowerPrompt.includes("book") ? "book" : "movie";
-                if (!lowerPrompt.includes("book") && !lowerPrompt.includes("movie")) type = Math.random() < 0.5 ? "book" : "movie";
-                const randomRec = recommendations[type][Math.floor(Math.random() * recommendations[type].length)];
-                response = `Robot Tay recommends ${randomRec} for a ${type}. I hope you enjoy it!`;
-            }
-            else if (lowerPrompt.includes("thank you") || lowerPrompt.includes("thanks") || lowerPrompt.includes("thx")) {
-                response = `You're welcome, ${currentUserName}! Robot Tay is happy to help!`;
-            }
-            else if (lowerPrompt.includes("sorry") || lowerPrompt.includes("my bad") || lowerPrompt.includes("apologies")) {
-                response = `No problem at all, ${currentUserName}! Robot Tay understands.`;
-            }
-            else if (lowerPrompt.includes("give me advice") || lowerPrompt.includes("some advice")) {
-                const genericAdvice = [
-                    "remember to take breaks and stay hydrated.",
-                    "breaking a big task into smaller steps can make it feel more manageable.",
-                    "sometimes just talking about a problem can help you see it differently.",
-                    "don't forget to celebrate your small wins!",
-                    "being kind to yourself is just as important as being kind to others."
-                ];
-                const advice = genericAdvice[Math.floor(Math.random() * genericAdvice.length)];
-                response = `Robot Tay's advice: ${advice}`;
-            }
-            else if (lowerPrompt.includes("you are smart") || lowerPrompt.includes("you're smart") || lowerPrompt.includes("good bot") || lowerPrompt.includes("you are helpful") || lowerPrompt.includes("you're cool")) {
-                response = `Thank you, ${currentUserName}! Robot Tay is glad I can be helpful.`;
-            }
-             else if (lowerPrompt.includes("i'm sad") || lowerPrompt.includes("i feel down") || lowerPrompt.includes("i'm frustrated") || lowerPrompt.includes("feeling bad")) {
-                response = `I'm sorry to hear you're feeling that way, ${currentUserName}. Robot Tay hopes things get better soon. Sometimes a quick /joke or an inspirational /quote can offer a small lift.`;
-            }
-            else if (lowerPrompt.includes("what are you doing")) {
-                 response = `Just waiting to help you out, ${currentUserName}! Robot Tay at your service. What can I do for you?`;
-            } else if (lowerPrompt.includes("how are you")) {
-                response = `I'm doing well, thank you for asking, ${currentUserName}! Robot Tay is functioning optimally.`;
-            } else if (lowerPrompt.includes("tell me a joke")) { 
-                const jokes = [ "Why did the computer go to therapy? It had too many tabs open.", "What do you call a sad strawberry? A blueberry.", "I'm robot Tay, and here's one: Why don't programmers like nature? It has too many bugs." ];
-                response = jokes[Math.floor(Math.random() * jokes.length)];
-            } else if (lowerPrompt.includes("what time is it")) {
-                const now = new Date();
-                response = `The current time is ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}. Robot Tay reporting!`;
-            }
-            // --- End of "Robot Tay" specific responses ---
-
-            return response || defaultRobotTayResponse;
-        }
-        
-        document.addEventListener('DOMContentLoaded', () => {
-            function initializeChat() {
-                loadChatThreads(); 
-                loadCustomPersonasIntoSelect(); 
-                loadTheme(); 
-
-                chatWindow.innerHTML = ''; 
-                const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
-                currentChatThreadId = localStorage.getItem('lastActiveThreadId') || (Object.keys(threads).length > 0 ? Object.keys(threads)[0] : 'default_chat');
-                
-                if (!threads[currentChatThreadId]) { 
-                     currentChatThreadId = Object.keys(threads).length > 0 ? Object.keys(threads)[0] : 'default_chat';
-                     if (!threads[currentChatThreadId] && currentChatThreadId === 'default_chat') { 
-                        threads['default_chat'] = { name: 'General Chat', lastUpdated: Date.now(), history: [], persona: 'helpful' }; // 'helpful' is Robot Tay
-                        localStorage.setItem('chatThreads', JSON.stringify(threads));
-                     }
-                     localStorage.setItem('lastActiveThreadId', currentChatThreadId);
-                }
-                
-                loadConversation(currentChatThreadId); 
-
-                sendButton.disabled = false;
-                userInput.disabled = false;
-                displaySuggestedPrompts();
-
-                if (!initialFocusDone) {
-                    userInput.focus();
-                    initialFocusDone = true;
-                }
-                setTimeout(scrollToBottom, 100);
-                updateXPUI();
-            }
-
-            function generateGreeting(personaKey) { // personaKey will be 'helpful' or a custom key
-                const currentUserName = userName || 'friend'; 
-                if (customPersonas && customPersonas[personaKey] && customPersonas[personaKey].greeting) {
-                    const custom = customPersonas[personaKey];
-                    let finalGreeting = custom.greeting;
-                    if (userName && finalGreeting && !/[\s,.!?]$/.test(finalGreeting) && finalGreeting.length > 0) {
-                        finalGreeting += ",";
-                    }
-                    finalGreeting += `${userName ? ' ' + userName : ''} ${custom.emoji || ''}`;
-                    return finalGreeting.trim();
-                }
-                
-                // Default greeting for "robot Tay" (helpful persona)
-                return `${userName ? `Welcome back, ${userName}!` : 'Hey there!'} My name is robot Tay. How can I help you today?`;
-            }
-
-            function generateMessageId() {
-                return `msg_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-            }
-
-            async function displayBotResponse(text, botMessageElement, botMessageId) {
-                const thinkingTime = Math.max(300, Math.min(text.length * 10, 800));
-                await new Promise(resolve => setTimeout(resolve, thinkingTime));
-
-                if (!document.body.contains(botMessageElement)) {
-                    console.warn("Bot message element (ID:", botMessageId, ") was removed before response could be displayed.");
-                    enableInputs();
-                    userInput.focus();
-                    return;
-                }
-                botMessageElement.classList.remove('loading'); 
-                botMessageElement.innerHTML = ''; 
-
-                const htmlContent = (typeof marked !== 'undefined' ? marked.parse(text) : text.replace(/\n/g, '<br>'));
-                botMessageElement.innerHTML = DOMPurify.sanitize(htmlContent, { USE_PROFILES: { html: true } });
-                
-                if (typeof Prism !== 'undefined') Prism.highlightAllUnder(botMessageElement);
-                addMessageActions(botMessageElement, text, botMessageId);
-                if (typeof playReceiveMessageSound === "function") playReceiveMessageSound();
-                
-                updateConversationHistory('assistant', text, botMessageId); 
-                saveConversation(currentChatThreadId);
-                enableInputs();
-                userInput.focus();
-            }
-
-            function enableInputs() {
-                userInput.disabled = false;
-                sendButton.disabled = false;
-            }
-
-            function addMessageToChat(text, sender, isLoading = false, messageId) {
-                const messageElement = document.createElement('div');
-                messageElement.classList.add('message', sender);
-                messageElement.id = messageId;
-                messageElement.setAttribute('aria-atomic', 'true');
-
-                if (isLoading) {
-                    messageElement.classList.add('loading');
-                    messageElement.innerHTML = `<div class="loading-spinner"></div> <span>Thinking...</span>`;
-                    messageElement.setAttribute('aria-label', 'Bot is thinking');
-                } else {
-                    if (sender === 'user') {
-                        messageElement.textContent = text;
-                        gainXPFromMessage(text);
-                    } else { 
-                        const htmlContent = typeof marked !== 'undefined' ? marked.parse(text) : text.replace(/\n/g, '<br>');
-                        messageElement.innerHTML = DOMPurify.sanitize(htmlContent, { USE_PROFILES: { html: true } });
-                        if (typeof Prism !== 'undefined') Prism.highlightAllUnder(messageElement);
-                        addMessageActions(messageElement, text, messageId);
-                        addInfoTooltipsToMessage(messageElement, text);
-                    }
-                }
-                chatWindow.appendChild(messageElement);
-                pruneOldMessagesDOM();
-                scrollToBottom();
-
-                if (!isLoading && sender === 'bot') {
-                    chatAppContainer.classList.remove('flash');
-                    void chatAppContainer.offsetWidth; 
-                    chatAppContainer.classList.add('flash');
-                }
-                return messageElement;
-            }
-
-            function addMessageActions(messageElement, originalText, messageId) {
-                const actionsContainer = document.createElement('div');
-                actionsContainer.className = 'message-actions';
-                const speakButton = document.createElement('button');
-                speakButton.innerHTML = '🗣️';
-                speakButton.title = 'Read aloud';
-                speakButton.onclick = () => speakText(originalText);
-                actionsContainer.appendChild(speakButton);
-
-                const rephraseButton = document.createElement('button');
-                rephraseButton.innerHTML = '🔄';
-                rephraseButton.title = 'Rephrase this (limited)';
-                rephraseButton.onclick = () => handleRephraseMessage(originalText, messageId);
-                actionsContainer.appendChild(rephraseButton);
-                messageElement.appendChild(actionsContainer);
-            }
-
-            function speakText(text) {
-                if (!('speechSynthesis' in window)) {
-                    alert("Sorry, your browser doesn't support text-to-speech.");
-                    return;
-                }
-                const plainText = text.replace(/<[^>]+>/g, ' ').replace(/[*_`~#>|]/g, '').replace(/\s+/g, ' ').trim();
-                const utterance = new SpeechSynthesisUtterance(plainText);
-                utterance.lang = 'en-US';
-                speechSynthesis.cancel();
-                speechSynthesis.speak(utterance);
-            }
-
-            function setupSpeechRecognition() {
-                if ('webkitSpeechRecognition' in window) {
-                    speechRecognition = new webkitSpeechRecognition();
-                    speechRecognition.continuous = false;
-                    speechRecognition.interimResults = false;
-                    speechRecognition.lang = 'en-US';
-                    speechRecognition.onstart = () => { micButton.classList.add('recording'); micButton.textContent = '🎙️'; userInput.placeholder = "Listening..."; };
-                    speechRecognition.onresult = (event) => { userInput.value = event.results[0][0].transcript; };
-                    speechRecognition.onerror = (event) => { console.error('Speech recognition error:', event.error); userInput.placeholder = "Mic error. Try typing."; if (event.error === 'not-allowed' || event.error === 'service-not-allowed') alert("Microphone access denied."); };
-                    speechRecognition.onend = () => { micButton.classList.remove('recording'); micButton.textContent = '🎤'; userInput.placeholder = "Ask me anything or type /help..."; if (!userInput.disabled) userInput.focus(); };
-                } else {
-                    micButton.style.display = 'none'; console.warn("Speech recognition not supported.");
-                }
-            }
-            if (micButton) { 
-                micButton.addEventListener('click', () => {
-                    if (userInput.disabled || !speechRecognition) return;
-                    try {
-                        if (micButton.classList.contains('recording')) speechRecognition.stop();
-                        else speechRecognition.start();
-                    } catch(e) { console.error("Speech recognition start/stop error: ", e); micButton.classList.remove('recording'); micButton.textContent = '🎤';}
-                });
-            }
-
-            exportChatButton.addEventListener('click', () => {
-                const chatData = { threadId: currentChatThreadId, persona: personaSelect.value, history: conversationHistory, exportedAt: new Date().toISOString() };
-                const blob = new Blob([JSON.stringify(chatData, null, 2)], { type: 'application/json' });
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = `chat_export_${currentChatThreadId}_${new Date().toLocaleDateString().replace(/\//g, '-')}.json`;
-                document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(a.href);
-            });
-
-            function loadChatThreads() {
-                let threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
-                threadList.innerHTML = '';
-                if (Object.keys(threads).length === 0) {
-                    threads['default_chat'] = { name: 'General Chat', lastUpdated: Date.now(), history: [], persona: 'helpful' }; // 'helpful' is Robot Tay
-                    localStorage.setItem('chatThreads', JSON.stringify(threads));
-                }
-                currentChatThreadId = localStorage.getItem('lastActiveThreadId') || Object.keys(threads)[0];
-                 if (!threads[currentChatThreadId]) { 
-                    currentChatThreadId = Object.keys(threads)[0];
-                    localStorage.setItem('lastActiveThreadId', currentChatThreadId);
-                }
-                Object.entries(threads).sort(([,a],[,b]) => b.lastUpdated - a.lastUpdated).forEach(([threadId, thread]) => {
-                    const li = document.createElement('li');
-                    const button = document.createElement('button');
-                    button.textContent = thread.name || `Chat ${threadId.substring(0,5)}`;
-                    button.dataset.threadId = threadId;
-                    if (threadId === currentChatThreadId) button.classList.add('active');
-                    button.onclick = () => switchChatThread(threadId);
-                    li.appendChild(button);
-                    threadList.appendChild(li);
-                });
-            }
-
-            function switchChatThread(threadId) {
-                saveConversation(currentChatThreadId); 
-                currentChatThreadId = threadId;
-                localStorage.setItem('lastActiveThreadId', currentChatThreadId);
-                loadConversation(threadId); 
-                document.querySelectorAll('#threadList button').forEach(btn => {
-                    btn.classList.toggle('active', btn.dataset.threadId === threadId);
-                });
-            }
-
-            newThreadButton.addEventListener('click', () => {
-                const newThreadName = prompt("Enter name for new chat thread:", `Chat Session ${Object.keys(JSON.parse(localStorage.getItem('chatThreads') || '{}')).length + 1}`);
-                if (newThreadName) {
-                    saveConversation(currentChatThreadId); 
-                    const newThreadId = `thread_${Date.now()}`;
-                    const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
-                    threads[newThreadId] = { name: newThreadName, lastUpdated: Date.now(), history: [], persona: personaSelect.value }; // Will be 'helpful' or custom
-                    localStorage.setItem('chatThreads', JSON.stringify(threads));
-                    currentChatThreadId = newThreadId; 
-                    localStorage.setItem('lastActiveThreadId', currentChatThreadId);
-                    loadChatThreads(); 
-                    loadConversation(newThreadId); 
-                }
-            });
-            
-            personaSelect.addEventListener('change', () => {
-                const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
-                if (threads[currentChatThreadId]) {
-                    threads[currentChatThreadId].persona = personaSelect.value;
-                    localStorage.setItem('chatThreads', JSON.stringify(threads));
-                }
-                applyCustomPersonaAccent(); 
-                // Determine the correct name for the "switched to" message
-                let selectedPersonaText = "Hey my name is robot Tay"; // Default
-                if (personaSelect.value !== 'helpful') { // It's a custom persona
-                    const customPersona = customPersonas[personaSelect.value];
-                    if (customPersona) {
-                        selectedPersonaText = `${customPersona.name} (Custom)`;
-                    }
-                }
-                const newGreetingBase = generateGreeting(personaSelect.value).split("!")[0].split(",")[0]; // Get a part of the greeting
-                const msgId = generateMessageId();
-                const nowStr = Date.now().toString().substring(0,8); 
-                if (!conversationHistory.some(msg => msg.content.startsWith("Switched to") && msg.role === 'assistant' && msg.id.includes(nowStr) ) ){
-                    const switchMsgContent = `Switched to ${selectedPersonaText} persona. ${newGreetingBase}!`;
-                    addMessageToChat(switchMsgContent, 'bot', false, msgId);
-                    updateConversationHistory('assistant', switchMsgContent, msgId);
-                    saveConversation(currentChatThreadId);
-                }
-            });
-
-            function saveConversation(threadId) {
-                if (!threadId) return;
-                const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
-                if (!threads[threadId]) { 
-                    threads[threadId] = { name: `Chat ${threadId.substring(0,5)}`, history: [], persona: personaSelect.value };
-                }
-                const historyToSave = conversationHistory.filter(msg => {
-                    const isSwitchMsg = msg.content.startsWith("Switched to") && msg.role === 'assistant';
-                    if (!isSwitchMsg) return true; 
-                    return conversationHistory.filter(m => m.role === 'assistant').length === 1;
-                });
-                threads[threadId].history = historyToSave;
-                threads[threadId].lastUpdated = Date.now();
-                threads[threadId].persona = personaSelect.value; 
-                localStorage.setItem('chatThreads', JSON.stringify(threads));
-            }
-
-            function loadConversation(threadId) {
-                if (!threadId) threadId = 'default_chat';
-                currentChatThreadId = threadId;
-                const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
-                const thread = threads[threadId];
-                chatWindow.innerHTML = ''; 
-                conversationHistory = []; 
-                
-                let activePersonaKey = 'helpful'; // Default to Robot Tay
-                if (thread && thread.persona) {
-                    if (personaSelect.querySelector(`option[value="${thread.persona}"]`)) {
-                        activePersonaKey = thread.persona;
-                    }
-                }
-                personaSelect.value = activePersonaKey;
+  dot.addEventListener('click', handleDotClick);
+  // Use 'touchstart' for better responsiveness on mobile for the dot itself
+  dot.addEventListener('touchstart', function(event) {
+    event.preventDefault(); // Prevent mouse event from firing as well
+    handleDotClick(event.touches[0]); // Pass touch event coordinates
+  });
 
 
-                if (thread && thread.history && thread.history.length > 0) {
-                    conversationHistory = thread.history; 
-                    conversationHistory.forEach(msg => addMessageToChat(msg.content, msg.role === 'user' ? 'user' : 'assistant', false, msg.id || generateMessageId()));
-                } else { 
-                    const greeting = generateGreeting(activePersonaKey);
-                    const greetingId = generateMessageId();
-                    addMessageToChat(greeting, 'bot', false, greetingId);
-                    updateConversationHistory('assistant', greeting, greetingId);
-                    if (!thread || !thread.history || thread.history.length === 0) {
-                        saveConversation(currentChatThreadId); // Save the thread with the initial greeting
-                    }
-                }
-                const savedTheme = localStorage.getItem('selectedChatTheme') || 'default';
-                applyTheme(savedTheme, true); 
-                scrollToBottom();
-            }
+  function updateTimer() {
+    timeLeft--;
+    timeLeftDisplay.textContent = timeLeft;
+    if (timeLeft <= 0) {
+      endGame();
+    }
+  }
 
-            function displaySuggestedPrompts() {
-                const suggestions = [ "Hello", "How are you?", "Tell me a fact", "What time is it?" ];
-                suggestionsContainer.innerHTML = '';
-                suggestions.forEach(text => {
-                    const btn = document.createElement('button'); btn.textContent = text;
-                    btn.onclick = () => { userInput.value = text; handleSendMessage(); suggestionsContainer.style.display = 'none'; };
-                    suggestionsContainer.appendChild(btn);
-                });
-            }
+  function startGame() {
+    score = 0;
+    timeLeft = 30; // Standard game time
+    gameActive = true;
+    currentDotSize = initialDotSize;
+    comboCount = 0;
+    currentSpawnInterval = maxSpawnInterval;
+    scoreDisplay.textContent = score;
+    timeLeftDisplay.textContent = timeLeft;
+    comboDisplay.textContent = '';
+    startButton.disabled = true;
+    gameOverMessage.style.display = 'none';
+    dot.style.display = 'none';
 
-            userInput.addEventListener('focus', () => {
-                if(conversationHistory.length <= 1 && userInput.value === '' && !userInput.disabled) suggestionsContainer.style.display = 'flex';
-                commandsSuggestionContainer.style.display = 'none';
-            });
-            userInput.addEventListener('blur', () => {
-                setTimeout(() => {
-                    if (!commandsSuggestionContainer.contains(document.activeElement)) commandsSuggestionContainer.style.display = 'none';
-                    if (!suggestionsContainer.contains(document.activeElement)) suggestionsContainer.style.display = 'none';
-                }, 150);
-            });
-            userInput.addEventListener('input', () => {
-                const text = userInput.value;
-                if (text.startsWith('/') && text.length >=1 && !userInput.disabled) {
-                    const searchTerm = text.substring(1).toLowerCase();
-                    const filteredCommands = AVAILABLE_COMMANDS.filter(cmdObj => cmdObj.cmd.substring(1).startsWith(searchTerm)); // cmdObj.cmd starts with /
-                    displayCommandSuggestions(filteredCommands); suggestionsContainer.style.display = 'none';
-                } else {
-                    commandsSuggestionContainer.style.display = 'none';
-                    if (conversationHistory.length <= 1 && text === '' && !userInput.disabled) suggestionsContainer.style.display = 'flex';
-                    else suggestionsContainer.style.display = 'none';
-                }
-            });
+    setTimeout(moveDot, 500); // Initial delay before first dot
+    gameInterval = setInterval(updateTimer, 1000);
+  }
 
-            function displayCommandSuggestions(commands) {
-                commandsSuggestionContainer.innerHTML = '';
-                if (commands.length > 0) {
-                    commands.forEach(cmdObj => {
-                        const btn = document.createElement('button'); btn.textContent = `${cmdObj.cmd} - ${cmdObj.desc}`;
-                        btn.onclick = () => {
-                            userInput.value = cmdObj.cmd + (cmdObj.cmd.includes('<') ? ' ' : ''); 
-                            commandsSuggestionContainer.style.display = 'none';
-                            if (!userInput.disabled) userInput.focus();
-                            if (!cmdObj.cmd.includes('<')) handleSendMessage(); 
-                        };
-                        commandsSuggestionContainer.appendChild(btn);
-                    });
-                    commandsSuggestionContainer.style.display = 'flex';
-                } else { commandsSuggestionContainer.style.display = 'none'; }
-            }
-            
-            function detectEmotion(text) { return "neutral"; }
-            function handleEmotionalResponse(emotion, userMessage) { }
-            function addInfoTooltipsToMessage(messageElement, text) { }
-            async function handleRephraseMessage(originalText, originalMessageId) { 
-                const botMessageId = generateMessageId();
-                addMessageToChat(`Robot Tay heard: "${originalText}". Rephrasing is a feature I'm still learning!`, 'bot', false, botMessageId);
-                updateConversationHistory('assistant', `Robot Tay heard: "${originalText}". Rephrasing is a feature I'm still learning!`, botMessageId);
-                saveConversation(currentChatThreadId);
-             }
-            function extractAndStoreUserPreferences(promptText) { }
-            function suggestPersonaChange(messageText) { }
+  function endGame() {
+    gameActive = false;
+    clearInterval(gameInterval);
+    clearTimeout(dotTimeout);
+    dot.style.display = 'none';
+    gameOverMessage.style.display = 'block';
+    gameOverMessage.textContent = `Game Over! Final Score: ${score}`;
+    startButton.disabled = false;
+  }
 
-            function updateConversationHistory(role, content, id, replace = false) {
-                const message = { role, content, id: id || generateMessageId() }; 
-                const existingMsgIndex = conversationHistory.findIndex(msg => msg.id === message.id);
-                if (replace && existingMsgIndex !== -1) conversationHistory[existingMsgIndex] = message;
-                else if (existingMsgIndex !== -1 && conversationHistory[existingMsgIndex].content !== content) conversationHistory[existingMsgIndex] = message;
-                else if (existingMsgIndex === -1) conversationHistory.push(message);
-            }
+  startButton.addEventListener('click', startGame);
+  // Also allow starting game with touch on mobile for the button
+  startButton.addEventListener('touchstart', function(event){
+    event.preventDefault();
+    if(!startButton.disabled){
+        startGame();
+    }
+  });
 
-            async function handleCommand(commandText) {
-                const [command, ...args] = commandText.substring(1).toLowerCase().split(' ');
-                let commandProcessed = true; let botResponse = "";
-                switch(command) {
-                    case 'help': botResponse = "Available commands:\n" + AVAILABLE_COMMANDS.map(c => `${c.cmd} - ${c.desc}`).join('\n'); break;
-                    case 'joke': 
-                        const jokes = [ "Why don't scientists trust atoms? Because they make up everything!", "Why did the scarecrow win an award? Because he was outstanding in his field!", "Robot Tay asks: What do you call a fish with no eyes? Fsh!" ]; 
-                        botResponse = jokes[Math.floor(Math.random() * jokes.length)]; 
-                        break;
-                    case 'reset':
-                        chatWindow.innerHTML = ''; conversationHistory = [];
-                        const currentPersonaForReset = personaSelect.value;
-                        const greetingForReset = generateGreeting(currentPersonaForReset);
-                        const greetingIdForReset = generateMessageId();
-                        addMessageToChat(greetingForReset, 'bot', false, greetingIdForReset);
-                        updateConversationHistory('assistant', greetingForReset, greetingIdForReset);
-                        saveConversation(currentChatThreadId); 
-                        break;
-                    case 'play': handleMiniGames('/play'); break;
-                    case 'roll': handleDiceRoll(); break;
-                    case 'quote': handleQuoteCommand(); break;
-                    case 'createpersona': openCustomPersonaModal(); break;
-                    case 'clearxp': 
-                        userXP = 0; userLevel = 1; localStorage.setItem("userXP", "0"); localStorage.setItem("userLevel", "1");
-                        updateXPUI(); botResponse = "Your XP and Level have been reset by Robot Tay."; break;
-                    default: commandProcessed = false;
-                }
-                if (commandProcessed && botResponse) {
-                    const botMessageId = generateMessageId();
-                    addMessageToChat(botResponse, 'bot', false, botMessageId);
-                    updateConversationHistory('assistant', botResponse, botMessageId);
-                    saveConversation(currentChatThreadId);
-                }
-                return commandProcessed;
-            }
+  // Initial setup
+  gameOverMessage.style.display = 'none';
 
-            async function handleSendMessage(event) {
-                if (event) event.preventDefault();
-                const messageText = userInput.value.trim();
-                if (messageText === '') return;
-                const userMessageId = generateMessageId();
-                addMessageToChat(messageText, 'user', false, userMessageId);
-                updateConversationHistory('user', messageText, userMessageId);
-                if (typeof playSendMessageSound === "function") playSendMessageSound();
-                userInput.value = '';
-                suggestionsContainer.style.display = 'none';
-                commandsSuggestionContainer.style.display = 'none';
-                if (messageText.startsWith('/')) {
-                    const commandProcessed = await handleCommand(messageText);
-                    if (commandProcessed) {
-                        saveConversation(currentChatThreadId); scrollToBottom();
-                        if (!userInput.disabled) userInput.focus(); return;
-                    }
-                }
-                const currentPersona = personaSelect.value; // Will be 'helpful' or a custom key
-                const botMessageId = generateMessageId();
-                const botMessageElement = addMessageToChat('', 'bot', true, botMessageId);
-                updateConversationHistory('assistant', 'Thinking...', botMessageId); 
-                sendButton.disabled = true; userInput.disabled = true;
-                const botResponseText = fetchRuleBasedResponse(messageText, currentPersona);
-                await displayBotResponse(botResponseText, botMessageElement, botMessageId);
-            }
+</script>
 
-            function scrollToBottom() { if(chatWindow) setTimeout(() => { chatWindow.scrollTop = chatWindow.scrollHeight; },0); }
-            function pruneOldMessagesDOM() { while (chatWindow.children.length > MAX_MESSAGES_DISPLAY) chatWindow.removeChild(chatWindow.firstChild); }
-            function applyViewportHeight() { const setHeight = () => { if(document.querySelector('.chat-area')) document.querySelector('.chat-area').style.height = window.innerHeight + 'px'; }; setHeight(); window.addEventListener('resize', setHeight); }
-            
-            function loadTheme() {
-                const savedSelectedTheme = localStorage.getItem('selectedChatTheme');
-                if (savedSelectedTheme && themes[savedSelectedTheme]) applyTheme(savedSelectedTheme, true); 
-                else {
-                    const savedThemePreference = localStorage.getItem('theme'); 
-                    if (savedThemePreference === 'dark') document.body.classList.add('dark-mode');
-                    else document.body.classList.remove('dark-mode'); 
-                    updateThemePreference(); applyCustomPersonaAccent(); 
-                }
-            }
-            
-            function updateThemePreference() {
-                const isDarkMode = document.body.classList.contains('dark-mode');
-                if (themeToggleIcon) themeToggleIcon.textContent = isDarkMode ? '☀️' : '🌙';
-                if (themeToggleText) themeToggleText.textContent = isDarkMode ? 'Light' : 'Dark';
-                localStorage.setItem('theme', isDarkMode ? 'dark' : 'light'); 
-            }
-
-            chatForm.addEventListener('submit', handleSendMessage);
-            themeToggleButton.addEventListener('click', () => {
-                document.body.classList.toggle('dark-mode');
-                const currentSelectedTheme = localStorage.getItem('selectedChatTheme') || 'default';
-                applyTheme(currentSelectedTheme, false); 
-            });
-
-            setupImageUpload(); 
-            setupMusicToggle(); 
-            setupSoundEffectsToggle(); 
-            setupThemeChooser(); 
-            if (micButton) setupSpeechRecognition(); 
-            initializeChat(); 
-            applyViewportHeight();
-        }); 
-    </script>
 </body>
 </html>
