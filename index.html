@@ -3,43 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Chat Assistant - Enhanced</title>
+    <title>AI Chat Assistant - Polished</title>
     <style>
         :root {
             --body-bg-light: #f4f6f8;
-            --body-bg-dark: #121212; /* Darker dark mode */
+            --body-bg-dark: #0d1117; /* GitHub dark inspired */
             --chat-bg-light: #ffffff;
-            --chat-bg-dark: #1e1e1e;
+            --chat-bg-dark: #161b22; /* GitHub dark inspired */
             --header-bg-light: #007bff;
-            --header-bg-dark: #0056b3;
+            --header-bg-dark: #1f6feb; /* Brighter blue for dark mode */
             --header-text-light: #ffffff;
-            --header-text-dark: #e0e0e0;
+            --header-text-dark: #c9d1d9;
             --user-msg-bg-light: #007bff;
-            --user-msg-bg-dark: #0056b3;
+            --user-msg-bg-dark: #1f6feb;
             --user-msg-text-light: #ffffff;
             --user-msg-text-dark: #e0e0e0;
             --bot-msg-bg-light: #e9ecef;
-            --bot-msg-bg-dark: #3a3a3a; /* Slightly lighter bot message in dark */
+            --bot-msg-bg-dark: #21262d; /* GitHub dark inspired */
             --bot-msg-text-light: #333333;
-            --bot-msg-text-dark: #d0d0d0;
+            --bot-msg-text-dark: #c9d1d9;
             --input-bg-light: #ffffff;
-            --input-bg-dark: #2c2c2c;
+            --input-bg-dark: #0d1117;
             --input-text-light: #333333;
-            --input-text-dark: #e0e0e0;
+            --input-text-dark: #c9d1d9;
             --input-border-light: #ced4da;
-            --input-border-dark: #555555;
+            --input-border-dark: #30363d; /* GitHub dark inspired */
             --button-bg-light: #007bff;
-            --button-bg-dark: #0056b3;
+            --button-bg-dark: #238636; /* GitHub green inspired */
             --button-text-light: #ffffff;
-            --button-text-dark: #e0e0e0;
+            --button-text-dark: #ffffff;
             --text-color-light: #212529;
-            --text-color-dark: #f8f9fa;
+            --text-color-dark: #c9d1d9;
             --border-color-light: #dee2e6;
-            --border-color-dark: #444444;
-            --shadow-light: 0 2px 10px rgba(0,0,0,0.1);
-            --shadow-dark: 0 2px 10px rgba(0,0,0,0.4); /* Darker shadow for dark mode */
-            --icon-filter-light: invert(0%);
-            --icon-filter-dark: invert(100%);
+            --border-color-dark: #30363d;
+            --shadow-light: 0 2px 10px rgba(0,0,0,0.075);
+            --shadow-dark: 0 3px 12px rgba(0,0,0,0.25);
+            --focus-ring-light: rgba(0,123,255,0.25);
+            --focus-ring-dark: rgba(31,111,235,0.4);
 
             /* Apply light theme by default */
             --body-bg: var(--body-bg-light);
@@ -58,7 +58,7 @@
             --text-color: var(--text-color-light);
             --border-color: var(--border-color-light);
             --shadow: var(--shadow-light);
-            --icon-filter: var(--icon-filter-light);
+            --focus-ring: var(--focus-ring-light);
         }
 
         body.dark-mode {
@@ -78,14 +78,14 @@
             --text-color: var(--text-color-dark);
             --border-color: var(--border-color-dark);
             --shadow: var(--shadow-dark);
-            --icon-filter: var(--icon-filter-dark);
+            --focus-ring: var(--focus-ring-dark);
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
         }
 
         body {
@@ -108,12 +108,22 @@
             box-shadow: var(--shadow);
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            overflow: hidden; /* Important for structure */
             transition: background-color 0.3s;
+            animation: subtleBackgroundFlash 0.5s ease-out; /* For message delivery feedback */
+        }
+        @keyframes subtleBackgroundFlash { /* Haptic-style visual feedback */
+            0% { background-color: var(--chat-bg); }
+            25% { background-color: color-mix(in srgb, var(--chat-bg) 95%, var(--button-bg) 5%); }
+            100% { background-color: var(--chat-bg); }
+        }
+        .chat-container.flash { /* Class to trigger flash */
+            animation: subtleBackgroundFlash 0.5s ease-out forwards;
         }
 
+
         .chat-header {
-            padding: 12px 20px; /* Reduced padding */
+            padding: 12px 20px;
             background-color: var(--header-bg);
             color: var(--header-text);
             display: flex;
@@ -121,34 +131,29 @@
             align-items: center;
             border-bottom: 1px solid var(--border-color);
             transition: background-color 0.3s, border-color 0.3s, color 0.3s;
-            flex-shrink: 0; /* Prevent header from shrinking */
+            flex-shrink: 0;
         }
 
-        .chat-header h2 {
-            font-size: 1.1em; /* Adjusted size */
-            margin: 0;
-        }
+        .chat-header h2 { font-size: 1.1em; margin: 0; }
 
         #theme-toggle {
             background: none;
             border: 1px solid var(--header-text);
             color: var(--header-text);
             padding: 6px 10px;
-            border-radius: 20px; /* More rounded */
+            border-radius: 20px;
             cursor: pointer;
             font-size: 0.9em;
             display: flex;
             align-items: center;
             gap: 5px;
-            transition: background-color 0.3s, color 0.3s;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
         }
         #theme-toggle:hover {
             background-color: var(--header-text);
             color: var(--header-bg);
         }
-        #theme-toggle .icon {
-            font-size: 1.1em;
-        }
+        #theme-toggle .icon { font-size: 1.1em; }
 
         .chat-window {
             flex-grow: 1;
@@ -175,7 +180,7 @@
             line-height: 1.5;
             opacity: 0;
             transform: translateY(10px);
-            animation: fadeInMessage 0.3s ease forwards;
+            animation: fadeInMessage 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards; /* Smoother bounce */
             word-wrap: break-word;
         }
         .message.fade-out {
@@ -183,19 +188,18 @@
         }
 
         @keyframes fadeInMessage {
-            to { opacity: 1; transform: translateY(0); }
+            0% { opacity: 0; transform: translateY(15px) scale(0.95); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
         }
         @keyframes fadeOutMessage {
             to { opacity: 0; transform: translateY(-5px); height: 0; padding-top: 0; padding-bottom: 0; margin-bottom: 0; }
         }
-
 
         .message.user {
             background-color: var(--user-msg-bg);
             color: var(--user-msg-text);
             align-self: flex-end;
             border-bottom-right-radius: 5px;
-            transition: background-color 0.3s, color 0.3s;
         }
 
         .message.bot {
@@ -203,34 +207,41 @@
             color: var(--bot-msg-text);
             align-self: flex-start;
             border-bottom-left-radius: 5px;
-            transition: background-color 0.3s, color 0.3s;
         }
-        .message.bot.typing .dot { /* Changed class for clarity */
+        .message.bot.typing .dot {
             display: inline-block;
-            width: 8px;
-            height: 8px;
+            width: 9px; /* Slightly larger */
+            height: 9px;
             border-radius: 50%;
-            background-color: currentColor; /* Use message text color */
-            animation: bounceTyping 1.2s infinite ease-in-out;
-            margin: 0 2px;
+            background-color: currentColor;
+            animation: bounceTyping 1.3s infinite ease-in-out;
+            margin: 0 2.5px; /* More spacing */
         }
         .message.bot.typing .dot:nth-child(1) { animation-delay: 0s; }
-        .message.bot.typing .dot:nth-child(2) { animation-delay: 0.2s; }
-        .message.bot.typing .dot:nth-child(3) { animation-delay: 0.4s; }
+        .message.bot.typing .dot:nth-child(2) { animation-delay: 0.15s; }
+        .message.bot.typing .dot:nth-child(3) { animation-delay: 0.3s; }
 
-        @keyframes bounceTyping {
-            0%, 60%, 100% { transform: scale(0.4); opacity: 0.5; }
-            30% { transform: scale(1.0); opacity: 1; }
+        @keyframes bounceTyping { /* More dynamic bounce */
+            0%, 70%, 100% { transform: translateY(0) scale(0.6); opacity: 0.6; }
+            35% { transform: translateY(-4px) scale(1); opacity: 1; }
         }
 
-        .chat-input-form { /* Renamed for clarity with form tag */
+        .chat-input-form {
             display: flex;
             padding: 15px 20px;
             border-top: 1px solid var(--border-color);
             background-color: var(--chat-bg);
             transition: background-color 0.3s, border-color 0.3s;
-            flex-shrink: 0; /* Prevent input area from shrinking */
+            flex-shrink: 0;
         }
+        /* Placeholder for voice input button */
+        /* #voiceInputButton {
+            padding: 10px; margin-right: 8px; border-radius: 50%;
+            background-color: transparent; border: 1px solid var(--input-border);
+            color: var(--text-color); cursor: pointer;
+        }
+        #voiceInputButton:hover { background-color: var(--bot-msg-bg); } */
+
 
         #userInput {
             flex-grow: 1;
@@ -243,10 +254,10 @@
             transition: background-color 0.3s, color 0.3s, border-color 0.3s;
             margin-right: 10px;
         }
-        #userInput:focus {
+        #userInput:focus, #sendButton:focus, #theme-toggle:focus /* #voiceInputButton:focus */ {
             outline: none;
-            border-color: var(--button-bg);
-            box-shadow: 0 0 0 2px color-mix(in srgb, var(--button-bg) 25%, transparent);
+            border-color: var(--button-bg); /* Fallback */
+            box-shadow: 0 0 0 3px var(--focus-ring); /* Clearer focus outline */
         }
 
         #sendButton {
@@ -260,24 +271,21 @@
             font-weight: bold;
             transition: background-color 0.2s, opacity 0.2s;
         }
-        #sendButton:hover:not(:disabled) {
-            opacity: 0.85;
-        }
+        #sendButton:hover:not(:disabled) { opacity: 0.85; }
         #sendButton:disabled {
-            background-color: color-mix(in srgb, var(--button-bg) 50%, #888);
+            background-color: color-mix(in srgb, var(--button-bg) 40%, #88888890);
             cursor: not-allowed;
-            opacity: 0.7;
+            opacity: 0.6;
         }
 
         /* Mobile responsiveness */
         @media (min-width: 801px) {
             .chat-container {
-                border-radius: 8px;
+                border-radius: 10px; /* Slightly more rounded */
                 height: calc(100vh - 40px);
                 margin: 20px auto;
             }
         }
-
         @media (max-width: 600px) {
             .chat-header h2 { font-size: 1em; }
             #theme-toggle { padding: 5px 8px; font-size: 0.85em; }
@@ -290,7 +298,7 @@
 </head>
 <body>
 
-    <div class="chat-container">
+    <div class="chat-container" id="chatAppContainer">
         <header class="chat-header">
             <h2>AI Assistant</h2>
             <button id="theme-toggle" aria-label="Toggle color theme">
@@ -298,28 +306,30 @@
             </button>
         </header>
         <div class="chat-window" id="chatWindow" role="log" aria-live="polite">
-        </div>
+            </div>
         <form class="chat-input-form" id="chatForm">
-            <input type="text" id="userInput" placeholder="Type your message..." autocomplete="off" aria-label="User message input">
+            <input type="text" id="userInput" placeholder="Type your message..." autocomplete="off" aria-label="User message input" role="textbox">
             <button type="submit" id="sendButton" aria-label="Send message">Send</button>
         </form>
     </div>
 
-    <script>
+    <script defer> // Added defer attribute
         document.addEventListener('DOMContentLoaded', () => {
+            const chatAppContainer = document.getElementById('chatAppContainer');
             const chatWindow = document.getElementById('chatWindow');
             const userInput = document.getElementById('userInput');
-            const chatForm = document.getElementById('chatForm'); // Changed from sendButton direct listener
+            const chatForm = document.getElementById('chatForm');
             const sendButton = document.getElementById('sendButton');
             const themeToggleButton = document.getElementById('theme-toggle');
             const themeToggleIcon = themeToggleButton.querySelector('.icon');
             const themeToggleText = themeToggleButton.querySelector('.text');
+            // const voiceInputButton = document.getElementById('voiceInputButton'); // For future voice input
 
             let conversationHistory = [];
             let userName = localStorage.getItem('userName') || null;
-            let aiTemperature = "balanced"; // "safe", "balanced", "creative"
+            let aiTemperature = localStorage.getItem('aiTemperature') || "balanced";
             let initialFocusDone = false;
-            const MAX_MESSAGES = 50; // For pruning old messages
+            const MAX_MESSAGES = 50; 
 
             // --- INITIAL GREETING & SETUP ---
             function initializeChat() {
@@ -334,14 +344,26 @@
                     userInput.focus();
                     initialFocusDone = true;
                 }
-                // Attempt to handle mobile keyboard pushback slightly by scrolling after focus
                 setTimeout(scrollToBottom, 100); 
+            }
+
+            // --- UTILITY: Sanitize HTML (basic example) ---
+            function sanitizeHTML(text) {
+                const temp = document.createElement('div');
+                temp.textContent = text; // Basic sanitization: converts HTML tags to text
+                // For more robust sanitization, consider a library like DOMPurify if dealing with complex/external HTML
+                let sanitizedText = temp.innerHTML;
+                // Re-apply simple markdown after basic sanitization
+                sanitizedText = sanitizedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                sanitizedText = sanitizedText.replace(/\*(.*?)\*/g, '<em>$1</em>');
+                return sanitizedText;
             }
 
             // --- ADD MESSAGE TO CHAT UI ---
             function addMessageToChat(text, sender, isTyping = false) {
                 const messageElement = document.createElement('div');
                 messageElement.classList.add('message', sender);
+                messageElement.setAttribute('aria-atomic', 'true'); // Announce whole message
 
                 if (isTyping) {
                     messageElement.classList.add('typing');
@@ -349,23 +371,27 @@
                     messageElement.setAttribute('aria-label', 'Bot is typing');
                 } else {
                     if (sender === 'user') {
-                        messageElement.textContent = text; // Use textContent for user messages (security)
+                        messageElement.textContent = text;
                     } else {
-                        // For bot, allow simple bold/italics via innerHTML. Sanitize if source is untrusted.
-                        text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                        text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
-                        messageElement.innerHTML = text;
+                        messageElement.innerHTML = sanitizeHTML(text); // Sanitize bot messages before innerHTML
                     }
                 }
                 
                 chatWindow.appendChild(messageElement);
                 pruneOldMessages();
                 scrollToBottom();
+
+                // Haptic-style visual feedback on main container for new messages
+                if (!isTyping) {
+                    chatAppContainer.classList.remove('flash'); // Remove class if already there
+                    void chatAppContainer.offsetWidth; // Trigger reflow to restart animation
+                    chatAppContainer.classList.add('flash');
+                }
                 return messageElement;
             }
             
-            // --- PRUNE OLD MESSAGES ---
             function pruneOldMessages() {
+                // This is a simple pruning. For very high traffic, consider debouncing/throttling this.
                 while (chatWindow.children.length > MAX_MESSAGES) {
                     chatWindow.removeChild(chatWindow.firstChild);
                 }
@@ -374,15 +400,10 @@
                 }
             }
 
-            // --- SCROLL TO BOTTOM ---
             function scrollToBottom() {
-                // A slight delay can sometimes help ensure rendering is complete before scrolling
-                setTimeout(() => { 
-                    chatWindow.scrollTop = chatWindow.scrollHeight;
-                }, 0);
+                setTimeout(() => { chatWindow.scrollTop = chatWindow.scrollHeight; }, 0);
             }
             
-            // --- AI RESPONSE SIMULATION ---
             function getSynonym(baseWord, options) {
                 return options[Math.floor(Math.random() * options.length)];
             }
@@ -392,120 +413,128 @@
                 sendButton.disabled = true;
                 userInput.disabled = true;
 
-                // Simulate API call delay 
                 await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 1200));
 
-                // Smoother typing indicator removal
-                if (typingIndicator) {
+                if (typingIndicator && typingIndicator.parentNode) {
                     typingIndicator.classList.add('fade-out');
                     setTimeout(() => {
-                        if (typingIndicator.parentNode) { // Check if still in DOM
-                           typingIndicator.remove();
-                        }
-                    }, 300); // Match fadeOutMessage animation duration
+                        if (typingIndicator.parentNode) { typingIndicator.remove(); }
+                    }, 300);
                 }
 
                 sendButton.disabled = false;
                 userInput.disabled = false;
-                // userInput.focus(); // Removed auto-focus after every message
 
                 let response = "I'm not quite sure how to respond to that. Could you try rephrasing?";
                 const lowerPrompt = prompt.toLowerCase();
 
-                // Improved Name Extraction
-                if (lowerPrompt.includes("my name is")) {
-                    const nameMatch = lowerPrompt.match(/my name is ([\w\s']+)/i);
-                    if (nameMatch && nameMatch[1]) {
-                        userName = nameMatch[1].split(' ').map(n => n.charAt(0).toUpperCase() + n.slice(1)).join(' ');
-                        localStorage.setItem('userName', userName);
-                        response = `${getSynonym("Nice to meet you", ["Great to meet you", "Pleasure to meet you", "Hello"])} ${userName}! What can I do for you?`;
+                try { // Fallback for plugin/command failures
+                    if (lowerPrompt.includes("my name is")) {
+                        const nameMatch = lowerPrompt.match(/my name is ([\w\s']+)/i);
+                        if (nameMatch && nameMatch[1]) {
+                            userName = nameMatch[1].trim().split(' ').map(n => n.charAt(0).toUpperCase() + n.slice(1)).join(' ');
+                            localStorage.setItem('userName', userName);
+                            response = `${getSynonym("Nice to meet you", ["Great to meet you", "Pleasure to meet you"])} ${userName}! What can I do for you?`;
+                        }
+                    } else if (lowerPrompt.includes("call me")) {
+                        const nameMatch = lowerPrompt.match(/call me ([\w\s']+)/i);
+                        if (nameMatch && nameMatch[1]) {
+                            userName = nameMatch[1].trim().split(' ').map(n => n.charAt(0).toUpperCase() + n.slice(1)).join(' ');
+                            localStorage.setItem('userName', userName);
+                            response = `Alright, ${userName}! How can I help?`;
+                        }
                     }
-                } else if (lowerPrompt.includes("call me")) {
-                     const nameMatch = lowerPrompt.match(/call me ([\w\s']+)/i);
-                    if (nameMatch && nameMatch[1]) {
-                        userName = nameMatch[1].split(' ').map(n => n.charAt(0).toUpperCase() + n.slice(1)).join(' ');
-                        localStorage.setItem('userName', userName);
-                        response = `Alright, ${userName}! How can I help?`;
-                    }
-                }
+                    // Command System
+                    else if (prompt.startsWith('/')) {
+                        const [command, ...args] = prompt.substring(1).split(' ');
+                        const commandArg = args.join(' ').trim();
 
-                // Command/Plugin System Placeholder
-                if (prompt.startsWith('/')) {
-                    const [command, ...args] = prompt.substring(1).split(' ');
-                    switch (command.toLowerCase()) {
-                        case 'weather':
-                            response = `I can't check the real weather yet, but let's imagine it's sunny! (args: ${args.join(' ')})`;
-                            break;
-                        case 'joke':
-                            response = getJoke();
-                            break;
-                        case 'temp':
-                            if (args[0] && ["safe", "balanced", "creative"].includes(args[0].toLowerCase())) {
-                                aiTemperature = args[0].toLowerCase();
-                                response = `AI temperature set to: ${aiTemperature}.`;
-                            } else {
-                                response = `Current AI temperature is ${aiTemperature}. Use /temp [safe|balanced|creative].`;
-                            }
-                            break;
-                        default:
-                            response = `Unknown command: ${command}`;
-                    }
-                } else { // Regular conversation
-                    const greetings = ["hello", "hi", "hey", "greetings"];
-                    if (greetings.some(g => lowerPrompt.startsWith(g))) {
-                        response = userName ? `${getSynonym("Hello", ["Hi", "Hey there"])} ${userName}! ${getSynonym("How can I help?", ["What's up?", "How can I assist?"])}` 
-                                          : `${getSynonym("Hello", ["Hi there", "Greetings"])}! ${getSynonym("How can I assist you?", ["What can I do for you?", "How can I help?"])}`;
-                    } else if (lowerPrompt.includes("what is your name") || lowerPrompt.includes("who are you")) {
-                        response = "I am AI Assistant 3000, your virtual helper.";
-                    } else if (lowerPrompt.includes("how are you")) {
-                        const feelingOptions = ["I'm functioning optimally", "I'm doing well", "I'm ready to assist"];
-                        response = `${feelingOptions[Math.floor(Math.random() * feelingOptions.length)]}, thank you!`;
-                    } else if (lowerPrompt.includes("what can you do") || lowerPrompt.includes("help")) {
-                        response = "I can chat with you, remember your name (if you tell me!), tell jokes (/joke), and simulate different response styles (/temp).";
-                    } else if (lowerPrompt.includes("bye") || lowerPrompt.includes("goodbye")) {
-                        response = userName ? `Goodbye, ${userName}! ${getSynonym("Have a great day.", ["Take care.", "See you later."])}` 
-                                          : `${getSynonym("Goodbye!", ["Farewell!", "See you!"])} Have a wonderful day.`;
-                    } else if (lowerPrompt.includes("time")) {
-                        response = `The current time is ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`;
-                    } else if (lowerPrompt.includes("date")) {
-                        response = `Today's date is ${new Date().toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.`;
-                    } else if (lowerPrompt.includes("thank you") || lowerPrompt.includes("thanks")) {
-                        response = `${getSynonym("You're welcome!", ["No problem!", "Happy to help!"])} ${getSynonym("Is there anything else?", ["What else can I do for you?", "Need help with anything more?"])}`;
-                    } else {
-                        // Temperature-based response variation
-                        if (aiTemperature === "creative" && Math.random() > 0.5) {
-                            const creativePrefixes = ["That's a fascinating thought!", "Let me ponder that...", "Hmm, interesting perspective."];
-                            response = `${creativePrefixes[Math.floor(Math.random() * creativePrefixes.length)]} I'm still learning about complex topics.`;
-                        } else if (aiTemperature === "safe") {
-                            response = "I understand. I'm designed to provide helpful and safe responses.";
-                        } else { // Balanced (default)
-                            const thoughtfulResponses = [
-                                `That's an interesting question, ${userName || 'friend'}.`,
-                                `I'll have to think about that one, ${userName || 'friend'}.`,
-                                `Tell me more about what you're thinking, ${userName || 'friend'}.`
-                            ];
-                            if (userName || conversationHistory.length > 4) { // Slightly more engaging if context exists
-                                response = thoughtfulResponses[Math.floor(Math.random() * thoughtfulResponses.length)];
+                        switch (command.toLowerCase()) {
+                            case 'reset':
+                                localStorage.removeItem('userName');
+                                localStorage.removeItem('aiTemperature');
+                                localStorage.removeItem('theme'); // Also reset theme if desired
+                                userName = null;
+                                aiTemperature = "balanced";
+                                conversationHistory = [];
+                                // Clear chat window except for a reset confirmation
+                                while (chatWindow.firstChild) { chatWindow.removeChild(chatWindow.firstChild); }
+                                response = "Chat history and settings have been reset.";
+                                setTimeout(() => window.location.reload(), 1500); // Reload to apply fully
+                                break;
+                            case 'weather':
+                                response = `Sorry, I can't check the real weather for "${commandArg || 'your location'}" yet, but let's imagine it's sunny!`;
+                                break;
+                            case 'joke':
+                                response = getJoke();
+                                break;
+                            case 'temp':
+                                if (commandArg && ["safe", "balanced", "creative"].includes(commandArg.toLowerCase())) {
+                                    aiTemperature = commandArg.toLowerCase();
+                                    localStorage.setItem('aiTemperature', aiTemperature);
+                                    response = `AI temperature set to: ${aiTemperature}.`;
+                                } else {
+                                    response = `Current AI temperature is ${aiTemperature}. Use /temp [safe|balanced|creative].`;
+                                }
+                                break;
+                            default:
+                                response = `Unknown command: /${command}. Try /joke or /temp.`;
+                        }
+                    } else { // Regular conversation
+                        const greetings = ["hello", "hi", "hey", "greetings"];
+                        if (greetings.some(g => lowerPrompt.startsWith(g))) {
+                            response = userName ? `${getSynonym("Hello", ["Hi", "Hey there"])} ${userName}! ${getSynonym("How can I help?", ["What's up?", "How can I assist?"])}` 
+                                            : `${getSynonym("Hello", ["Hi there", "Greetings"])}! ${getSynonym("How can I assist you?", ["What can I do for you?", "How can I help?"])}`;
+                        } else if (lowerPrompt.includes("what is your name") || lowerPrompt.includes("who are you")) {
+                            response = "I am AI Assistant 3000, your virtual helper.";
+                        } else if (lowerPrompt.includes("how are you")) {
+                            response = `${getSynonym("I'm functioning optimally", ["I'm doing well", "I'm ready to assist"])}, thank you!`;
+                        } else if (lowerPrompt.includes("what can you do") || lowerPrompt.includes("help")) {
+                            response = "I can chat with you, remember your name (if you tell me!), tell jokes (/joke), set AI personality (/temp), and reset our chat (/reset).";
+                        } else if (lowerPrompt.includes("bye") || lowerPrompt.includes("goodbye")) {
+                            response = userName ? `Goodbye, ${userName}! ${getSynonym("Have a great day.", ["Take care.", "See you later."])}` 
+                                            : `${getSynonym("Goodbye!", ["Farewell!", "See you!"])} Have a wonderful day.`;
+                        } else if (lowerPrompt.includes("time")) {
+                            response = `The current time is ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`;
+                        } else if (lowerPrompt.includes("date")) {
+                            response = `Today's date is ${new Date().toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.`;
+                        } else if (lowerPrompt.includes("thank you") || lowerPrompt.includes("thanks")) {
+                            response = `${getSynonym("You're welcome!", ["No problem!", "Happy to help!"])} ${getSynonym("Is there anything else?", ["What else can I do for you?", "Need help with anything more?"])}`;
+                        } else {
+                            if (aiTemperature === "creative" && Math.random() > 0.4) {
+                                response = `${getSynonym("That's a fascinating thought!", ["Let me ponder that...", "Hmm, interesting perspective."])} What else comes to mind?`;
+                            } else if (aiTemperature === "safe") {
+                                response = "I understand. I aim to provide helpful and clear responses.";
+                            } else { // Balanced (default)
+                                const thoughtfulResponses = [
+                                    `That's an interesting point, ${userName || 'friend'}.`,
+                                    `I'll have to think about that one, ${userName || 'friend'}.`,
+                                    `Tell me more about what you're thinking, ${userName || 'friend'}.`
+                                ];
+                                if (userName || conversationHistory.length > 4) {
+                                    response = thoughtfulResponses[Math.floor(Math.random() * thoughtfulResponses.length)];
+                                }
                             }
                         }
                     }
+                } catch (error) {
+                    console.error("Error processing AI response:", error);
+                    response = "Oops! Something went a bit wrong on my end. Please try again.";
                 }
                 return response;
             }
             
             function getJoke() {
                 const jokes = [
-                    "Why don't scientists trust atoms? Because they make up everything!",
-                    "Why did the scarecrow win an award? Because he was outstanding in his field!",
-                    "What do you call fake spaghetti? An Impasta!",
-                    "Why did the bicycle fall over? Because it was two-tired!"
+                    "Why don't scientists trust atoms? Because they make up everything!", "Why did the scarecrow win an award? Because he was outstanding in his field!",
+                    "What do you call fake spaghetti? An Impasta!", "Why did the bicycle fall over? Because it was two-tired!",
+                    "Parallel lines have so much in common. It’s a shame they’ll never meet."
                 ];
                 return jokes[Math.floor(Math.random() * jokes.length)];
             }
 
-            // --- HANDLE SEND MESSAGE ---
             async function handleSendMessage(event) {
-                if (event) event.preventDefault(); // Prevent form submission & page reload
+                if (event) event.preventDefault();
                 const messageText = userInput.value.trim();
                 if (messageText === '') return;
 
@@ -518,7 +547,6 @@
                 conversationHistory.push({ role: 'assistant', content: aiResponseText });
             }
 
-            // --- EVENT LISTENERS ---
             chatForm.addEventListener('submit', handleSendMessage);
 
             themeToggleButton.addEventListener('click', () => {
@@ -526,26 +554,20 @@
                 updateThemePreference();
             });
             
-            // Mobile Keyboard Pushback (Basic - ensure scroll after viewport changes slightly)
             if (window.visualViewport) {
                 window.visualViewport.addEventListener('resize', () => {
-                    // Only scroll if input is focused, suggesting keyboard is likely cause
-                    if (document.activeElement === userInput) {
-                         scrollToBottom();
-                    }
+                    if (document.activeElement === userInput) { scrollToBottom(); }
                 });
             }
 
-
-            // --- THEME MANAGEMENT ---
             function updateThemePreference() {
                 const isDarkMode = document.body.classList.contains('dark-mode');
                 if (isDarkMode) {
-                    themeToggleIcon.textContent = '☀️'; // Sun icon
+                    themeToggleIcon.textContent = '☀️';
                     themeToggleText.textContent = 'Light Mode';
                     localStorage.setItem('theme', 'dark');
                 } else {
-                    themeToggleIcon.textContent = '🌙'; // Moon icon
+                    themeToggleIcon.textContent = '🌙';
                     themeToggleText.textContent = 'Dark Mode';
                     localStorage.setItem('theme', 'light');
                 }
@@ -556,67 +578,36 @@
                 if (savedTheme === 'dark') {
                     document.body.classList.add('dark-mode');
                 } else {
-                    document.body.classList.remove('dark-mode'); // Default to light
+                    document.body.classList.remove('dark-mode');
                 }
-                updateThemePreference(); // Update button text/icon
+                updateThemePreference();
             }
             
-            // --- VOICE INPUT & TTS (PLACEHOLDERS) ---
-            /*
-            function startVoiceInput() {
-                if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                    const recognition = new SpeechRecognition();
-                    recognition.interimResults = false;
-                    recognition.lang = 'en-US';
-                    
-                    recognition.onstart = () => {
-                        console.log("Voice recognition started. Speak into the microphone.");
-                        userInput.placeholder = "Listening...";
-                    };
-                    
-                    recognition.onspeechend = () => {
-                        recognition.stop();
-                        userInput.placeholder = "Type your message...";
-                    };
-                    
-                    recognition.onresult = (event) => {
-                        const transcript = event.results[0][0].transcript;
-                        userInput.value = transcript;
-                        handleSendMessage(); // Optionally send immediately
-                    };
-                    
-                    recognition.onerror = (event) => {
-                        console.error("Speech recognition error", event.error);
-                        userInput.placeholder = "Voice input error. Type your message...";
-                    };
-                    
-                    recognition.start();
-                } else {
-                    console.log("Speech recognition not supported in this browser.");
-                    alert("Sorry, your browser doesn't support voice input.");
-                }
-            }
+            // --- VOICE INPUT & TTS (PLACEHOLDERS & UX NOTES) ---
+            // To implement voice input:
+            // 1. Uncomment the voiceInputButton in HTML.
+            // 2. Uncomment the voiceInputButton JS variable.
+            // 3. Add event listener: voiceInputButton.addEventListener('click', startVoiceInput);
+            // To implement TTS (read responses aloud):
+            // 1. Add a settings toggle (e.g., in header or a modal).
+            // 2. Let the setting control a variable like `let enableTTS = false;`
+            // 3. In `addMessageToChat` for 'bot' messages, if `enableTTS` is true, call `speakText(text)`.
 
-            function speakText(text) {
-                if ('speechSynthesis' in window) {
-                    const utterance = new SpeechSynthesisUtterance(text);
-                    // You can configure voice, pitch, rate here if desired
-                    // utterance.voice = speechSynthesis.getVoices().find(voice => voice.name === 'Google UK English Female');
-                    // utterance.pitch = 1;
-                    // utterance.rate = 1;
-                    speechSynthesis.speak(utterance);
-                } else {
-                    console.log("Text-to-speech not supported in this browser.");
-                }
+            /*
+            function startVoiceInput() { // Basic structure
+                // (Implementation from previous version)
+                // Ensure to handle microphone permissions gracefully.
             }
-            // Example: To make the bot speak its response:
-            // Inside getAIResponse, before returning 'response':
-            // speakText(response); 
-            // And you'd need a button to trigger startVoiceInput()
+            function speakText(text) { // Basic structure
+                // (Implementation from previous version)
+                // Consider allowing users to choose voice/rate/pitch.
+            }
             */
 
-            // --- INITIALIZE ---
+            // --- Initialize Chat ---
+            // Note on modules: If this script grows significantly, consider splitting into modules:
+            // e.g., ui.js (DOM manipulations, theme), chatLogic.js (AI responses, history), main.js (init, event listeners)
+            // Then use <script type="module" src="main.js"></script> and import/export syntax.
             initializeChat();
         });
     </script>
