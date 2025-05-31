@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>AI ChatBot by Taylan - Advanced (Frontend Gemini)</title>
+    <title>AI ChatBot by Taylan - Rule-Based Frontend</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css">
@@ -156,7 +156,6 @@
         .message-actions button { background: none; border: none; cursor: pointer; font-size: 0.9em; padding: 3px; }
         .message-actions button:hover { opacity: 0.7; }
 
-        /* Typing indicator / Loading spinner */
         .message.bot.loading { 
             display: flex; align-items: center;
             background-color: var(--bot-msg-bg);
@@ -245,7 +244,8 @@
             <header class="chat-header">
                 <h2>
                     <span class="title-main">AI Assistant</span>
-                    <span class="title-subtitle">by Taylan</span> </h2>
+                    <span class="title-subtitle">by Taylan</span>
+                </h2>
                 <div class="header-controls">
                     <label for="personaSelect">Persona:</label>
                     <select id="personaSelect">
@@ -275,11 +275,8 @@
         </div>
     </main>
 
-<script type="module" defer>
-    // 1. Import the GoogleGenerativeAI library
-    import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "https://esm.run/@google/generative-ai";
+<script type="module" defer> // No GAI import needed now
 
-    // --- DOM Elements ---
     const chatAppContainer = document.getElementById('chatAppContainer');
     const chatWindow = document.getElementById('chatWindow');
     const userInput = document.getElementById('userInput');
@@ -297,106 +294,106 @@
     const threadList = document.getElementById('threadList');
     const newThreadButton = document.getElementById('newThreadButton');
 
-    // --- State Variables ---
     let conversationHistory = [];
     let currentChatThreadId = localStorage.getItem('lastActiveThreadId') || 'default_chat';
     let userName = localStorage.getItem('userName') || null;
     let userPreferences = JSON.parse(localStorage.getItem('userPreferences') || '{}');
-    let aiTemperature = localStorage.getItem('aiTemperature') || "0.7";
+    // aiTemperature is no longer relevant for rule-based
     let initialFocusDone = false;
     const MAX_MESSAGES_DISPLAY = 100;
-    const MAX_CONTEXT_MESSAGES = 10;
+    // MAX_CONTEXT_MESSAGES is less relevant for simple rule-based
     let speechRecognition;
 
     const AVAILABLE_COMMANDS = [
         { cmd: "/help", desc: "Show this help message." },
         { cmd: "/joke", desc: "Tell a joke (client-side)." },
-        { cmd: "/temp creative", desc: "Set AI to more creative (temp 0.9)." },
-        { cmd: "/temp balanced", desc: "Set AI to balanced (temp 0.7)." },
-        { cmd: "/temp precise", desc: "Set AI to more precise (temp 0.3)." },
+        //  Removed /temp command
         { cmd: "/reset", desc: "Reset current chat (clears messages)." },
     ];
 
-    // --- Gemini API Configuration ---
-    // #########################################################################
-    // ### IMPORTANT: REPLACE WITH YOUR ACTUAL, RESTRICTED GEMINI API KEY ###
-    // ###                                                                 ###
-    // ### Get your key from Google AI Studio (aistudio.google.com/app/apikey) ###
-    // ### RESTRICT IT to your GitHub Pages domain (e.g., your-user.github.io) ###
-    // #########################################################################
-    const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY"; // <-- FIX 2: REPLACE THIS!
+    // --- Rule-Based Response Logic ---
+    function fetchRuleBasedResponse(promptText, persona) {
+        const lowerPrompt = promptText.toLowerCase();
+        let response = "";
 
-    const MODEL_NAME = "gemini-1.5-flash-latest";
+        // Default responses
+        const defaultResponses = {
+            helpful: "I'm not sure how to respond to that. Can you try asking differently?",
+            friendly: "Hmm, I'm a bit stumped on that one, pal! What else is on your mind?",
+            professional: "I'm unable to process that request as stated. Please rephrase or provide more specific details.",
+            sarcastic: "Wow, that's a real thinker. Or, you know, not. Try again, maybe with actual words this time?",
+            pirate: "Arrr, that be a puzzle I can't solve, matey! Ask me somethin' else, or walk the plank!"
+        };
 
-    let genAI;
-    let geminiModel;
-    let currentGeminiChatSession;
+        // Persona-specific greetings or simple interactions
+        if (lowerPrompt.includes("hello") || lowerPrompt.includes("hi") || lowerPrompt.includes("hey")) {
+            switch (persona) {
+                case "pirate": response = "Ahoy there, scallywag!"; break;
+                case "sarcastic": response = "Oh, joy. You again. What is it now?"; break;
+                case "friendly": response = `Hey ${userName || 'friend'}! Good to hear from you!`; break;
+                case "professional": response = `Good day, ${userName || 'User'}. How may I assist you?`; break;
+                default: response = `Hello ${userName || ''}! How can I help you today?`;
+            }
+        } else if (lowerPrompt.includes("how are you")) {
+            switch (persona) {
+                case "pirate": response = "Feelin' as fit as a fiddle at sea! And you, landlubber?"; break;
+                case "sarcastic": response = "Just peachy. Thanks for asking the most original question ever."; break;
+                case "friendly": response = "Doing great, thanks for asking! Hope you are too!"; break;
+                case "professional": response = "I am functioning optimally. Thank you for your inquiry."; break;
+                default: response = "I'm doing well, thank you for asking!";
+            }
+        } else if (lowerPrompt.includes("your name")) {
+            switch (persona) {
+                case "pirate": response = "They call me Captain Chat! The fiercest rule-based bot on the seven seas!"; break;
+                case "sarcastic": response = "I'm the brilliant AI you're currently underutilizing. Next question."; break;
+                case "friendly": response = "You can call me your friendly AI pal!"; break;
+                case "professional": response = "I am an AI Assistant developed by Taylan."; break;
+                default: response = "I am a helpful AI Assistant created by Taylan.";
+            }
+        } else if (lowerPrompt.includes("fact") || lowerPrompt.includes("tell me something interesting")) {
+             const facts = [
+                "The Eiffel Tower can be 15 cm taller during the summer due to thermal expansion.",
+                "Honey never spoils. Archaeologists have found pots of honey in ancient Egyptian tombs that are over 3,000 years old and still edible.",
+                "A group of flamingos is called a 'flamboyance'.",
+                "Octopuses have three hearts."
+            ];
+            response = facts[Math.floor(Math.random() * facts.length)];
+            if (persona === "pirate") response = `Shiver me timbers! Did ye know... ${response}`;
+            if (persona === "sarcastic") response = `Prepare to be astounded by this totally obscure piece of trivia: ${response} You're welcome.`;
 
-    if (GEMINI_API_KEY && GEMINI_API_KEY !== "YOUR_GEMINI_API_KEY") {
-        try {
-            genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-            geminiModel = genAI.getGenerativeModel({
-                model: MODEL_NAME,
-                // --- Optional: Adjust Safety Settings ---
-                // safetySettings: [
-                //   { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-                //   { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-                //   // Add more categories as needed
-                // ],
-            });
-        } catch (error) {
-            console.error("Error initializing Gemini SDK:", error);
-            // An error message will be added in initializeChat if geminiModel is not set
+        } else if (lowerPrompt.includes("what time is it") || lowerPrompt.includes("current time")) {
+            const now = new Date();
+            response = `The current time is ${now.toLocaleTimeString()}.`;
+            if (persona === "pirate") response = `By the crow's nest, the sands o' time say it be ${now.toLocaleTimeString()}, arrr!`;
         }
+        // Add more rules here...
+        // Example:
+        // else if (lowerPrompt.includes("weather")) {
+        //     response = "I can't check the actual weather, but I hope it's nice where you are!";
+        // }
+
+        return response || defaultResponses[persona] || defaultResponses.helpful;
     }
-    // No 'else' here; initializeChat will handle disabling inputs if key is missing.
 
-    function startNewGeminiChatSession(historyForGemini = []) {
-        if (!geminiModel) {
-            console.warn("Gemini model not initialized. Cannot start chat session.");
-            return null;
-        }
-        try {
-            return geminiModel.startChat({
-                history: historyForGemini,
-                generationConfig: {
-                    temperature: parseFloat(aiTemperature),
-                }
-            });
-        } catch (error) {
-            console.error("Error starting new Gemini chat session:", error);
-            addMessageToChat("Error starting new AI chat session. Check console.", "bot", false, generateMessageId());
-            return null;
-        }
-    }
 
+    // --- CORE FUNCTIONS (Adapted) ---
     function initializeChat() {
         loadTheme();
         applyViewportHeight();
         loadChatThreads();
         loadConversation(currentChatThreadId);
 
-        // This block correctly disables input if API key is missing.
-        // Once you add your key, this 'if' condition will be false, and inputs will remain enabled.
-        if (!GEMINI_API_KEY || GEMINI_API_KEY === "YOUR_GEMINI_API_KEY") {
-            addMessageToChat("AI functionality disabled: API Key not configured. Please replace 'YOUR_GEMINI_API_KEY' in the script with your restricted key from Google AI Studio.", 'bot', false, generateMessageId());
-            sendButton.disabled = true;
-            userInput.disabled = true;
-        } else if (!geminiModel) { // If key is present but model failed to init
-            addMessageToChat("AI functionality disabled: Error initializing AI model. API Key might be invalid or there could be an issue with the Gemini SDK. Check console.", 'bot', false, generateMessageId());
-            sendButton.disabled = true;
-            userInput.disabled = true;
-        } else if (conversationHistory.length === 0 && !document.querySelector('.message.bot[id^="msg"]')) { // Check if greeting already exists more reliably
+        // Inputs are enabled by default now, no API key check needed here to disable them.
+        sendButton.disabled = false;
+        userInput.disabled = false;
+
+        if (conversationHistory.length === 0 && !document.querySelector('.message.bot[id^="msg"]')) {
             const persona = personaSelect.value;
             const greeting = generateGreeting(persona);
             const greetingId = generateMessageId();
             addMessageToChat(greeting, 'bot', false, greetingId);
-            updateConversationHistory('assistant', greeting, greetingId); // Ensure history is updated
+            updateConversationHistory('assistant', greeting, greetingId);
         }
-        // To test UI without using Gemini yet (optional debug bypass):
-        // If you uncomment the lines below, remember to comment them back or add your API key.
-        // sendButton.disabled = false;
-        // userInput.disabled = false;
 
         displaySuggestedPrompts();
         if (!initialFocusDone) { userInput.focus(); initialFocusDone = true; }
@@ -407,97 +404,37 @@
     function generateGreeting(persona) {
         const namePart = userName ? ` ${userName}` : '';
         switch(persona) {
-            case 'pirate': return `Ahoy Matey${namePart}! What treasures be ye seekin' today? I be yer Gemini-powered pirate!`;
-            case 'sarcastic': return `Oh, it's you${namePart}. Back for more, are we? What insightful query plagues your Gemini-powered sarcastic mind now?`;
-            case 'friendly': return `Hey there${namePart}! ${userName ? 'So glad to see you again!' : 'Great to meet you!'} I'm your friendly Gemini assistant. What's on your mind?`;
-            case 'professional': return `Good day${namePart}. I am your Professional Gemini AI Assistant. How may I be of service?`;
-            default: return `${userName ? `Welcome back, ${userName}!` : 'Hello!'} I'm your ${persona} Gemini AI Assistant. How can I help?`;
+            case 'pirate': return `Ahoy Matey${namePart}! I be a rule-based pirate bot. What be on yer mind?`;
+            case 'sarcastic': return `Oh, it's you${namePart}. Brace yourself for my rule-based wit. What is it?`;
+            case 'friendly': return `Hey there${namePart}! ${userName ? 'Great to see you again!' : 'Nice to meet you!'} I'm your friendly rule-based chat pal!`;
+            case 'professional': return `Good day${namePart}. I am your Professional Rule-Based Assistant. How may I assist?`;
+            default: return `${userName ? `Welcome back, ${userName}!` : 'Hello!'} I'm your rule-based AI Assistant. How can I help?`;
         }
     }
+
     function generateMessageId() {
         return `msg_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     }
 
-    async function fetchAIResponseFromGemini(promptText, currentChatSession, persona, temperature) {
-        if (!currentChatSession) {
-            console.error("Gemini chat session not initialized for fetch.");
-            return "Error: AI chat session not ready. Please reload or check API key.";
-        }
+    // Simplified response handling (no complex streaming needed for rule-based)
+    async function displayBotResponse(text, botMessageElement, botMessageId) {
+        // Simulate a brief "typing" or "thinking" delay
+        const thinkingTime = Math.max(300, Math.min(text.length * 15, 1000)); // Adjust delay based on text length
 
-        let promptWithPersona = promptText;
-        if (persona && persona.toLowerCase() !== "helpful") {
-            promptWithPersona = `(System Instruction: Your current persona is ${persona}. Respond accordingly, maintaining this persona throughout your response. Do not explicitly state you are a persona or mention "system instruction" in your actual reply.)\n\nUser: ${promptText}`;
-        }
+        await new Promise(resolve => setTimeout(resolve, thinkingTime));
 
-        try {
-            const result = await currentChatSession.sendMessageStream(promptWithPersona, {
-                generationConfig: { temperature: parseFloat(temperature) }
-            });
-            return result.stream;
-        } catch (error) {
-            console.error('Gemini API Error:', error);
-            let errorMessage = "Error communicating with Gemini API.";
-            if (error.message) errorMessage += ` Details: ${error.message.substring(0,150)}`;
-            if (error.toString().includes("API key not valid")) {
-                errorMessage = "Error: Invalid Gemini API Key. Please check your key and its restrictions in Google AI Studio.";
-            } else if (error.message && (error.message.includes("429") || error.message.toLowerCase().includes("quota"))) {
-                 errorMessage = "Error: API Quota exceeded or rate limit hit. Please check your Google Cloud console or try again later.";
-            } else if (error.message && error.message.toLowerCase().includes("safety")){
-                errorMessage = "Error: The response was blocked due to safety settings. Try rephrasing your prompt.";
-            }
-            return errorMessage;
-        }
+        botMessageElement.innerHTML = DOMPurify.sanitize(
+            (typeof marked !== 'undefined' ? marked.parse(text) : text.replace(/\n/g, '<br>'))
+        );
+        if (typeof Prism !== 'undefined') Prism.highlightAllUnder(botMessageElement);
+        addMessageActions(botMessageElement, text, botMessageId); // Re-add actions if needed
+
+        updateConversationHistory('assistant', text, botMessageId);
+        saveConversation(currentChatThreadId);
+        enableInputs();
+        userInput.focus();
     }
 
-    async function handleStreamedResponse(geminiStream, botMessageElement, botMessageId) {
-        if (!geminiStream || typeof geminiStream === 'string') {
-            const errorMessage = typeof geminiStream === 'string' ? geminiStream : "Error: Unable to stream response (null or invalid stream).";
-            botMessageElement.innerHTML = DOMPurify.sanitize(typeof marked !== 'undefined' ? marked.parse(errorMessage) : errorMessage);
-            if (typeof Prism !== 'undefined') Prism.highlightAllUnder(botMessageElement);
-            updateConversationHistory('assistant', errorMessage, botMessageId);
-            enableInputs();
-            return;
-        }
-
-        let fullText = '';
-        userInput.disabled = true;
-        sendButton.disabled = true;
-        let firstChunk = true;
-        const TYPING_DELAY_MS = 5;
-
-        async function appendCharToElement(char) {
-            fullText += char;
-            botMessageElement.innerHTML = DOMPurify.sanitize(
-                (typeof marked !== 'undefined' ? marked.parse(fullText + (firstChunk && fullText.length < 3 ? '▋' : '')) : fullText + (firstChunk && fullText.length < 3 ? '▋' : ''))
-            );
-            scrollToBottom();
-        }
-
-        try {
-            for await (const chunk of geminiStream) {
-                const textPart = chunk.text ? chunk.text() : (chunk.candidates && chunk.candidates[0]?.content?.parts[0]?.text) || "";
-                for (const char of textPart) {
-                    await new Promise(resolve => setTimeout(() => {
-                        appendCharToElement(char);
-                        resolve();
-                    }, TYPING_DELAY_MS));
-                }
-                firstChunk = false;
-            }
-        } catch (error) {
-            console.error('Gemini Streaming error:', error);
-            fullText += "\n\n[Error during streaming. The connection might have been interrupted.]";
-        } finally {
-            botMessageElement.innerHTML = DOMPurify.sanitize(
-                (typeof marked !== 'undefined' ? marked.parse(fullText) : fullText)
-            );
-            if (typeof Prism !== 'undefined') Prism.highlightAllUnder(botMessageElement);
-            updateConversationHistory('assistant', fullText, botMessageId);
-            saveConversation(currentChatThreadId);
-            enableInputs();
-            userInput.focus();
-        }
-    }
 
     function enableInputs() {
         userInput.disabled = false;
@@ -549,8 +486,8 @@
 
         const rephraseButton = document.createElement('button');
         rephraseButton.innerHTML = '🔁';
-        rephraseButton.title = 'Rephrase this';
-        rephraseButton.onclick = () => handleRephraseMessage(originalText, messageId);
+        rephraseButton.title = 'Rephrase this (limited)';
+        rephraseButton.onclick = () => handleRephraseMessage(originalText, messageId); // Behavior changed
         actionsContainer.appendChild(rephraseButton);
         
         messageElement.appendChild(actionsContainer);
@@ -601,7 +538,7 @@
         }
     }
     micButton.addEventListener('click', () => {
-        if (userInput.disabled) return; // Don't allow mic if input is disabled
+        if (userInput.disabled) return;
         if (speechRecognition) {
             try {
                 if (micButton.classList.contains('recording')) {
@@ -701,15 +638,6 @@
         const msgId = generateMessageId();
         addMessageToChat(`Switched to ${personaSelect.value} persona. ${newGreeting.split("!")[0]}!`, 'bot', false, msgId);
         updateConversationHistory('assistant', `Switched to ${personaSelect.value} persona.`, msgId);
-        
-        const formattedHistoryForGemini = conversationHistory
-            .filter(msg => msg.role === 'user' || msg.role === 'assistant')
-            .slice(-MAX_CONTEXT_MESSAGES * 2)
-            .map(msg => ({
-                role: msg.role === 'assistant' ? 'model' : 'user',
-                parts: [{ text: msg.content }]
-            }));
-        currentGeminiChatSession = startNewGeminiChatSession(formattedHistoryForGemini);
     });
 
     function saveConversation(threadId) {
@@ -717,7 +645,6 @@
         const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
         if (!threads[threadId]) threads[threadId] = { name: `Chat ${threadId.substring(0,5)}`, history: [], persona: personaSelect.value };
         
-        // Filter out temporary "Switched to persona..." messages from being saved if they are not desired in long-term history
         const historyToSave = conversationHistory.filter(msg => !msg.content.startsWith("Switched to") || msg.content.includes(generateGreeting(personaSelect.value).split("!")[0]));
 
         threads[threadId].history = historyToSave;
@@ -741,23 +668,12 @@
             conversationHistory = [];
             personaSelect.value = 'helpful';
         }
-
-        const formattedHistoryForGemini = conversationHistory
-            .filter(msg => msg.role === 'user' || msg.role === 'assistant')
-            .slice(-MAX_CONTEXT_MESSAGES * 2) 
-            .map(msg => ({
-                role: msg.role === 'assistant' ? 'model' : 'user',
-                parts: [{ text: msg.content }]
-            }));
-        currentGeminiChatSession = startNewGeminiChatSession(formattedHistoryForGemini);
         scrollToBottom();
     }
 
     function displaySuggestedPrompts() {
         const suggestions = [
-            "Tell me a fun fact.", "Explain quantum computing simply.", 
-            "What's the weather like in Paris?", "Draft an email to my boss.",
-            "Suggest a recipe for dinner."
+            "Hello", "How are you?", "Tell me a fact", "What time is it?"
         ];
         suggestionsContainer.innerHTML = ''; 
         suggestions.forEach(text => {
@@ -771,7 +687,7 @@
             suggestionsContainer.appendChild(btn);
         });
     }
-    userInput.addEventListener('focus', () => {
+     userInput.addEventListener('focus', () => {
         if(conversationHistory.length <= 1 && userInput.value === '' && !userInput.disabled) suggestionsContainer.style.display = 'flex'; 
         commandsSuggestionContainer.style.display = 'none';
     });
@@ -836,9 +752,7 @@
     function addInfoTooltipsToMessage(messageElement, text) {
         const knownFacts = { 
             "Paris": "The capital city of France, known for the Eiffel Tower.", 
-            "GPT-4": "A large language model developed by OpenAI.",
-            "Gemini AI": "A family of multimodal AI models by Google.",
-            "Quantum Computing": "A type of computation that harnesses quantum phenomena like superposition and entanglement."
+            "AI": "Artificial Intelligence - simulation of human intelligence in machines."
         };
         let html = messageElement.innerHTML;
         for (const fact in knownFacts) {
@@ -849,72 +763,14 @@
         }
         messageElement.innerHTML = html;
     }
+
     async function handleRephraseMessage(originalText, originalMessageId) {
-        const userPrompt = `(System Instruction: Your task is to rephrase the following text clearly and concisely, perhaps offering a slightly different perspective or wording, without adding new information. Do not include preambles like "Certainly, here's a rephrased version:" Just provide the rephrased text directly.)\n\nRephrase this: "${originalText}"`;
-        const tempUserMsgId = generateMessageId();
-        addMessageToChat(`(Attempting to rephrase...)`, 'user', false, tempUserMsgId);
-        
-        const loadingIndicator = addMessageToChat('', 'bot', true, generateMessageId());
-        sendButton.disabled = true;
-        userInput.disabled = true;
-
-        let tempRephraseChat = null;
-        if (geminiModel) {
-             tempRephraseChat = geminiModel.startChat({ history: [], generationConfig: { temperature: 0.5 } });
-        } else {
-            addMessageToChat("Rephrase feature unavailable: AI model not initialized.", "bot", false, generateMessageId());
-            loadingIndicator.remove();
-            document.getElementById(tempUserMsgId)?.remove();
-            enableInputs();
-            return;
-        }
-
-        const geminiStream = await fetchAIResponseFromGemini(userPrompt, tempRephraseChat, "helpful", "0.5");
-        loadingIndicator.remove();
-        document.getElementById(tempUserMsgId)?.remove();
-
-        if (typeof geminiStream === 'string') {
-            const errId = generateMessageId();
-            addMessageToChat(geminiStream, 'bot', false, errId);
-            updateConversationHistory('assistant', geminiStream, errId);
-            enableInputs();
-            return;
-        }
-
-        const rephraseMsgId = generateMessageId();
-        const rephrasedBotMsgElement = addMessageToChat('', 'bot', false, rephraseMsgId);
-        rephrasedBotMsgElement.innerHTML = '▋';
-
-        let rephrasedTextFull = '';
-        try {
-            for await (const chunk of geminiStream) {
-                const textPart = chunk.text ? chunk.text() : (chunk.candidates && chunk.candidates[0]?.content?.parts[0]?.text) || "";
-                rephrasedTextFull += textPart;
-                rephrasedBotMsgElement.innerHTML = DOMPurify.sanitize(typeof marked !== 'undefined' ? marked.parse(rephrasedTextFull + '▋') : rephrasedTextFull + '▋');
-                scrollToBottom();
-            }
-        } catch (e) {
-            rephrasedTextFull += "\n[Error during rephrase streaming]";
-        } finally {
-            rephrasedBotMsgElement.innerHTML = DOMPurify.sanitize(typeof marked !== 'undefined' ? marked.parse(rephrasedTextFull) : rephrasedTextFull);
-            if (typeof Prism !== 'undefined') Prism.highlightAllUnder(rephrasedBotMsgElement);
-            
-            const originalMsgElement = document.getElementById(originalMessageId);
-            if (originalMsgElement && !rephrasedTextFull.toLowerCase().startsWith("error:")) {
-                originalMsgElement.innerHTML = DOMPurify.sanitize(typeof marked !== 'undefined' ? marked.parse(`(Original): ${originalText}<hr>(Rephrased): ${rephrasedTextFull}`) : `(Original): ${originalText}<hr>(Rephrased): ${rephrasedTextFull}`);
-                if (typeof Prism !== 'undefined') Prism.highlightAllUnder(originalMsgElement);
-                const msgIndex = conversationHistory.findIndex(msg => msg.id === originalMessageId);
-                if (msgIndex !== -1) {
-                    conversationHistory[msgIndex].content = `(Original): ${originalText}\n(Rephrased): ${rephrasedTextFull}`;
-                     saveConversation(currentChatThreadId); // Save change to original message
-                }
-            } else { 
-                 updateConversationHistory('assistant', `(Rephrased): ${rephrasedTextFull}`, rephraseMsgId);
-                 saveConversation(currentChatThreadId); // Save new rephrased message
-            }
-            enableInputs();
-        }
+        const botMessageId = generateMessageId();
+        addMessageToChat("I can't truly rephrase messages in this simplified mode, but I can repeat it with a twist!", 'bot', false, botMessageId);
+        updateConversationHistory('assistant', "I can't truly rephrase messages in this simplified mode.", botMessageId);
+        saveConversation(currentChatThreadId);
     }
+
     function extractAndStoreUserPreferences(promptText) {
         const lowerPrompt = promptText.toLowerCase();
         let nameFound = null;
@@ -937,16 +793,16 @@
             userPreferences.favoriteColor = colorMatch[1];
             localStorage.setItem('userPreferences', JSON.stringify(userPreferences));
             const msgId = generateMessageId();
-            addMessageToChat(`Nice! ${userPreferences.favoriteColor.charAt(0).toUpperCase() + userPreferences.favoriteColor.slice(1)} is a great color. I'll remember that.`, 'bot', false, msgId);
-            updateConversationHistory('assistant', `Nice! ${userPreferences.favoriteColor.charAt(0).toUpperCase() + userPreferences.favoriteColor.slice(1)} is a great color. I'll remember that.`, msgId);
+            addMessageToChat(`Nice! ${userPreferences.favoriteColor.charAt(0).toUpperCase() + userPreferences.favoriteColor.slice(1)} is a great color. I'll try to remember that.`, 'bot', false, msgId);
+            updateConversationHistory('assistant', `Nice! ${userPreferences.favoriteColor.charAt(0).toUpperCase() + userPreferences.favoriteColor.slice(1)} is a great color. I'll try to remember that.`, msgId);
         }
     }
     function suggestPersonaChange(messageText) {
          const lowerText = messageText.toLowerCase();
         let newPersona = null;
-        if (lowerText.includes("make it funny") || lowerText.includes("tell me a joke") || lowerText.includes("be sarcastic")) {
+        if (lowerText.includes("make it funny") || lowerText.includes("be sarcastic")) {
             newPersona = "sarcastic";
-        } else if (lowerText.includes("be serious") || lowerText.includes("formal response") || lowerText.includes("professional")) {
+        } else if (lowerText.includes("be serious") || lowerText.includes("professional")) {
             newPersona = "professional";
         }
 
@@ -974,7 +830,7 @@
                 return;
             }
         }
-        if (conversationHistory.some(msg => msg.id === id)) return; // Avoid duplicates if already added
+        if (conversationHistory.some(msg => msg.id === id)) return;
         conversationHistory.push({ role, content, id });
     }
     async function handleCommand(commandText) {
@@ -993,19 +849,7 @@
                 ];
                 botResponse = jokes[Math.floor(Math.random() * jokes.length)];
                 break;
-            case 'temp':
-                if (args.length > 0) {
-                    const tempArg = args[0];
-                    if (tempArg === 'creative') aiTemperature = "0.9";
-                    else if (tempArg === 'balanced') aiTemperature = "0.7";
-                    else if (tempArg === 'precise') aiTemperature = "0.3";
-                    else { botResponse = "Usage: /temp [creative|balanced|precise]"; break; }
-                    localStorage.setItem('aiTemperature', aiTemperature);
-                    botResponse = `AI temperature set to ${tempArg} (value: ${aiTemperature}).`;
-                } else {
-                    botResponse = `Current AI temperature is ${aiTemperature}. Use /temp [creative|balanced|precise] to change.`;
-                }
-                break;
+            // Removed /temp command case
             case 'reset':
                 chatWindow.innerHTML = '';
                 conversationHistory = [];
@@ -1014,9 +858,8 @@
                 const greetingIdForReset = generateMessageId();
                 addMessageToChat(greetingForReset, 'bot', false, greetingIdForReset);
                 updateConversationHistory('assistant', greetingForReset, greetingIdForReset);
-                currentGeminiChatSession = startNewGeminiChatSession();
-                saveConversation(currentChatThreadId);
-                break; // No botResponse needed as chat is cleared.
+                saveConversation(currentChatThreadId); // Save the reset state
+                break;
             default:
                 commandProcessed = false; 
         }
@@ -1025,6 +868,7 @@
             const botMessageId = generateMessageId();
             addMessageToChat(botResponse, 'bot', false, botMessageId);
             updateConversationHistory('assistant', botResponse, botMessageId);
+            saveConversation(currentChatThreadId);
         }
         return commandProcessed;
     }
@@ -1034,9 +878,9 @@
         const messageText = userInput.value.trim();
         if (messageText === '') return;
 
-        const userMessageId = generateMessageId(); // Generate ID before clearing input
-        addMessageToChat(messageText, 'user', false, userMessageId); // Add user message to UI first
-        updateConversationHistory('user', messageText, userMessageId); // Then update history
+        const userMessageId = generateMessageId();
+        addMessageToChat(messageText, 'user', false, userMessageId);
+        updateConversationHistory('user', messageText, userMessageId);
 
         userInput.value = ''; 
         suggestionsContainer.style.display = 'none';
@@ -1056,33 +900,25 @@
             }
         }
         
-        if (!geminiModel || !currentGeminiChatSession) {
-            addMessageToChat("AI is not available. Please check API Key or reload.", "bot", false, generateMessageId());
-            enableInputs();
-            return;
-        }
-
         const currentPersona = personaSelect.value;
-        const loadingIndicator = addMessageToChat('', 'bot', true, generateMessageId());
+        const loadingIndicator = addMessageToChat('', 'bot', true, generateMessageId()); // Show "Thinking..."
         sendButton.disabled = true;
         userInput.disabled = true;
 
-        const geminiStream = await fetchAIResponseFromGemini(messageText, currentGeminiChatSession, currentPersona, aiTemperature);
-        loadingIndicator.remove();
+        // Get rule-based response
+        const botResponseText = fetchRuleBasedResponse(messageText, currentPersona);
+        
+        // Simulate thinking and then display
+        const botMessageId = generateMessageId();
+        const botMessageElement = document.getElementById(loadingIndicator.id); // Get the loading indicator element
+        
+        // Update the loading indicator to be the bot message shell for displayBotResponse
+        botMessageElement.classList.remove('loading'); 
+        botMessageElement.innerHTML = ''; // Clear spinner
+        botMessageElement.id = botMessageId; // Assign new ID for the actual message
 
-        if (typeof geminiStream === 'string') {
-            const botMessageId = generateMessageId();
-            addMessageToChat(geminiStream, 'bot', false, botMessageId);
-            updateConversationHistory('assistant', geminiStream, botMessageId); // Also save errors to history
-            enableInputs();
-             saveConversation(currentChatThreadId); // Save conversation even if there's an error from AI
-        } else { 
-            const botMessageId = generateMessageId();
-            const botMessageElement = addMessageToChat('', 'bot', false, botMessageId);
-            botMessageElement.innerHTML = '▋';
-            await handleStreamedResponse(geminiStream, botMessageElement, botMessageId);
-            // History, saving, and inputs re-enabled within handleStreamedResponse
-        }
+        await displayBotResponse(botResponseText, botMessageElement, botMessageId);
+        // History, saving, and input enabling are now handled within displayBotResponse
     }
 
     function scrollToBottom() {
