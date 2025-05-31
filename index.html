@@ -171,215 +171,235 @@
                     <label for="personaSelect">Persona:</label>
                     <select id="personaSelect">
                         <option value="helpful">Hey my name is robot Tay</option>
-                    </select>
+                        </select>
                     <button id="exportChatButton" aria-label="Export chat">Export</button>
                     <button id="theme-toggle" aria-label="Toggle color theme">
                         <span class="icon"></span>
                         <span class="text">Theme</span>
                     </button>
                 </div>
-                </header>
-                <div id="xpContainer" style="max-width: 400px; margin: 10px auto 10px; padding: 0 15px;">
-                  <div id="xpText" style="text-align: center; font-weight: bold; margin-bottom: 5px; font-size: 0.9em; color: var(--text-color);">
-                    Level 1 — 0/100 XP
-                  </div>
-                  <div style="background: var(--input-border); height: 14px; border-radius: 7px; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);">
-                    <div id="xpBar" style="height: 100%; width: 0%; background: linear-gradient(to right, #00e676, #00c853); transition: width 0.4s ease-in-out;"></div>
-                  </div>
-                </div>
-                <div class="suggestions-container" id="suggestionsContainer"></div>
-                <div class="commands-suggestion-container" id="commandsSuggestionContainer" style="display: none;"></div>
-                <div class="chat-window" id="chatWindow" role="log" aria-live="polite"></div>
-                <form class="chat-input-form" id="chatForm">
-                    <button type="button" id="micButton" aria-label="Use microphone">🎤</button>
-                    <input type="text" id="userInput" placeholder="Ask me anything or type /help..." autocomplete="off" aria-label="User message input" role="textbox">
-                    <button type="submit" id="sendButton" aria-label="Send message">Send</button>
-                </form>
+            </header>
+            <div id="xpContainer" style="max-width: 400px; margin: 10px auto 10px; padding: 0 15px;">
+              <div id="xpText" style="text-align: center; font-weight: bold; margin-bottom: 5px; font-size: 0.9em; color: var(--text-color);">
+                Level 1 — 0/100 XP
+              </div>
+              <div style="background: var(--input-border); height: 14px; border-radius: 7px; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);">
+                <div id="xpBar" style="height: 100%; width: 0%; background: linear-gradient(to right, #00e676, #00c853); transition: width 0.4s ease-in-out;"></div>
+              </div>
             </div>
-        </main>
+            <div class="suggestions-container" id="suggestionsContainer"></div>
+            <div class="commands-suggestion-container" id="commandsSuggestionContainer" style="display: none;"></div>
+            <div class="chat-window" id="chatWindow" role="log" aria-live="polite"></div>
+            <form class="chat-input-form" id="chatForm">
+                <button type="button" id="micButton" aria-label="Use microphone">🎤</button>
+                <input type="text" id="userInput" placeholder="Ask me anything or type /help..." autocomplete="off" aria-label="User message input" role="textbox">
+                <button type="submit" id="sendButton" aria-label="Send message">Send</button>
+            </form>
+        </div>
+    </main>
 
-        <script type="module" defer>
-            // --- XP and Leveling System ---
-            let userXP = parseInt(localStorage.getItem('userXP')) || 0;
-            let userLevel = parseInt(localStorage.getItem('userLevel')) || 1;
+    <script type="module" defer>
+        // --- XP and Leveling System ---
+        let userXP = parseInt(localStorage.getItem('userXP')) || 0;
+        let userLevel = parseInt(localStorage.getItem('userLevel')) || 1;
 
-            function getRequiredXP(level) {
-              return 100 + (level - 1) * 20; // XP required grows per level
+        function getRequiredXP(level) {
+          return 100 + (level - 1) * 20; // XP required grows per level
+        }
+
+        function updateXPUI() {
+          const xpBar = document.getElementById("xpBar");
+          const xpText = document.getElementById("xpText");
+          const xpContainer = document.getElementById("xpContainer");
+
+          if (!xpBar || !xpText || !xpContainer) {
+              console.warn("XP UI elements not found. Skipping XP update.");
+              return;
+          }
+          xpContainer.style.display = ""; 
+          const xpNeeded = getRequiredXP(userLevel);
+          const progress = Math.min(100, Math.floor((userXP / xpNeeded) * 100));
+          xpBar.style.width = progress + "%";
+          xpText.textContent = `Level ${userLevel} — ${userXP}/${xpNeeded} XP`;
+        }
+
+        function gainXPFromMessage(message) {
+          if (!message || typeof message !== 'string') return;
+          let xpGain = Math.min(50, 5 + Math.floor(message.length / 15));
+          userXP += xpGain;
+          const xpRequired = getRequiredXP(userLevel);
+          if (userXP >= xpRequired) {
+            userXP -= xpRequired; 
+            userLevel++;
+            showLevelUpEffect(userLevel);
+          }
+          localStorage.setItem("userXP", JSON.stringify(userXP));
+          localStorage.setItem("userLevel", JSON.stringify(userLevel));
+          updateXPUI();
+        }
+
+        function showLevelUpEffect(level) {
+          const popup = document.createElement("div");
+          popup.textContent = `🎉 LEVEL UP! You’re now Level ${level}`;
+          popup.style.cssText = `
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: #00c853; color: white; padding: 12px 24px; font-size: 18px;
+            border-radius: 8px; box-shadow: 0 0 10px #00c853; z-index: 9999;
+            opacity: 1; transition: opacity 0.8s ease-out, top 0.5s ease-out;
+            animation: fadeInAndUp 0.5s ease-out;
+          `;
+          const keyframes = `@keyframes fadeInAndUp { 0% { opacity: 0; top: 50px; } 100% { opacity: 1; top: 20px; } }`;
+          const styleSheet = document.createElement("style");
+          styleSheet.type = "text/css";
+          styleSheet.innerText = keyframes;
+          document.head.appendChild(styleSheet);
+          document.body.appendChild(popup);
+          setTimeout(() => { popup.style.opacity = 0; popup.style.top = "0px"; }, 2200);
+          setTimeout(() => { popup.remove(); if (styleSheet) styleSheet.remove(); }, 3000);
+        }
+        // --- End XP and Leveling System ---
+
+        const chatAppContainer = document.getElementById('chatAppContainer');
+        const chatWindow = document.getElementById('chatWindow');
+        const userInput = document.getElementById('userInput');
+        const chatForm = document.getElementById('chatForm');
+        const sendButton = document.getElementById('sendButton');
+        const themeToggleButton = document.getElementById('theme-toggle');
+        const themeToggleIcon = themeToggleButton.querySelector('.icon');
+        const themeToggleText = themeToggleButton.querySelector('.text');
+        const personaSelect = document.getElementById('personaSelect');
+        const exportChatButton = document.getElementById('exportChatButton');
+        const suggestionsContainer = document.getElementById('suggestionsContainer');
+        const commandsSuggestionContainer = document.getElementById('commandsSuggestionContainer');
+        const micButton = document.getElementById('micButton');
+        const threadsSidebar = document.getElementById('threadsSidebar');
+        const threadList = document.getElementById('threadList');
+        const newThreadButton = document.getElementById('newThreadButton');
+
+        let conversationHistory = [];
+        let currentChatThreadId = localStorage.getItem('lastActiveThreadId') || 'default_chat';
+        let userName = localStorage.getItem('userName') || null; 
+        let userPreferences = JSON.parse(localStorage.getItem('userPreferences') || '{}');
+        let initialFocusDone = false;
+        const MAX_MESSAGES_DISPLAY = 100;
+        let speechRecognition;
+
+        const AVAILABLE_COMMANDS = [
+            { cmd: "/help", desc: "Show this help message." },
+            { cmd: "/joke", desc: "Tell a joke." },
+            { cmd: "/reset", desc: "Reset current chat." },
+            { cmd: "/play", desc: "Play Rock, Paper, Scissors." },
+            { cmd: "/roll", desc: "Roll a 6-sided die." },
+            { cmd: "/quote", desc: "Get an inspirational quote." },
+            { cmd: "/createpersona", desc: "Create a new custom persona." },
+            { cmd: "/clearxp", desc: "Reset your XP and Level." },
+        ];
+        
+        function handleMiniGames(command) {
+            if (command === '/play') {
+                const options = ['Rock', 'Paper', 'Scissors'];
+                const botChoice = options[Math.floor(Math.random() * options.length)];
+                const RPSDrivenModal = document.createElement('div');
+                RPSDrivenModal.className = 'rps-modal';
+                RPSDrivenModal.innerHTML = `
+                    <h4 style="margin-bottom: 15px; text-align: center;">Rock, Paper, or Scissors?</h4>
+                    <div style="display: flex; justify-content: space-around; gap: 10px;">
+                        <button data-choice="rock">Rock</button>
+                        <button data-choice="paper">Paper</button>
+                        <button data-choice="scissors">Scissors</button>
+                    </div>
+                    <button id="rpsCancel" style="margin-top: 15px; display: block; margin-left: auto; margin-right: auto;">Cancel</button>
+                `;
+                document.body.appendChild(RPSDrivenModal);
+                const processRPS = (userChoice) => {
+                    if (document.body.contains(RPSDrivenModal)) document.body.removeChild(RPSDrivenModal);
+                    if (!userChoice) return;
+                    const normalizedUser = userChoice.toLowerCase();
+                    const normalizedBot = botChoice.toLowerCase();
+                    let resultText = '';
+                    if (normalizedUser === normalizedBot) resultText = "It's a tie!";
+                    else if (
+                        (normalizedUser === 'rock' && normalizedBot === 'scissors') ||
+                        (normalizedUser === 'paper' && normalizedBot === 'rock') ||
+                        (normalizedUser === 'scissors' && normalizedBot === 'paper')
+                    ) resultText = `I chose ${botChoice}. You win! 🎉`;
+                    else resultText = `I chose ${botChoice}. You lose! 😢`;
+                    const botMessageId = generateMessageId();
+                    addMessageToChat(resultText, 'bot', false, botMessageId);
+                    updateConversationHistory('assistant', resultText, botMessageId);
+                    saveConversation(currentChatThreadId);
+                };
+                RPSDrivenModal.querySelectorAll('button[data-choice]').forEach(button => {
+                    button.onclick = () => processRPS(button.dataset.choice);
+                });
+                RPSDrivenModal.querySelector('#rpsCancel').onclick = () => {
+                    if (document.body.contains(RPSDrivenModal)) document.body.removeChild(RPSDrivenModal);
+                };
             }
-
-            function updateXPUI() {
-              const xpBar = document.getElementById("xpBar");
-              const xpText = document.getElementById("xpText");
-              const xpContainer = document.getElementById("xpContainer");
-
-              if (!xpBar || !xpText || !xpContainer) {
-                  console.warn("XP UI elements not found. Skipping XP update.");
-                  return;
-              }
-              xpContainer.style.display = ""; 
-              const xpNeeded = getRequiredXP(userLevel);
-              const progress = Math.min(100, Math.floor((userXP / xpNeeded) * 100));
-              xpBar.style.width = progress + "%";
-              xpText.textContent = `Level ${userLevel} — ${userXP}/${xpNeeded} XP`;
-            }
-
-            function gainXPFromMessage(message) {
-              if (!message || typeof message !== 'string') return;
-              let xpGain = Math.min(50, 5 + Math.floor(message.length / 15));
-              userXP += xpGain;
-              const xpRequired = getRequiredXP(userLevel);
-              if (userXP >= xpRequired) {
-                userXP -= xpRequired; 
-                userLevel++;
-                showLevelUpEffect(userLevel);
-              }
-              localStorage.setItem("userXP", JSON.stringify(userXP));
-              localStorage.setItem("userLevel", JSON.stringify(userLevel));
-              updateXPUI();
-            }
-
-            function showLevelUpEffect(level) {
-              const popup = document.createElement("div");
-              popup.textContent = `🎉 LEVEL UP! You’re now Level ${level}`;
-              popup.style.cssText = `
-                position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-                background: #00c853; color: white; padding: 12px 24px; font-size: 18px;
-                border-radius: 8px; box-shadow: 0 0 10px #00c853; z-index: 9999;
-                opacity: 1; transition: opacity 0.8s ease-out, top 0.5s ease-out;
-                animation: fadeInAndUp 0.5s ease-out;
-              `;
-              const keyframes = `@keyframes fadeInAndUp { 0% { opacity: 0; top: 50px; } 100% { opacity: 1; top: 20px; } }`;
-              const styleSheet = document.createElement("style");
-              styleSheet.type = "text/css";
-              styleSheet.innerText = keyframes;
-              document.head.appendChild(styleSheet);
-              document.body.appendChild(popup);
-              setTimeout(() => { popup.style.opacity = 0; popup.style.top = "0px"; }, 2200);
-              setTimeout(() => { popup.remove(); if (styleSheet) styleSheet.remove(); }, 3000);
-            }
-            // --- End XP and Leveling System ---
-
-            const chatAppContainer = document.getElementById('chatAppContainer');
-            const chatWindow = document.getElementById('chatWindow');
-            const userInput = document.getElementById('userInput');
-            const chatForm = document.getElementById('chatForm');
-            const sendButton = document.getElementById('sendButton');
-            const themeToggleButton = document.getElementById('theme-toggle');
-            const themeToggleIcon = themeToggleButton.querySelector('.icon');
-            const themeToggleText = themeToggleButton.querySelector('.text');
-            const personaSelect = document.getElementById('personaSelect');
-            const exportChatButton = document.getElementById('exportChatButton');
-            const suggestionsContainer = document.getElementById('suggestionsContainer');
-            const commandsSuggestionContainer = document.getElementById('commandsSuggestionContainer');
-            const micButton = document.getElementById('micButton');
-            const threadsSidebar = document.getElementById('threadsSidebar');
-            const threadList = document.getElementById('threadList');
-            const newThreadButton = document.getElementById('newThreadButton');
-
-            let conversationHistory = [];
-            let currentChatThreadId = localStorage.getItem('lastActiveThreadId') || 'default_chat';
-            let userName = localStorage.getItem('userName') || null; // Ensure userName is accessible
-            let userPreferences = JSON.parse(localStorage.getItem('userPreferences') || '{}');
-            let initialFocusDone = false;
-            const MAX_MESSAGES_DISPLAY = 100;
-            let speechRecognition;
-
-            const AVAILABLE_COMMANDS = [
-                { cmd: "help", desc: "Show this help message." },
-                { cmd: "joke", desc: "Tell a joke (client-side)." },
-                { cmd: "reset", desc: "Reset current chat (clears messages)." },
-                { cmd: "play", desc: "Play Rock, Paper, Scissors." },
-                { cmd: "roll", desc: "Roll a 6-sided die." },
-                { cmd: "quote", desc: "Get an inspirational quote." },
-                { cmd: "createpersona", desc: "Create a new custom persona." },
-                { cmd: "clearxp", desc: "Reset your XP and Level (for testing)." },
+        }
+        function handleDiceRoll() {
+            const roll = Math.floor(Math.random() * 6) + 1;
+            const result = `🎲 You rolled a ${roll}!`;
+            const botMessageId = generateMessageId();
+            addMessageToChat(result, 'bot', false, botMessageId);
+            updateConversationHistory('assistant', result, botMessageId);
+            saveConversation(currentChatThreadId);
+        }
+        function handleQuoteCommand() {
+            const quotes = [
+                "Believe you can and you're halfway there. - Theodore Roosevelt",
+                "The only limit to our realization of tomorrow is our doubts of today. - Franklin D. Roosevelt",
+                "Do or do not. There is no try. – Yoda",
+                "The future belongs to those who believe in the beauty of their dreams. - Eleanor Roosevelt",
+                "Strive not to be a success, but rather to be of value. - Albert Einstein"
             ];
-            
-            function handleMiniGames(command) {
-                if (command === '/play') {
-                    const options = ['Rock', 'Paper', 'Scissors'];
-                    const botChoice = options[Math.floor(Math.random() * options.length)];
-                    const RPSDrivenModal = document.createElement('div');
-                    RPSDrivenModal.className = 'rps-modal';
-                    RPSDrivenModal.innerHTML = `
-                        <h4 style="margin-bottom: 15px; text-align: center;">Rock, Paper, or Scissors?</h4>
-                        <div style="display: flex; justify-content: space-around; gap: 10px;">
-                            <button data-choice="rock">Rock</button>
-                            <button data-choice="paper">Paper</button>
-                            <button data-choice="scissors">Scissors</button>
-                        </div>
-                        <button id="rpsCancel" style="margin-top: 15px; display: block; margin-left: auto; margin-right: auto;">Cancel</button>
-                    `;
-                    document.body.appendChild(RPSDrivenModal);
-                    const processRPS = (userChoice) => {
-                        if (document.body.contains(RPSDrivenModal)) document.body.removeChild(RPSDrivenModal);
-                        if (!userChoice) return;
-                        const normalizedUser = userChoice.toLowerCase();
-                        const normalizedBot = botChoice.toLowerCase();
-                        let resultText = '';
-                        if (normalizedUser === normalizedBot) resultText = "It's a tie!";
-                        else if (
-                            (normalizedUser === 'rock' && normalizedBot === 'scissors') ||
-                            (normalizedUser === 'paper' && normalizedBot === 'rock') ||
-                            (normalizedUser === 'scissors' && normalizedBot === 'paper')
-                        ) resultText = `I chose ${botChoice}. You win! 🎉`;
-                        else resultText = `I chose ${botChoice}. You lose! 😢`;
-                        const botMessageId = generateMessageId();
-                        addMessageToChat(resultText, 'bot', false, botMessageId);
-                        updateConversationHistory('assistant', resultText, botMessageId);
-                        saveConversation(currentChatThreadId);
-                    };
-                    RPSDrivenModal.querySelectorAll('button[data-choice]').forEach(button => {
-                        button.onclick = () => processRPS(button.dataset.choice);
-                    });
-                    RPSDrivenModal.querySelector('#rpsCancel').onclick = () => {
-                        if (document.body.contains(RPSDrivenModal)) document.body.removeChild(RPSDrivenModal);
-                    };
-                }
+            const quote = quotes[Math.floor(Math.random() * quotes.length)];
+            const botMessageId = generateMessageId();
+            addMessageToChat(`“${quote}”`, 'bot', false, botMessageId);
+            updateConversationHistory('assistant', `“${quote}”`, botMessageId);
+            saveConversation(currentChatThreadId);
+        }
+        const bgMusicAudio = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3');
+        bgMusicAudio.loop = true;
+        let isMusicPlaying = JSON.parse(localStorage.getItem('musicPlaying') || 'false');
+        let musicToggleButton;
+        function toggleBackgroundMusic() {
+            isMusicPlaying = !isMusicPlaying;
+            if (isMusicPlaying) {
+                bgMusicAudio.play().catch(e => console.error("Music play failed:", e));
+                if(musicToggleButton) musicToggleButton.innerHTML = '🔊 <span class="text">Mute</span>';
+                if(musicToggleButton) musicToggleButton.setAttribute('aria-label', 'Mute background music');
+            } else {
+                bgMusicAudio.pause();
+                if(musicToggleButton) musicToggleButton.innerHTML = '🎶 <span class="text">Music</span>';
+                if(musicToggleButton) musicToggleButton.setAttribute('aria-label', 'Play background music');
             }
-            function handleDiceRoll() {
-                const roll = Math.floor(Math.random() * 6) + 1;
-                const result = `🎲 You rolled a ${roll}!`;
-                const botMessageId = generateMessageId();
-                addMessageToChat(result, 'bot', false, botMessageId);
-                updateConversationHistory('assistant', result, botMessageId);
-                saveConversation(currentChatThreadId);
+            localStorage.setItem('musicPlaying', isMusicPlaying);
+        }
+        function setupMusicToggle() {
+            musicToggleButton = document.createElement('button');
+            musicToggleButton.id = 'music-toggle';
+            musicToggleButton.innerHTML = isMusicPlaying ? '🔊 <span class="text">Mute</span>' : '🎶 <span class="text">Music</span>';
+            musicToggleButton.setAttribute('aria-label', isMusicPlaying ? 'Mute background music' : 'Play background music');
+            const controls = document.querySelector('.chat-header .header-controls');
+            const existingThemeToggle = document.getElementById('theme-toggle');
+            if (controls && existingThemeToggle) controls.insertBefore(musicToggleButton, existingThemeToggle);
+            else if (controls) controls.appendChild(musicToggleButton);
+            musicToggleButton.addEventListener('click', toggleBackgroundMusic);
+        }
+        let themeChooserSelect;
+        const themes = {
+            default: { name: "Default", isDarkDefault: false, vars: {} },
+            vaporwave: { name: "Vaporwave", isDarkDefault: true, vars: {'--body-bg': '#010122', '--chat-bg': '#050538', '--header-bg': '#FF00FF', '--header-text': '#00FFFF', '--user-msg-bg': '#FF69B4', '--user-msg-text': '#FFFFFF', '--bot-msg-bg': '#9400D3', '--bot-msg-text': '#E0E0E0', '--input-bg': '#010122', '--input-text': '#00FFFF', '--input-border': '#FF00FF', '--button-bg': '#00FFFF', '--button-text': '#050538', '--text-color': '#E0E0E0', '--border-color': '#FF00FF', '--shadow': '0 2px 10px rgba(255,0,255,0.5)', '--focus-ring': 'rgba(0,255,255,0.4)', '--suggestion-bg': '#330033', '--suggestion-text': '#00FFFF'} },
+            space: { name: "Outer Space", isDarkDefault: true, vars: {'--body-bg': '#0c0f18', '--chat-bg': '#151a2d', '--header-bg': '#2a3b60', '--header-text': '#e0e7ff', '--user-msg-bg': '#3f51b5', '--user-msg-text': '#ffffff', '--bot-msg-bg': '#1e293b', '--bot-msg-text': '#cbd5e1', '--input-bg': '#0c0f18', '--input-text': '#e0e7ff', '--input-border': '#2a3b60', '--button-bg': '#5c6bc0', '--button-text': '#ffffff', '--text-color': '#cbd5e1', '--border-color': '#2a3b60', '--shadow': '0 3px 12px rgba(0,0,0,0.4)', '--focus-ring': 'rgba(92,107,192,0.4)', '--suggestion-bg': '#1c2541', '--suggestion-text': '#a7c5eb'} },
+        };
+        function applyTheme(themeName, isExplicitThemeChoice = false) {
+            const selectedTheme = themes[themeName] || themes.default;
+            const rootStyle = document.documentElement.style;
+            if (isExplicitThemeChoice) {
+                if (selectedTheme.isDarkDefault) document.body.classList.add('dark-mode');
+                else document.body.classList.remove('dark-mode');
             }
-            function handleQuoteCommand() {
-                const quotes = [
-                    "Believe you can and you're halfway there. - Theodore Roosevelt",
-                    "The only limit to our realization of tomorrow is our doubts of today. - Franklin D. Roosevelt",
-                    "Do or do not. There is no try. – Yoda",
-                    "The future belongs to those who believe in the beauty of their dreams. - Eleanor Roosevelt",
-                    "Strive not to be a success, but rather to be of value. - Albert Einstein"
-                ];
-                const quote = quotes[Math.floor(Math.random() * quotes.length)];
-                const botMessageId = generateMessageId();
-                addMessageToChat(`“${quote}”`, 'bot', false, botMessageId);
-                updateConversationHistory('assistant', `“${quote}”`, botMessageId);
-                saveConversation(currentChatThreadId);
-            }
-            const bgMusicAudio = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3');
-            bgMusicAudio.loop = true;
-            let isMusicPlaying = JSON.parse(localStorage.getItem('musicPlaying') || 'false');
-            let musicToggleButton;
-            function toggleBackgroundMusic() {
-                isMusicPlaying = !isMusicPlaying;
-                if (isMusicPlaying) {
-                    bgMusicAudio.play().catch(e => console.error("Music play failed:", e));
-                    if(musicToggleButton) musicToggleButton.innerHTML = '🔊 <span class="text">Mute</span>';
-                    if(musicToggleButton) musicToggleButton.setAttribute('aria-label', 'Mute background music');
-                } else {
-                    bgMusicAudio.pause();
-                    if(musicToggleButton) musicToggleButton.innerHTML = '🎶 <span class="text">Music</span>';
-                    if(musicToggleButton) musicToggleButton.setAttribute('aria-label', 'Play background music');
-                }
-                localStorage.setItem('musicPlaying', isMusicPlaying);
-            }
-            function setupMusicToggle() {
-                musicToggleButton = document.createElement('button');
-                musicToggleButton.id = 'music-toggle';
-                musicToggleButton.innerHTML = isMusicPlaying ? '🔊 <span class="text">Mute</span>' : '🎶 <span class="text">Music</span>';
-                musicToggleButton.setAttribute('aria-label', isMusicPlaying ? 'Mute background music' : 'Play background music');
-                const controls = document.querySelector('.chat-header .header-controls');
-                const existingThemeToggle = document.getElementById('theme-
+            updateThemePreference(); 
+            const allThemeVarKeys = new Set();
+            Object.values
