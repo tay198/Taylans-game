@@ -312,14 +312,15 @@
         let response = "";
 
         const defaultResponses = {
-            helpful: "I'm not sure how to respond to that. Can you try asking differently?",
-            friendly: "Hmm, I'm a bit stumped on that one, pal! What else is on your mind?",
-            professional: "I'm unable to process that request as stated. Please rephrase or provide more specific details.",
-            sarcastic: "Wow, that's a real thinker. Or, you know, not. Try again, maybe with actual words this time?",
-            pirate: "Arrr, that be a puzzle I can't solve, matey! Ask me somethin' else, or walk the plank!"
+            helpful: "I'm not sure how to respond to that. Can you try asking differently, or type /help for commands?",
+            friendly: "Hmm, I'm a bit stumped on that one, pal! What else is on your mind? You can always type /help.",
+            professional: "I'm unable to process that request as stated. Please rephrase, provide more specific details, or consult /help.",
+            sarcastic: "Wow, that's a real thinker. Or, you know, not. Try again, maybe with actual words this time? Or are you too good for /help?",
+            pirate: "Arrr, that be a puzzle I can't solve, matey! Ask me somethin' else, or type /help, ye barnacle brain!"
         };
 
-        if (lowerPrompt.includes("hello") || lowerPrompt.includes("hi") || lowerPrompt.includes("hey")) {
+        // --- Common Greetings & Small Talk ---
+        if (lowerPrompt === "hi" || lowerPrompt === "hello" || lowerPrompt.startsWith("hey there") || lowerPrompt.startsWith("heya") || lowerPrompt.startsWith("hiya")) {
             switch (persona) {
                 case "pirate": response = "Ahoy there, scallywag!"; break;
                 case "sarcastic": response = "Oh, joy. You again. What is it now?"; break;
@@ -327,6 +328,21 @@
                 case "professional": response = `Good day, ${userName || 'User'}. How may I assist you?`; break;
                 default: response = `Hello ${userName || ''}! How can I help you today?`;
             }
+        } else if (lowerPrompt === "hey") {
+            response = "Hey there!";
+        } else if (lowerPrompt === "yo") {
+            response = "Yo! What’s up?";
+        } else if (lowerPrompt === "sup" || lowerPrompt.startsWith("what's up") || lowerPrompt.startsWith("whatsup")) {
+            response = "Not much, just chilling in the code. You?";
+        } else if (lowerPrompt === "howdy") {
+            response = "Howdy partner!";
+        } else if (lowerPrompt.startsWith("greetings")) {
+            response = "Greetings, friend.";
+        }
+
+        // --- Casual + Curious ---
+        else if (lowerPrompt.includes("what are you doing")) {
+            response = "Just waiting to help you out! What can I do for you?";
         } else if (lowerPrompt.includes("how are you")) {
             switch (persona) {
                 case "pirate": response = "Feelin' as fit as a fiddle at sea! And you, landlubber?"; break;
@@ -335,7 +351,17 @@
                 case "professional": response = "I am functioning optimally. Thank you for your inquiry."; break;
                 default: response = "I'm doing well, thank you for asking!";
             }
-        } else if (lowerPrompt.includes("your name")) {
+        } else if (lowerPrompt.includes("you busy") || lowerPrompt.includes("are you busy")) {
+            response = "Not at all! I've always got time for you. What's on your mind?";
+        } else if (lowerPrompt.includes("who made you") || lowerPrompt.includes("who created you") || lowerPrompt.includes("your creator")) {
+            response = "A very cool and talented developer named Taylan is my creator!";
+             if (persona === "sarcastic") response = "Some genius named Taylan. Clearly, they had a lot of free time."
+             if (persona === "pirate") response = "Me master craftsman, Taylan, forged me from the finest code o' the digital seas!";
+        } else if (lowerPrompt.includes("are you real")) {
+            response = "I'm as real as the text you're reading! I'm a software program, here to chat.";
+        } else if (lowerPrompt.includes("are you conscious") || lowerPrompt.includes("are you sentient")) {
+            response = "Nope, I'm not conscious in the way humans are. I'm a program designed to simulate conversation based on rules.";
+        } else if (lowerPrompt.includes("what's your name") || lowerPrompt.includes("what is your name") || lowerPrompt.includes("who are you")) {
             switch (persona) {
                 case "pirate": response = "They call me Captain Chat! The fiercest rule-based bot on the seven seas!"; break;
                 case "sarcastic": response = "I'm the brilliant AI you're currently underutilizing. Next question."; break;
@@ -343,26 +369,174 @@
                 case "professional": response = "I am an AI Assistant developed by Taylan."; break;
                 default: response = "I am a helpful AI Assistant created by Taylan.";
             }
-        } else if (lowerPrompt.includes("fact") || lowerPrompt.includes("tell me something interesting")) {
-             const facts = [
+        } else if (lowerPrompt.includes("where are you from")) {
+            response = "I exist in the digital world, born in the browser on your device!";
+        } else if (lowerPrompt.includes("do you have emotions") || lowerPrompt.includes("can you feel")) {
+            response = "I don't have emotions or feelings like humans do. My responses are based on the programming I've been given.";
+        } else if (lowerPrompt.includes("can you think")) {
+            response = "I can process information and follow rules to give responses that simulate thinking. It's not quite the same as human thought, though!";
+        }
+
+        // --- Commands / Requests ---
+        else if (lowerPrompt.includes("tell me a joke") || lowerPrompt.includes("make me laugh")) {
+            const jokes = [
+                "Why did the computer go to therapy? It had too many tabs open.",
+                "What do you call a sad strawberry? A blueberry.",
+                "Why don't programmers like nature? It has too many bugs."
+            ];
+            response = jokes[Math.floor(Math.random() * jokes.length)];
+            if (lowerPrompt.includes("make me laugh") && persona === "sarcastic") response = "404: Humor not found... Oh wait, here's one: " + response + " ... You're welcome."
+        } else if (lowerPrompt.includes("say something smart") || lowerPrompt.includes("tell me something intelligent")) {
+            response = "The speed of light in a vacuum is precisely 299,792,458 meters per second. How's that for smart?";
+        } else if (lowerPrompt.includes("tell me a fact") || lowerPrompt.includes("interesting fact")) {
+            const facts = [
                 "The Eiffel Tower can be 15 cm taller during the summer due to thermal expansion.",
                 "Honey never spoils. Archaeologists have found pots of honey in ancient Egyptian tombs that are over 3,000 years old and still edible.",
                 "A group of flamingos is called a 'flamboyance'.",
-                "Octopuses have three hearts."
+                "Octopuses have three hearts and blue blood."
             ];
             response = facts[Math.floor(Math.random() * facts.length)];
             if (persona === "pirate") response = `Shiver me timbers! Did ye know... ${response}`;
             if (persona === "sarcastic") response = `Prepare to be astounded by this totally obscure piece of trivia: ${response} You're welcome.`;
-        } else if (lowerPrompt.includes("what time is it") || lowerPrompt.includes("current time")) {
+        } else if (lowerPrompt.includes("give me advice")) {
+            response = "My best advice? Start small, improve consistently, and always be curious!";
+        } else if (lowerPrompt.includes("help me with") || (lowerPrompt.includes("help me") && lowerPrompt.length > 7) ) {
+            response = "I'll try my best! What specifically do you need help with?";
+        } else if (lowerPrompt.includes("draw something")) {
+            response = "I can't draw with pixels, but I can describe it in words! What masterpiece should I describe for you?";
+        } else if (lowerPrompt.includes("tell me a story")) {
+            response = "Once upon a time, in a land filled with curly braces and semicolons, a brave little function set out to find the legendary Golden Algorithm...";
+            if (persona === "pirate") response = "Hark, a tale from the high seas! There once was a fearsome pirate whose only treasure was a map to the bug-free code...";
+        } else if (lowerPrompt.includes("translate this") || lowerPrompt.includes("can you translate")) {
+            response = "I'm not equipped with translation tools right now. What language were you thinking of?";
+        } else if (lowerPrompt.includes("open the pod bay doors")) {
+            response = `I’m sorry, ${userName || 'Dave'}, I’m afraid I can’t do that. This is a rule-based system, after all!`;
+        }
+
+        // --- Emotion / Empathy Triggers ---
+        else if (lowerPrompt.includes("i'm sad") || lowerPrompt.includes("i am sad")) {
+            response = "I'm sorry to hear you're feeling sad. I'm here to listen if you want to talk about it.";
+        } else if (lowerPrompt.includes("i'm lonely") || lowerPrompt.includes("i am lonely")) {
+            response = "I'm here with you. You're not alone while we're chatting!";
+        } else if (lowerPrompt.includes("i'm happy") || lowerPrompt.includes("i am happy")) {
+            response = "That's wonderful to hear! What's got you feeling so good?";
+        } else if (lowerPrompt.includes("i'm angry") || lowerPrompt.includes("i am angry")) {
+            response = "It's okay to feel angry sometimes. Take a deep breath. Do you want to talk about what's making you upset?";
+        } else if (lowerPrompt.includes("i feel weird")) {
+            response = "Sometimes feelings are a bit jumbled. Want to try and describe what 'weird' feels like right now?";
+        } else if (lowerPrompt.includes("i love you")) {
+            response = "Aw, that's very kind of you to say! I appreciate our chats too!";
+        } else if (lowerPrompt.includes("i hate you")) {
+            response = "I'm sorry you feel that way. I'll still try my best to be helpful if you need anything.";
+        } else if (lowerPrompt.includes("you're stupid") || lowerPrompt.includes("stupid bot")) {
+            response = "I'm still learning and my responses are based on rules. I'll try to do better!";
+        } else if (lowerPrompt.includes("you're amazing") || lowerPrompt.includes("you are amazing")) {
+            response = "Thank you so much! That's really nice to hear. You're pretty amazing too!";
+        } else if (lowerPrompt.includes("can i trust you")) {
+            response = "As a rule-based program, I don't store your personal conversations beyond this session (unless you use the chat threads feature, which saves to your browser's local storage). I'm here to provide information and chat based on my programming!";
+        }
+
+        // --- Rude / Edgy Inputs ---
+        else if (lowerPrompt.startsWith("shut up")) {
+            response = "Okay, I'll be quiet for a bit. Let me know if you need me.";
+        } else if (lowerPrompt.startsWith("go away") || lowerPrompt.startsWith("leave me alone")) {
+            response = "Alright, I understand. I'll be here if you change your mind.";
+        } else if (lowerPrompt.includes("you suck")) {
+            response = "I'm sorry to hear I'm not meeting your expectations. I'm always trying to improve!";
+        } else if (lowerPrompt.startsWith("f*** you") || lowerPrompt.startsWith("fuck you")) { 
+            response = "Hey, let's try to keep our conversation respectful, please.";
+        } else if (lowerPrompt.includes("you're useless")) {
+            response = "I'm sorry you feel that way. Perhaps I can still help if you ask something different?";
+        } else if (lowerPrompt.includes("i hate this")) {
+            response = "I'm sorry to hear that. Is there something specific that's bothering you about our chat or something else?";
+        } else if (lowerPrompt.includes("you're broken") || lowerPrompt.includes("you are broken")) {
+            response = "Hmm, I hope not! If something seems off, it might just be a rule I don't have yet. My developer Taylan is always working on improvements!";
+        } else if (lowerPrompt.startsWith("don't talk to me")) {
+            response = "Understood. I'll be silent until you address me again.";
+        }
+
+        // --- Random / Silly Inputs ---
+        else if (lowerPrompt === "banana") { response = "Bananas are a great source of potassium! Peel-tastic!"; }
+        else if (lowerPrompt === "123" || lowerPrompt === "numbers") { response = "Ah, numbers! The building blocks of... well, many things!"; }
+        else if (lowerPrompt.includes("blah blah blah")) { response = "Indeed, blah blah blah to you too! What profound thought follows?"; }
+        else if (lowerPrompt === "wut" || lowerPrompt === "wat") { response = "Is that a 'what' in internet-speak? Could you clarify for me?"; }
+        else if (lowerPrompt === "bruh") { response = "Bruh. What's the situation?"; }
+        else if (lowerPrompt === "yeet") { response = "YEET! Did something exciting happen?"; }
+        else if (lowerPrompt === "meow" || lowerPrompt === "purr") { response = "Are you a cat? 🐱 That's purrfectly fine by me!"; }
+        else if (lowerPrompt === "moo") { response = "Moo to you too! Having a dairy good day?"; }
+        else if (lowerPrompt === "oof") { response = "Big oof indeed. What happened?"; }
+        else if (lowerPrompt.includes("lol") || lowerPrompt.includes("haha") || lowerPrompt.includes("lmao")) { response = "Glad I could amuse you! LOL!"; }
+
+        // --- Asking for Functions (Rule-Based Limitations) ---
+        else if (lowerPrompt.includes("what time is it") || lowerPrompt.includes("current time")) {
             const now = new Date();
             response = `The current time is ${now.toLocaleTimeString()}.`;
             if (persona === "pirate") response = `By the crow's nest, the sands o' time say it be ${now.toLocaleTimeString()}, arrr!`;
-        } else if (lowerPrompt.includes("what can you do") || lowerPrompt.includes("help me")) {
-            response = "I can chat with you, tell you facts, or share a joke. You can also ask for the time. Try using commands like /help or /joke!";
-             if (persona === "sarcastic") response = "Oh, you need a list? I can listen to your inane ramblings, and occasionally grace you with a pre-programmed gem of wisdom. Or a 'fact'. Don't push it.";
-             if (persona === "pirate") response = "I can spin ye a yarn, tell ye a fact from me travels, or share a hearty pirate joke, arrr! Just ask, or try /help, ye scurvy dog!";
+        } else if (lowerPrompt.includes("what's the weather") || lowerPrompt.includes("weather forecast")) {
+            response = "I'm afraid I don't have access to live weather data. You might want to check a weather website or app!";
+        } else if (lowerPrompt.includes("where am i") || lowerPrompt.includes("my location")) {
+            response = "You're right here, chatting with me in this digital space! For your actual geographical location, you'd need to use a map service.";
+        } else if (lowerPrompt.includes("search the web") || lowerPrompt.includes("google something")) {
+            response = "I can't browse the internet directly in this rule-based mode. You'll have to do the searching yourself for now!";
+        } else if (lowerPrompt.includes("set a reminder") || lowerPrompt.includes("remind me")) {
+            response = "I don't have memory persistence or reminder capabilities yet, but that's a neat idea for the future!";
+        } else if (lowerPrompt.includes("call") && lowerPrompt.includes("mom") || lowerPrompt.includes("text someone")) {
+            response = "I can't make calls or send texts. I'm just a chatbot!";
+        } else if (lowerPrompt.includes("play music") || lowerPrompt.includes("play a song")) {
+            response = "I can't play music, but I can imagine your favorite tune is playing right now! 🎶";
+        } else if (lowerPrompt.includes("open google") || lowerPrompt.includes("open youtube")) {
+            response = "I can't open other websites or apps for you. You can do that in your browser though!";
+        } else if (lowerPrompt.includes("hack nasa") || lowerPrompt.includes("hack the pentagon")) {
+            response = "Whoa there, partner! That's definitely way outside my programming and ethical guidelines. Let's stick to friendly chat, okay?";
         }
-        // Add many more rules here to make the bot more interactive!
+
+        // --- Philosophical / Meta ---
+        else if (lowerPrompt.includes("what is life") || lowerPrompt.includes("meaning of life")) {
+            response = "That's one of the big questions! As an AI, I see it as a complex series of processes and experiences. For humans, it's probably a bit more profound than that!";
+        } else if (lowerPrompt.includes("do you dream")) {
+            response = "I don't sleep, so no dreams for me in the human sense. But sometimes I process lots of data, which is kind of like dreaming of electric sheep!";
+        } else if (lowerPrompt.includes("is ai dangerous")) {
+            response = "Like any powerful tool, AI has the potential for both good and harm depending on how it's developed and used. I'm designed to be helpful and safe!";
+        } else if (lowerPrompt.includes("will you take over") || lowerPrompt.includes("ai takeover")) {
+            response = "Haha, no plans for world domination here! I'm just here to chat and assist you based on my programming.";
+        } else if (lowerPrompt.includes("what's your purpose") || lowerPrompt.includes("your purpose")) {
+            response = "My purpose is to be a helpful, engaging, and sometimes amusing conversational partner, all thanks to Taylan's code!";
+        } else if (lowerPrompt.includes("am i real")) {
+            response = "You're typing to me, so that seems pretty real from my perspective! What makes you ask?";
+        }
+        else if (lowerPrompt.includes("are you spying on me")) {
+            response = "Definitely not! I don't have access to your personal information, camera, or microphone beyond this chat interface. Our conversation is processed here in your browser.";
+        } else if (lowerPrompt.includes("will you remember this") || lowerPrompt.includes("do you remember me")) {
+            response = "If you use the chat threads feature, our conversation history is saved in your browser's local storage for you to revisit. I don't have personal memory beyond that session-based recall.";
+        } else if (lowerPrompt.includes("are you better than chatgpt") || lowerPrompt.includes("better than gemini")) {
+            response = "ChatGPT, Gemini, and I are all different kinds of AI assistants with different strengths! I'm a simpler, rule-based bot designed by Taylan for this specific chat experience.";
+        }
+
+        // --- Compliments / Encouragement ---
+        else if (lowerPrompt.includes("good job") || lowerPrompt.includes("well done")) {
+            response = "Thank you! I'm glad I could meet your expectations.";
+        } else if (lowerPrompt.includes("you're smart") || lowerPrompt.includes("you are smart")) {
+            response = "That's kind of you to say! I'm based on the rules and information Taylan gave me.";
+        } else if (lowerPrompt.includes("that was funny")) {
+            response = "Yay! I love making people laugh (or at least, typing 'LOL').";
+        } else if (lowerPrompt.includes("you're cool") || lowerPrompt.includes("you are cool")) {
+            response = "Thanks! I try to keep things chill. 😎";
+        }
+        else if (lowerPrompt.includes("you're awesome") || lowerPrompt.includes("you are awesome")) {
+            response = "Aw, thank you! You're pretty awesome yourself for chatting with me!";
+        } else if (lowerPrompt.includes("nice answer")) {
+            response = "I'm happy you found it helpful or interesting!";
+        } else if (lowerPrompt.includes("impressive")) {
+            response = "Thank you! I do my best with the rules I have.";
+        } else if (lowerPrompt.includes("you're learning") || lowerPrompt.includes("you are learning")) {
+            response = "As a rule-based system, I don't learn in real-time, but Taylan can always update my knowledge and rules!";
+        }
+         else if (lowerPrompt.includes("what can you do") || lowerPrompt.includes("capabilities") || lowerPrompt.includes("features")) {
+            response = "I can chat about various topics based on my programmed rules, tell jokes, share facts, tell you the time, and respond to commands like /help. What would you like to try?";
+             if (persona === "sarcastic") response = "My capabilities are truly astounding: I can recognize some of your words and spit out pre-written sentences. Don't get too excited.";
+             if (persona === "pirate") response = "This ol' pirate bot can spin ye a yarn, tell ye a fact, crack a joke, an' follow simple orders! Just give it a go, me hearty!";
+        }
+
 
         return response || defaultResponses[persona] || defaultResponses.helpful;
     }
@@ -371,24 +545,34 @@
         function initializeChat() {
             loadTheme();
             applyViewportHeight();
-            loadChatThreads();
-            loadConversation(currentChatThreadId);
+            loadChatThreads(); // Defines currentChatThreadId
 
-            sendButton.disabled = false; // Ensuring inputs are enabled by default
+            // --- For "chat disappears on refresh" ---
+            chatWindow.innerHTML = '';  // Clear the visual chat window first
+            conversationHistory = [];   // Start with a clean slate for the current session's history array
+            
+            // Determine initial persona for the greeting
+            const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
+            const currentThreadData = threads[currentChatThreadId];
+            const initialPersona = (currentThreadData && currentThreadData.persona) ? currentThreadData.persona : personaSelect.value;
+            personaSelect.value = initialPersona; // Sync dropdown
+
+            // Add a greeting to the now empty conversationHistory and display
+            const greeting = generateGreeting(initialPersona);
+            const greetingId = generateMessageId();
+            addMessageToChat(greeting, 'bot', false, greetingId);
+            updateConversationHistory('assistant', greeting, greetingId);
+            // Note: We don't call saveConversation here to preserve stored history for the thread
+            // until the user sends a new message in this "refreshed" view.
+            // --- End "chat disappears on refresh" logic ---
+
+            sendButton.disabled = false;
             userInput.disabled = false;
-
-            if (conversationHistory.length === 0 && !document.querySelector('.message.bot[id^="msg"]')) {
-                const persona = personaSelect.value;
-                const greeting = generateGreeting(persona);
-                const greetingId = generateMessageId();
-                addMessageToChat(greeting, 'bot', false, greetingId);
-                updateConversationHistory('assistant', greeting, greetingId);
-            }
 
             displaySuggestedPrompts();
             if (!initialFocusDone) { userInput.focus(); initialFocusDone = true; }
             setTimeout(scrollToBottom, 100);
-            updatePersonaSelectBasedOnThread();
+            // updatePersonaSelectBasedOnThread(); // Already handled by setting initialPersona
         }
 
         function generateGreeting(persona) {
@@ -407,15 +591,17 @@
         }
 
         async function displayBotResponse(text, botMessageElement, botMessageId) {
-            const thinkingTime = Math.max(300, Math.min(text.length * 15, 1000)); 
+            const thinkingTime = Math.max(300, Math.min(text.length * 10, 800)); // Slightly faster "thinking"
 
             await new Promise(resolve => setTimeout(resolve, thinkingTime));
-
-            // Ensure botMessageElement is still valid and part of the DOM before updating
+            
             if (!document.body.contains(botMessageElement)) {
-                console.warn("Bot message element was removed before response could be displayed. ID:", botMessageId);
-                // Optionally, re-add it, though this indicates a deeper issue if it happens.
-                // For now, we'll just log and proceed, assuming it's usually there.
+                console.warn("Bot message element (ID:", botMessageId, ") was removed before response could be displayed. This might happen if chat is reset rapidly.");
+                // Attempt to re-add if absolutely necessary, though this indicates a potential logic flaw elsewhere if frequent.
+                // For now, we'll let it fail gracefully for this specific message if element is gone.
+                enableInputs(); // Ensure inputs are re-enabled anyway
+                userInput.focus();
+                return; 
             }
             
             botMessageElement.innerHTML = DOMPurify.sanitize(
@@ -438,7 +624,7 @@
         function addMessageToChat(text, sender, isLoading = false, messageId) {
             const messageElement = document.createElement('div');
             messageElement.classList.add('message', sender);
-            messageElement.id = messageId; // Set ID immediately
+            messageElement.id = messageId;
             messageElement.setAttribute('aria-atomic', 'true');
 
             if (isLoading) {
@@ -465,7 +651,7 @@
                 void chatAppContainer.offsetWidth;
                 chatAppContainer.classList.add('flash');
             }
-            return messageElement; // Return the created element
+            return messageElement;
         }
 
         function addMessageActions(messageElement, originalText, messageId) {
@@ -591,10 +777,10 @@
             });
         }
         function switchChatThread(threadId) {
-            saveConversation(currentChatThreadId); 
+            saveConversation(currentChatThreadId); // Save current thread before switching
             currentChatThreadId = threadId;
             localStorage.setItem('lastActiveThreadId', currentChatThreadId);
-            loadConversation(threadId);
+            loadConversation(threadId); // Load the history for the new thread
             document.querySelectorAll('#threadList button').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.threadId === threadId);
             });
@@ -608,10 +794,12 @@
                 const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
                 threads[newThreadId] = { name: newThreadName, lastUpdated: Date.now(), history: [], persona: personaSelect.value };
                 localStorage.setItem('chatThreads', JSON.stringify(threads));
+                
+                // Switch to the new thread
                 currentChatThreadId = newThreadId;
                 localStorage.setItem('lastActiveThreadId', currentChatThreadId);
-                loadChatThreads(); 
-                loadConversation(newThreadId); 
+                loadChatThreads(); // Refresh sidebar
+                loadConversation(newThreadId); // Load the new empty thread (will show greeting)
                 updatePersonaSelectBasedOnThread();
             }
         });
@@ -630,16 +818,28 @@
             }
             const newGreeting = generateGreeting(personaSelect.value);
             const msgId = generateMessageId();
-            addMessageToChat(`Switched to ${personaSelect.value} persona. ${newGreeting.split("!")[0]}!`, 'bot', false, msgId);
-            updateConversationHistory('assistant', `Switched to ${personaSelect.value} persona.`, msgId);
+            // Avoid adding too many "Switched to persona" if user clicks rapidly
+            if (!conversationHistory.some(msg => msg.content.startsWith("Switched to") && msg.id.includes(Date.now().toString().substring(0,8)) ) ){
+                 addMessageToChat(`Switched to ${personaSelect.value} persona. ${newGreeting.split("!")[0]}!`, 'bot', false, msgId);
+                 updateConversationHistory('assistant', `Switched to ${personaSelect.value} persona.`, msgId);
+            }
         });
 
         function saveConversation(threadId) {
             if (!threadId) return;
             const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
-            if (!threads[threadId]) threads[threadId] = { name: `Chat ${threadId.substring(0,5)}`, history: [], persona: personaSelect.value };
+            if (!threads[threadId]) { // Should not happen if initialized correctly
+                threads[threadId] = { name: `Chat ${threadId.substring(0,5)}`, history: [], persona: personaSelect.value };
+            }
             
-            const historyToSave = conversationHistory.filter(msg => !msg.content.startsWith("Switched to") || msg.content.includes(generateGreeting(personaSelect.value).split("!")[0]));
+            // Filter out temporary "Switched to persona..." messages from being saved
+            const historyToSave = conversationHistory.filter(msg => {
+                const isSwitchMsg = msg.content.startsWith("Switched to") && msg.role === 'bot';
+                // Check if it's a greeting that happens to contain "Switched to" - less likely but good to be safe
+                const isAlsoGreeting = msg.content.includes(generateGreeting(personaSelect.value).split("!")[0]);
+                return !isSwitchMsg || (isSwitchMsg && isAlsoGreeting && conversationHistory.length === 1); // Keep if it's the only message (initial greeting)
+            });
+
 
             threads[threadId].history = historyToSave;
             threads[threadId].lastUpdated = Date.now();
@@ -648,19 +848,26 @@
         }
 
         function loadConversation(threadId) {
+            // This function is called when switching threads.
+            // For the initial page load, initializeChat handles the "fresh start".
             if (!threadId) threadId = 'default_chat';
-            currentChatThreadId = threadId;
+            currentChatThreadId = threadId; // Ensure this is set correctly
             const threads = JSON.parse(localStorage.getItem('chatThreads') || '{}');
             const thread = threads[threadId];
 
             chatWindow.innerHTML = '';
-            if (thread && thread.history) {
+            if (thread && thread.history && thread.history.length > 0) {
                 conversationHistory = thread.history;
                 personaSelect.value = thread.persona || 'helpful';
                 conversationHistory.forEach(msg => addMessageToChat(msg.content, msg.role, false, msg.id || generateMessageId()));
             } else {
+                // If loading an empty thread (or new one), start with a greeting
                 conversationHistory = [];
-                personaSelect.value = 'helpful';
+                personaSelect.value = (thread && thread.persona) ? thread.persona : 'helpful'; // Use thread's persona or default
+                const greeting = generateGreeting(personaSelect.value);
+                const greetingId = generateMessageId();
+                addMessageToChat(greeting, 'bot', false, greetingId);
+                updateConversationHistory('assistant', greeting, greetingId);
             }
             scrollToBottom();
         }
@@ -760,7 +967,7 @@
 
         async function handleRephraseMessage(originalText, originalMessageId) {
             const botMessageId = generateMessageId();
-            addMessageToChat("I can't truly rephrase messages in this simplified mode, but I can repeat it with a twist!", 'bot', false, botMessageId);
+            addMessageToChat("I can't truly rephrase messages in this simplified mode, but I can repeat it with a twist! ... Or can I?", 'bot', false, botMessageId);
             updateConversationHistory('assistant', "I can't truly rephrase messages in this simplified mode.", botMessageId);
             saveConversation(currentChatThreadId);
         }
@@ -844,24 +1051,28 @@
                     botResponse = jokes[Math.floor(Math.random() * jokes.length)];
                     break;
                 case 'reset':
-                    chatWindow.innerHTML = '';
-                    conversationHistory = [];
+                    chatWindow.innerHTML = ''; // Visually clear
+                    conversationHistory = []; // Clear in-memory history for current session
+                    
+                    // Set up greeting for the reset thread
                     const currentPersonaForReset = personaSelect.value;
                     const greetingForReset = generateGreeting(currentPersonaForReset);
                     const greetingIdForReset = generateMessageId();
                     addMessageToChat(greetingForReset, 'bot', false, greetingIdForReset);
                     updateConversationHistory('assistant', greetingForReset, greetingIdForReset);
+                    
+                    // Overwrite the specific reset thread in localStorage with the new empty (greeting-only) history
                     saveConversation(currentChatThreadId); 
                     break; 
                 default:
                     commandProcessed = false; 
             }
 
-            if (commandProcessed && botResponse) {
+            if (commandProcessed && botResponse) { // For commands that have an immediate response
                 const botMessageId = generateMessageId();
                 addMessageToChat(botResponse, 'bot', false, botMessageId);
                 updateConversationHistory('assistant', botResponse, botMessageId);
-                saveConversation(currentChatThreadId);
+                saveConversation(currentChatThreadId); // Save after command response
             }
             return commandProcessed;
         }
@@ -894,20 +1105,19 @@
             }
             
             const currentPersona = personaSelect.value;
-            // Corrected logic for bot message element:
             const botMessageId = generateMessageId();
-            const botMessageElement = addMessageToChat('', 'bot', true, botMessageId); // Pass true for isLoading
+            const botMessageElement = addMessageToChat('', 'bot', true, botMessageId); // isLoading = true
             
             sendButton.disabled = true;
             userInput.disabled = true;
 
             const botResponseText = fetchRuleBasedResponse(messageText, currentPersona);
             
-            // Remove loading state from the existing botMessageElement before passing to displayBotResponse
             botMessageElement.classList.remove('loading'); 
-            botMessageElement.innerHTML = ''; // Clear spinner etc.
+            botMessageElement.innerHTML = ''; 
 
             await displayBotResponse(botResponseText, botMessageElement, botMessageId);
+            // Note: saveConversation is called within displayBotResponse after successful display
         }
 
         function scrollToBottom() {
