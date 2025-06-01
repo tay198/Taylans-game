@@ -122,7 +122,7 @@
   <h1>Taylan's Game</h1>
   <div id="scoreBoard">Score: <span id="score">0</span></div>
   <div id="timer">Time: <span id="timeLeft">30</span>s</div>
-  <div id="combo" style="min-height: 24px;"></div> {/* Note: min-height: 24px might be larger than 18px font needs, but it's fine */}
+  <div id="combo" style="min-height: 24px;"></div>
   <div id="gameArea">
     <div id="gameOverMessage"></div>
   </div>
@@ -187,7 +187,7 @@
             navigator.vibrate([100, 50, 100]);
           }
 
-          gameOverMessage.textContent = 'YOU KILLED JAKE!, GAME OVER DUDE';
+          gameOverMessage.textContent = 'YOU KILLED HIM, GAME OVER DUDE';
           gameOverMessage.style.display = 'block';
           endGame();
         } else { // Clicked Stacey
@@ -272,8 +272,7 @@
 
       clearGameElements();
 
-      // MOD: Play music when game starts
-      music.play().catch(error => console.error("Error playing audio:", error)); // Added catch for robustness
+      music.play().catch(error => console.error("Error playing audio:", error));
 
       spawnInterval = setInterval(spawnFace, 850);
       gameInterval = setInterval(updateTimer, 1000);
@@ -294,7 +293,6 @@
       startButton.textContent = 'Restart Game';
       startButton.disabled = false;
 
-      // MOD: Pause music and reset to start when game ends
       music.pause();
       music.currentTime = 0;
 
@@ -313,11 +311,6 @@
 
     startButton.addEventListener('click', startGame);
 
-    /*
-    // Placeholder for other sound effects if you want to add them later
-    const staceySound = new Audio('path/to/stacey_click_sound.mp3');
-    const jakeSound = new Audio('path/to/jake_click_sound.mp3');
-    */
   </script>
 </body>
 </html>
