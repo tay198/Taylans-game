@@ -9,7 +9,7 @@
       --original-bg: linear-gradient(135deg, #e0f7fa, #c5e1a5);
       background: var(--original-bg);
       margin: 0;
-      padding: 0; /* MODIFIED: Was 10px 0 */
+      padding: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -18,23 +18,22 @@
       overflow-y: auto;
       overflow-x: hidden;
     }
-    /* ADDED: Styling for H1 to reduce its space */
     h1 {
-      font-size: 1.8em; /* MODIFIED: Smaller than default 2em */
-      margin-top: 8px;   /* MODIFIED: Reduced top margin */
-      margin-bottom: 8px;/* MODIFIED: Reduced bottom margin */
+      font-size: 1.8em;
+      margin-top: 8px;
+      margin-bottom: 8px;
     }
     #scoreBoard, #timer, #combo {
-      margin: 4px; /* MODIFIED: Was 8px */
-      font-size: 18px; /* MODIFIED: Was 20px */
+      margin: 4px;
+      font-size: 18px;
       color: #333;
     }
     #gameArea {
       position: relative;
       width: 90vw;
-      height: 65vh; /* MODIFIED: Was 70vh */
+      height: 65vh;
       max-width: 450px;
-      max-height: 650px; /* Kept max-height, 65vh will usually be determining factor on phones */
+      max-height: 650px;
       background-color: #fff;
       border: 2px solid #333;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
@@ -58,9 +57,9 @@
       100% { transform: scale(0.8) rotate(-15deg); opacity: 0; filter: brightness(0.8); }
     }
     #startButton {
-      margin-top: 8px;    /* MODIFIED: Was 20px */
-      padding: 10px 20px; /* MODIFIED: Was 15px 30px */
-      font-size: 16px;    /* MODIFIED: Was 18px */
+      margin-top: 8px;
+      padding: 10px 20px;
+      font-size: 16px;
       background-color: #007bff;
       color: white;
       border: none;
@@ -141,7 +140,6 @@
     const startButton = document.getElementById('startButton');
 
     const music = document.getElementById('gameMusic');
-    // ADDED: Get the game over sound element
     const gameOverSound = document.getElementById('gameOverSound');
 
     const staceyURL = 'https://i.imgur.com/qDTf6hn.jpeg';
@@ -155,9 +153,12 @@
     let comboCount = 0;
     let comboTimeout;
 
-    let flickerInterval;
+    let flickerInterval = null; // MODIFIED: Initialize to null
     let originalBodyBackground = getComputedStyle(document.body).getPropertyValue('--original-bg');
     let isFlickerRed = false;
+    
+    // ADDED: Timeout for game over flicker effect
+    let gameOverFlickerTimeout = null;
 
     function spawnFace() {
       if (!gameActive) return;
@@ -178,7 +179,6 @@
         if (!gameActive) return;
 
         if (isJake) {
-          // gameActive = false; // Moved to endGame to ensure sound plays
           const blood = document.createElement('div');
           blood.className = 'blood-overlay';
           blood.style.left = (img.offsetLeft + (img.offsetWidth / 2) - 35) + 'px';
@@ -191,7 +191,7 @@
 
           gameOverMessage.textContent = 'YOU KILLED HIM, GAME OVER DUDE';
           gameOverMessage.style.display = 'block';
-          endGame(); // Call endGame to handle game over logic including sound
+          endGame();
         } else { // Clicked Stacey
           img.classList.add('sparkle');
           comboCount++;
@@ -246,21 +246,28 @@
       if (timeLeft <= 0) {
         gameOverMessage.textContent = "Time's Up! GAME OVER";
         gameOverMessage.style.display = 'block';
-        endGame(); // Call endGame to handle game over logic including sound
+        endGame();
       }
     }
 
     function toggleBackgroundColor() {
         if (isFlickerRed) {
-            document.body.style.background = 'rgba(0,0,255,0.3)';
+            document.body.style.background = 'rgba(0,0,255,0.3)'; // Blue
         } else {
-            document.body.style.background = 'rgba(255,0,0,0.3)';
+            document.body.style.background = 'rgba(255,0,0,0.3)'; // Red
         }
         isFlickerRed = !isFlickerRed;
     }
 
     function startGame() {
-      // Ensure game over sound is reset if played previously
+      // ADDED: Clear any pending game over flicker timeout
+      if (gameOverFlickerTimeout) {
+        clearTimeout(gameOverFlickerTimeout);
+        gameOverFlickerTimeout = null;
+        // If this timeout was running, the flickerInterval might still be active
+        // and background might not be original. The lines below will fix this.
+      }
+
       gameOverSound.pause();
       gameOverSound.currentTime = 0;
 
@@ -278,25 +285,39 @@
 
       clearGameElements();
 
-      music.play().catch(error => console.error("Error playing game music:", error));
+      music.play().catch(error => console.error("Error playing audio:", error));
+
+      // Clear any existing flickerInterval from previous game or game over
+      if (flickerInterval) {
+        clearInterval(flickerInterval);
+        flickerInterval = null;
+      }
+      // Start new flicker for the game
+      isFlickerRed = false; // Reset to ensure consistent start, e.g., red first
+      toggleBackgroundColor(); // Set initial color (will be red)
+      flickerInterval = setInterval(toggleBackgroundColor, 300);
 
       spawnInterval = setInterval(spawnFace, 850);
       gameInterval = setInterval(updateTimer, 1000);
-
-      if (flickerInterval) clearInterval(flickerInterval);
-      flickerInterval = setInterval(toggleBackgroundColor, 300);
     }
 
     function endGame() {
-      if (!gameActive) return; // Prevent endGame from running multiple times
-      gameActive = false;
+      if (!gameActive && !gameOverMessage.style.display === 'block') return; // Prevent endGame from running multiple times unless game over message is already shown
+      
+      // If game is already over (e.g. timer ran out, and then player clicks Jake, or vice-versa)
+      // and the extended flicker is already scheduled, don't re-schedule.
+      // However, we do want to ensure the game over state is fully set.
+      const wasAlreadyOver = !gameActive;
+      
+      gameActive = false; // Set game as inactive
 
       clearInterval(spawnInterval);
       clearInterval(gameInterval);
       clearTimeout(comboTimeout);
 
-      clearInterval(flickerInterval);
-      document.body.style.background = originalBodyBackground;
+      // Don't stop flicker or reset background immediately
+      // clearInterval(flickerInterval);
+      // document.body.style.background = originalBodyBackground;
 
       startButton.textContent = 'Restart Game';
       startButton.disabled = false;
@@ -304,9 +325,23 @@
       music.pause();
       music.currentTime = 0;
 
-      // ADDED: Play game over sound
-      gameOverSound.currentTime = 0; // Rewind to start in case it was partially played
-      gameOverSound.play().catch(error => console.error("Error playing game over sound:", error));
+      if (!wasAlreadyOver || gameOverSound.paused) { // Play sound if not already played for this game over sequence
+          gameOverSound.currentTime = 0;
+          gameOverSound.play().catch(error => console.error("Error playing game over sound:", error));
+      }
+      
+      // If a game over flicker timeout is already running, let it finish.
+      // Only set a new one if one isn't already in progress for this game over sequence.
+      if (!gameOverFlickerTimeout) {
+        gameOverFlickerTimeout = setTimeout(() => {
+          if (flickerInterval) { // Check if it wasn't cleared by a new game starting
+              clearInterval(flickerInterval);
+              flickerInterval = null;
+          }
+          document.body.style.background = originalBodyBackground;
+          gameOverFlickerTimeout = null; // Clear the reference to this timeout
+        }, 6000); // 6 seconds
+      }
     }
 
     function clearGameElements() {
