@@ -8,6 +8,8 @@
     body {
       font-family: Arial, sans-serif;
       text-align: center;
+      /* The background gradient below will be overridden by the :root, body rule further down,
+         but other properties like flex layout, font, etc., will still apply. */
       background: linear-gradient(135deg, #e0f7fa, #c5e1a5);
       margin: 0;
       padding: 0;
@@ -19,12 +21,14 @@
       overflow: hidden;
     }
 
-    #gameArea {
+    /* Increased specificity for #gameArea and added color-scheme */
+    html body div#gameArea {
       width: 90vw;
       height: 70vh;
       max-width: 400px;
       max-height: 600px;
       background-color: #ffffff !important; /* Force white */
+      color-scheme: light !important; /* Force light scheme for this element */
       border: 2px solid #333;
       position: relative;
       box-shadow: 0 6px 12px rgba(0,0,0,0.15);
@@ -32,7 +36,7 @@
       z-index: 1;
     }
 
-    #dot {
+    #dot { /* Tay's original selector for dot is fine */
       width: 50px;
       height: 50px;
       background-color: #ff4081;
@@ -40,7 +44,7 @@
       position: absolute;
       cursor: pointer;
       display: none;
-      z-index: 10;
+      z-index: 10; /* Ensures dot is above gameArea */
       transition: transform 0.1s ease, opacity 0.1s ease;
     }
 
@@ -52,31 +56,31 @@
     #scoreBoard {
       font-size: 24px;
       margin-top: 10px;
-      color: #333;
+      color: #333; /* This might be overridden by the :root, body color rule if not specific enough */
     }
 
     #timer {
       font-size: 20px;
       margin-bottom: 10px;
-      color: #555;
+      color: #555; /* This might be overridden */
     }
 
     #combo {
       font-size: 18px;
-      color: #007bff;
+      color: #007bff; /* This might be overridden */
       min-height: 20px;
     }
 
     .score-popup {
       position: absolute;
       background-color: rgba(0, 0, 0, 0.7);
-      color: white;
+      color: white; /* Explicitly white, should be fine */
       padding: 5px 10px;
       border-radius: 5px;
       font-size: 16px;
       animation: fadeOut 0.5s ease-out forwards;
       pointer-events: none;
-      z-index: 999;
+      z-index: 999; /* Above dot if dot is z-index 10 and they share stacking context */
     }
 
     @keyframes fadeOut {
@@ -87,11 +91,12 @@
       padding: 12px 24px;
       font-size: 20px;
       background-color: #007bff;
-      color: white;
+      color: white; /* Explicitly white, should be fine */
       border: none;
       border-radius: 6px;
       margin-top: 15px;
       cursor: pointer;
+      z-index: 2; /* Ensure button is above general body, if needed */
     }
 
     #startButton:disabled {
@@ -104,23 +109,28 @@
       margin-top: 20px;
       font-size: 20px;
       font-weight: bold;
-      color: #d32f2f;
+      color: #d32f2f; /* Explicit color, likely fine */
+      z-index: 2;
+    }
+
+    /* New rule to force light mode globally and override body background/text color */
+    :root, body {
+      background-color: #e0f7fa !important; /* Overrides body's linear-gradient to solid light blue */
+      color: #000 !important; /* Default text color for the page to black */
+      color-scheme: light !important; /* Force light scheme for the whole document */
     }
   </style>
 </head>
 <body>
 
-  <h1>Taylan's Game</h1>
-  <div id="scoreBoard">Score: <span id="score">0</span></div>
-  <div id="timer">Time: <span id="timeLeft">30</span>s</div>
-  <div id="combo"></div>
-  <div id="gameArea">
+  <h1>Taylan's Game</h1> <div id="scoreBoard">Score: <span id="score">0</span></div> <div id="timer">Time: <span id="timeLeft">30</span>s</div> <div id="combo"></div> <div id="gameArea">
     <div id="dot"></div>
   </div>
   <button id="startButton">Start Game</button>
   <div id="gameOverMessage"></div>
 
   <script>
+    // JavaScript from Tay's "✅ Copy-Paste This Fixed HTML" version
     const dot = document.getElementById('dot');
     const gameArea = document.getElementById('gameArea');
     const scoreDisplay = document.getElementById('score');
@@ -133,20 +143,22 @@
     let timeLeft = 30;
     let comboCount = 0;
     let lastTapTime = 0;
-    let currentDotSize = 50;
+    let currentDotSize = 50; // Initial dot size
     let gameActive = false;
     let gameInterval, dotTimeout;
-    const comboThreshold = 700;
-    let spawnInterval = 1500;
-    const minInterval = 600;
-    const minDotSize = 20;
+    const comboThreshold = 700; // ms
+    let spawnInterval = 1500; // ms
+    const minInterval = 600; // ms
+    const minDotSize = 20; // px
+    const initialDotSize = 50; // Store initial size for reset
 
     function getRandomPosition() {
+      // Use clientWidth/Height which excludes border, good for internal positioning
       const width = gameArea.clientWidth - currentDotSize;
       const height = gameArea.clientHeight - currentDotSize;
       return {
-        x: Math.random() * width,
-        y: Math.random() * height
+        x: Math.max(0, Math.random() * width), // Ensure x is not negative if area is smaller than dot
+        y: Math.max(0, Math.random() * height)  // Ensure y is not negative
       };
     }
 
@@ -158,16 +170,17 @@
       dot.style.width = currentDotSize + 'px';
       dot.style.height = currentDotSize + 'px';
       dot.style.display = 'block';
-      dot.style.opacity = 1;
+      dot.style.opacity = 1; // Ensure it's visible
+      dot.style.transform = 'scale(1)'; // Reset any pop effect
 
       clearTimeout(dotTimeout);
       dotTimeout = setTimeout(() => {
         if (gameActive) {
-          comboCount = 0;
+          comboCount = 0; // Reset combo if dot times out
           comboDisplay.textContent = '';
           moveDot();
         }
-      }, spawnInterval + 500);
+      }, spawnInterval + 500); // Dot disappears/moves if not clicked
     }
 
     function handleDotClick(e) {
@@ -178,7 +191,7 @@
       lastTapTime = now;
 
       const comboBonus = Math.max(0, comboCount - 1) * 2;
-      const points = 5 + comboBonus;
+      const points = 5 + comboBonus; // Base points + combo bonus
       score += points;
       scoreDisplay.textContent = score;
       comboDisplay.textContent = comboCount > 1 ? `Combo x${comboCount}!` : '';
@@ -190,39 +203,44 @@
       popup.className = 'score-popup';
       popup.textContent = `+${points}`;
       const rect = gameArea.getBoundingClientRect();
-      popup.style.left = (e.clientX - rect.left - 10) + 'px';
-      popup.style.top = (e.clientY - rect.top - 25) + 'px';
+      // Adjust click coordinates for popup positioning relative to gameArea
+      popup.style.left = (e.clientX - rect.left - 10) + 'px'; // Adjust -10 for centering
+      popup.style.top = (e.clientY - rect.top - 25) + 'px'; // Adjust -25 for above click
       gameArea.appendChild(popup);
-      setTimeout(() => popup.remove(), 500);
+      setTimeout(() => popup.remove(), 500); // Modern way to remove element
 
-      dot.style.display = 'none';
-      clearTimeout(dotTimeout);
+      dot.style.display = 'none'; // Hide dot immediately
+      clearTimeout(dotTimeout); // Prevent old timeout from firing
 
-      currentDotSize = Math.max(minDotSize, currentDotSize - 1);
-      spawnInterval = Math.max(minInterval, spawnInterval - 30);
-      setTimeout(moveDot, 100);
+      // Game difficulty progression
+      currentDotSize = Math.max(minDotSize, currentDotSize - 1); // Shrink dot
+      spawnInterval = Math.max(minInterval, spawnInterval - 30); // Spawn faster
+      setTimeout(moveDot, 100); // Spawn next dot quickly
     }
 
     function updateTimer() {
       timeLeft--;
       timeLeftDisplay.textContent = timeLeft;
-      if (timeLeft <= 0) endGame();
+      if (timeLeft <= 0) {
+        endGame();
+      }
     }
 
     function startGame() {
       score = 0;
       timeLeft = 30;
       comboCount = 0;
-      currentDotSize = 50;
-      spawnInterval = 1500;
-      scoreDisplay.textContent = 0;
-      timeLeftDisplay.textContent = 30;
+      currentDotSize = initialDotSize; // Reset dot size
+      spawnInterval = 1500; // Reset spawn interval
+      scoreDisplay.textContent = score; // Use variable directly
+      timeLeftDisplay.textContent = timeLeft; // Use variable
       comboDisplay.textContent = '';
       gameOverMessage.style.display = 'none';
       startButton.disabled = true;
       gameActive = true;
 
-      moveDot();
+      dot.style.display = 'none'; // Ensure dot is hidden before first move
+      moveDot(); // First dot appears immediately
       gameInterval = setInterval(updateTimer, 1000);
     }
 
@@ -236,12 +254,21 @@
       gameOverMessage.textContent = `Game Over! Final Score: ${score}`;
     }
 
+    // Event Listeners
     startButton.addEventListener('click', startGame);
+    // Add touchstart for startButton for better mobile responsiveness
+    startButton.addEventListener('touchstart', function(e) {
+      e.preventDefault(); // Prevent click from also firing if desired
+      if (!startButton.disabled) {
+        startGame();
+      }
+    });
+
     dot.addEventListener('click', handleDotClick);
     dot.addEventListener('touchstart', function(e) {
       e.preventDefault();
       if (e.touches && e.touches.length > 0) {
-        handleDotClick(e.touches[0]);
+        handleDotClick(e.touches[0]); // Pass the first touch point
       }
     });
   </script>
