@@ -1,99 +1,101 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Taylan's Game</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    background: linear-gradient(135deg, #e0f7fa, #c5e1a5);
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    overflow: hidden;
-  }
-  #gameArea {
-    width: 90vw;
-    height: 70vh;
-    max-width: 400px;
-    max-height: 600px;
-    background-color: #fff;
-    border: 2px solid #333;
-    position: relative;
-    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-    overflow: hidden;
-  }
-  #dot {
-    width: 50px;
-    height: 50px;
-    background-color: #ff4081;
-    border-radius: 50%;
-    position: absolute;
-    cursor: pointer;
-    transition: transform 0.1s ease-out, opacity 0.1s ease-out, width 0.1s ease-out, height 0.1s ease-out;
-    display: none;
-  }
-  #dot.pop {
-    transform: scale(1.2);
-    opacity: 0.8;
-  }
-  #scoreBoard {
-    font-size: 28px;
-    margin-bottom: 10px;
-    color: #333;
-  }
-  #timer {
-    font-size: 22px;
-    margin-bottom: 15px;
-    color: #555;
-  }
-  #combo {
-    font-size: 18px;
-    color: #007bff;
-    margin-bottom: 5px;
-    min-height: 20px;
-  }
-  .score-popup {
-    position: absolute;
-    background-color: rgba(0, 0, 0, 0.7);
-    color: white;
-    padding: 5px 10px;
-    border-radius: 5px;
-    font-size: 16px;
-    animation: fadeOut 0.5s ease-in-out forwards;
-    pointer-events: none;
-  }
-  @keyframes fadeOut {
-    to { opacity: 0; transform: translateY(-20px); }
-  }
-  button {
-    padding: 12px 24px;
-    font-size: 20px;
-    cursor: pointer;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 7px;
-    margin-top: 25px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
-  button:disabled {
-    background-color: #ccc;
-    cursor: default;
-  }
-  #gameOverMessage {
-    display: none;
-    margin-top: 25px;
-    font-size: 22px;
-    color: #d32f2f;
-    font-weight: bold;
-  }
-</style>
+  <title>Taylan's Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: linear-gradient(135deg, #e0f7fa, #c5e1a5);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    #gameArea {
+      width: 90vw;
+      height: 70vh;
+      max-width: 400px;
+      max-height: 600px;
+      background-color: #fff;
+      border: 2px solid #333;
+      position: relative;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+      overflow: hidden;
+    }
+    #dot {
+      width: 50px;
+      height: 50px;
+      background-color: #ff4081;
+      border-radius: 50%;
+      position: absolute;
+      cursor: pointer;
+      transition: transform 0.1s ease-out, opacity 0.1s ease-out, width 0.1s ease-out, height 0.1s ease-out;
+      display: none;
+      z-index: 1000;
+    }
+    #dot.pop {
+      transform: scale(1.2);
+      opacity: 0.8;
+    }
+    #scoreBoard {
+      font-size: 28px;
+      margin-bottom: 10px;
+      color: #333;
+    }
+    #timer {
+      font-size: 22px;
+      margin-bottom: 15px;
+      color: #555;
+    }
+    #combo {
+      font-size: 18px;
+      color: #007bff;
+      margin-bottom: 5px;
+      min-height: 20px;
+    }
+    .score-popup {
+      position: absolute;
+      background-color: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 16px;
+      animation: fadeOut 0.5s ease-in-out forwards;
+      pointer-events: none;
+      z-index: 1001;
+    }
+    @keyframes fadeOut {
+      to { opacity: 0; transform: translateY(-20px); }
+    }
+    button {
+      padding: 12px 24px;
+      font-size: 20px;
+      cursor: pointer;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 7px;
+      margin-top: 25px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    button:disabled {
+      background-color: #ccc;
+      cursor: default;
+    }
+    #gameOverMessage {
+      display: none;
+      margin-top: 25px;
+      font-size: 22px;
+      color: #d32f2f;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
 
@@ -164,11 +166,7 @@
   function handleDotClick(event) {
     if (!gameActive || dot.style.display === 'none') return;
     const currentTime = Date.now();
-    if (currentTime - lastTapTime < comboThreshold) {
-      comboCount++;
-    } else {
-      comboCount = 1;
-    }
+    comboCount = currentTime - lastTapTime < comboThreshold ? comboCount + 1 : 1;
     lastTapTime = currentTime;
     comboDisplay.textContent = comboCount > 1 ? `Combo x${comboCount}!` : '';
     const comboBonus = Math.max(0, comboCount - 1) * 2;
@@ -190,9 +188,7 @@
     scorePopup.style.top = (popupY - 30) + 'px';
     gameArea.appendChild(scorePopup);
     setTimeout(() => {
-      if (gameArea.contains(scorePopup)) {
-        gameArea.removeChild(scorePopup);
-      }
+      if (gameArea.contains(scorePopup)) gameArea.removeChild(scorePopup);
     }, 500);
 
     dot.style.display = 'none';
@@ -211,9 +207,7 @@
   function updateTimer() {
     timeLeft--;
     timeLeftDisplay.textContent = timeLeft;
-    if (timeLeft <= 0) {
-      endGame();
-    }
+    if (timeLeft <= 0) endGame();
   }
 
   function startGame() {
@@ -247,9 +241,7 @@
   startButton.addEventListener('click', startGame);
   startButton.addEventListener('touchstart', function(event){
     event.preventDefault();
-    if(!startButton.disabled){
-      startGame();
-    }
+    if (!startButton.disabled) startGame();
   });
 
   gameOverMessage.style.display = 'none';
