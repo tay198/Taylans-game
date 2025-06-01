@@ -1,197 +1,171 @@
-<!DOCTYPE html>
-<html>
+<!DOCTYPE html><html>
 <head>
   <title>Taylan's Game</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       font-family: Arial, sans-serif;
-      text-align: center;
-      background: linear-gradient(135deg, #0d4d3e, #013220);
-      color: #fff;
+      background: linear-gradient(135deg, #e0f7fa, #c5e1a5);
       margin: 0;
-      padding: 20px;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      height: 100vh;
+      overflow: hidden;
     }
-    h1 { margin-top: 10px; }
     #scoreBoard, #timer, #combo {
-      margin: 10px 0;
+      margin: 8px;
+      font-size: 20px;
     }
-    #combo { color: yellow; min-height: 20px; }
     #gameArea {
       position: relative;
       width: 90vw;
       height: 60vh;
       max-width: 400px;
-      max-height: 500px;
-      margin: 0 auto;
-      background-color: #111;
-      border: 2px solid #ccc;
+      max-height: 600px;
+      background-color: #fff;
+      border: 2px solid #333;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       overflow: hidden;
-      border-radius: 10px;
     }
-    #dot {
+    .face {
       position: absolute;
       width: 60px;
       height: 60px;
+      object-fit: cover;
       border-radius: 50%;
       cursor: pointer;
-      display: none;
-      z-index: 2;
+    }
+    .sparkle {
+      animation: sparkle 0.5s ease-out;
+    }
+    @keyframes sparkle {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(1.5); opacity: 0; }
     }
     #startButton {
       margin-top: 20px;
-      padding: 15px 25px;
+      padding: 12px 24px;
       font-size: 18px;
-      border: none;
-      background: #007bff;
+      background-color: #007bff;
       color: white;
-      border-radius: 8px;
+      border: none;
+      border-radius: 5px;
       cursor: pointer;
     }
     #gameOverMessage {
-      margin-top: 20px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       font-size: 22px;
-      font-weight: bold;
       color: red;
+      font-weight: bold;
+      z-index: 10;
+      display: none;
+      text-align: center;
     }
     .blood-overlay {
       position: absolute;
       width: 60px;
       height: 60px;
+      background-image: url('https://i.imgur.com/AhrFSJL.jpeg');
+      background-size: cover;
+      z-index: 1000;
       pointer-events: none;
-      z-index: 3;
     }
   </style>
 </head>
 <body>
+  <h1>Taylan's Game</h1>
+  <div id="scoreBoard">Score: <span id="score">0</span></div>
+  <div id="timer">Time: <span id="timeLeft">30</span>s</div>
+  <div id="combo"></div>
+  <div id="gameArea">
+    <div id="gameOverMessage"></div>
+  </div>
+  <button id="startButton">Start Game</button>  <script>
+    const gameArea = document.getElementById('gameArea');
+    const scoreDisplay = document.getElementById('score');
+    const timeDisplay = document.getElementById('timeLeft');
+    const comboDisplay = document.getElementById('combo');
+    const gameOverMessage = document.getElementById('gameOverMessage');
+    const startButton = document.getElementById('startButton');
 
-<h1>Taylan's Game</h1>
-<div id="scoreBoard">Score: <span id="score">0</span></div>
-<div id="timer">Time: <span id="timeLeft">30</span>s</div>
-<div id="combo"></div>
-<div id="gameArea">
-  <img id="dot" src="" alt="face">
-</div>
-<button id="startButton">Start Game</button>
-<div id="gameOverMessage"></div>
+    const staceyURL = 'https://i.imgur.com/qDTf6hn.jpeg';
+    const jakeURL = 'https://i.imgur.com/hDQyFFS.jpeg';
+    const bloodURL = 'https://i.imgur.com/AhrFSJL.jpeg';
 
-<script>
-  const dot = document.getElementById("dot");
-  const gameArea = document.getElementById("gameArea");
-  const startButton = document.getElementById("startButton");
-  const scoreBoard = document.getElementById("score");
-  const timeLeftDisplay = document.getElementById("timeLeft");
-  const comboDisplay = document.getElementById("combo");
-  const gameOverMessage = document.getElementById("gameOverMessage");
+    let score = 0;
+    let timeLeft = 30;
+    let gameInterval, spawnInterval;
+    let comboCount = 0;
+    let gameActive = false;
 
-  const staceyImg = "https://i.imgur.com/qDTf6hn.jpeg";
-  const jakeImg = "https://i.imgur.com/hDQyFFS.jpeg";
-  const jakeBloodImg = "https://i.imgur.com/YOuN3Yf.png";
+    function spawnFace() {
+      const isJake = Math.random() < 0.2;
+      const img = document.createElement('img');
+      img.src = isJake ? jakeURL : staceyURL;
+      img.classList.add('face');
 
-  let score = 0;
-  let timeLeft = 30;
-  let gameActive = false;
-  let gameInterval;
-  let dotTimeout;
-  let combo = 0;
-  let lastTap = 0;
-  let currentDotIsJake = false;
+      const x = Math.random() * (gameArea.clientWidth - 60);
+      const y = Math.random() * (gameArea.clientHeight - 60);
+      img.style.left = x + 'px';
+      img.style.top = y + 'px';
 
-  function randomPosition(dotSize) {
-    const areaRect = gameArea.getBoundingClientRect();
-    const x = Math.random() * (gameArea.clientWidth - dotSize);
-    const y = Math.random() * (gameArea.clientHeight - dotSize);
-    return { x, y };
-  }
+      img.addEventListener('click', () => {
+        if (!gameActive) return;
+        if (isJake) {
+          const blood = document.createElement('div');
+          blood.className = 'blood-overlay';
+          blood.style.left = x + 'px';
+          blood.style.top = y + 'px';
+          gameArea.appendChild(blood);
+          gameOverMessage.textContent = 'YOU KILLED HIM, GAME OVER DUDE';
+          gameOverMessage.style.display = 'block';
+          endGame();
+        } else {
+          img.classList.add('sparkle');
+          score += 5;
+          scoreDisplay.textContent = score;
+        }
+        setTimeout(() => img.remove(), 200);
+      });
 
-  function moveDot() {
-    if (!gameActive) return;
-
-    currentDotIsJake = Math.random() < 0.25; // 25% chance
-    dot.src = currentDotIsJake ? jakeImg : staceyImg;
-
-    const pos = randomPosition(dot.offsetWidth);
-    dot.style.left = pos.x + "px";
-    dot.style.top = pos.y + "px";
-    dot.style.display = "block";
-
-    clearTimeout(dotTimeout);
-    dotTimeout = setTimeout(() => {
-      combo = 0;
-      comboDisplay.textContent = "";
-      moveDot();
-    }, 1200);
-  }
-
-  function endGame(killedJake = false) {
-    gameActive = false;
-    clearInterval(gameInterval);
-    clearTimeout(dotTimeout);
-    dot.style.display = "none";
-
-    if (killedJake) {
-      dot.src = jakeBloodImg;
-      dot.style.display = "block";
-      gameOverMessage.innerHTML = "YOU KILLED HIM, GAME OVER DUDE";
-    } else {
-      gameOverMessage.textContent = `Game Over! Final Score: ${score}`;
+      gameArea.appendChild(img);
+      setTimeout(() => {
+        if (gameArea.contains(img)) gameArea.removeChild(img);
+      }, 1200);
     }
 
-    startButton.disabled = false;
-  }
-
-  function handleDotClick() {
-    if (!gameActive) return;
-
-    const now = Date.now();
-    if (currentDotIsJake) {
-      endGame(true);
-      return;
+    function updateTimer() {
+      timeLeft--;
+      timeDisplay.textContent = timeLeft;
+      if (timeLeft <= 0) endGame();
     }
 
-    if (now - lastTap < 600) {
-      combo++;
-    } else {
-      combo = 1;
+    function startGame() {
+      gameActive = true;
+      score = 0;
+      timeLeft = 30;
+      comboCount = 0;
+      scoreDisplay.textContent = score;
+      timeDisplay.textContent = timeLeft;
+      gameOverMessage.style.display = 'none';
+      startButton.disabled = true;
+      spawnInterval = setInterval(spawnFace, 900);
+      gameInterval = setInterval(updateTimer, 1000);
     }
-    lastTap = now;
-    comboDisplay.textContent = combo > 1 ? `Combo x${combo}!` : "";
 
-    const comboBonus = Math.max(0, combo - 1) * 2;
-    score += 5 + comboBonus;
-    scoreBoard.textContent = score;
+    function endGame() {
+      gameActive = false;
+      clearInterval(spawnInterval);
+      clearInterval(gameInterval);
+      startButton.disabled = false;
+    }
 
-    dot.style.display = "none";
-    setTimeout(moveDot, 200);
-  }
-
-  function updateTimer() {
-    timeLeft--;
-    timeLeftDisplay.textContent = timeLeft;
-    if (timeLeft <= 0) endGame();
-  }
-
-  function startGame() {
-    score = 0;
-    timeLeft = 30;
-    combo = 0;
-    scoreBoard.textContent = score;
-    timeLeftDisplay.textContent = timeLeft;
-    comboDisplay.textContent = "";
-    gameOverMessage.textContent = "";
-    startButton.disabled = true;
-    gameActive = true;
-    moveDot();
-    gameInterval = setInterval(updateTimer, 1000);
-  }
-
-  startButton.addEventListener("click", startGame);
-  dot.addEventListener("click", handleDotClick);
-  dot.addEventListener("touchstart", e => {
-    e.preventDefault();
-    handleDotClick();
-  });
-</script>
-
-</body>
+    startButton.addEventListener('click', startGame);
+  </script></body>
 </html>
