@@ -1,30 +1,38 @@
-<!DOCTYPE html><html>
+<!DOCTYPE html>
+<html>
 <head>
   <title>Taylan's Game</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #e0f7fa, #c5e1a5);
+      /* MOD: Storing original background in a CSS variable for easier revert */
+      --original-bg: linear-gradient(135deg, #e0f7fa, #c5e1a5);
+      background: var(--original-bg);
       margin: 0;
-      padding: 0;
+      padding: 10px 0; /* MOD: Added padding to prevent elements sticking to edges */
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
-      height: 100vh;
-      overflow: hidden;
+      /* MOD: Changed justify-content for better centering if content is short,
+              and min-height/overflow-y for responsiveness (Fixes #1, #9) */
+      justify-content: center;
+      min-height: 100vh;
+      overflow-y: auto; /* Allow scrolling if content overflows viewport height */
+      /* MOD: overflow-x hidden to prevent horizontal scrollbars from popups potentially */
+      overflow-x: hidden;
     }
     #scoreBoard, #timer, #combo {
       margin: 8px;
       font-size: 20px;
+      color: #333; /* MOD: Added color for better visibility */
     }
     #gameArea {
       position: relative;
       width: 90vw;
-      height: 60vh;
-      max-width: 400px;
-      max-height: 600px;
+      height: 70vh; /* MOD: Slightly increased height for more play area */
+      max-width: 450px; /* MOD: Slightly increased max-width */
+      max-height: 650px; /* MOD: Slightly increased max-height */
       background-color: #fff;
       border: 2px solid #333;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
@@ -32,28 +40,39 @@
     }
     .face {
       position: absolute;
-      width: 60px;
+      width: 60px; /* Meets 48x48px tap target recommendation */
       height: 60px;
       object-fit: cover;
       border-radius: 50%;
       cursor: pointer;
+      user-select: none; /* MOD: Prevent image selection on drag/tap */
     }
     .sparkle {
-      animation: sparkle 0.5s ease-out;
+      /* MOD: Enhanced sparkle animation (Fix #3) */
+      animation: sparkle 0.6s ease-out forwards; /* 'forwards' keeps last frame state */
     }
     @keyframes sparkle {
-      0% { transform: scale(1); opacity: 1; }
-      100% { transform: scale(1.5); opacity: 0; }
+      0% { transform: scale(1) rotate(0deg); opacity: 1; filter: brightness(1.2); }
+      50% { transform: scale(1.6) rotate(15deg); opacity: 0.7; filter: brightness(1.5) drop-shadow(0 0 5px gold); }
+      100% { transform: scale(0.8) rotate(-15deg); opacity: 0; filter: brightness(0.8); }
     }
     #startButton {
       margin-top: 20px;
-      padding: 12px 24px;
+      padding: 15px 30px; /* MOD: Increased padding for better tap target (Fix #9) */
       font-size: 18px;
       background-color: #007bff;
       color: white;
       border: none;
-      border-radius: 5px;
+      border-radius: 8px; /* MOD: Slightly more rounded */
       cursor: pointer;
+      transition: background-color 0.2s ease; /* MOD: Smooth transition */
+    }
+    #startButton:hover {
+        background-color: #0056b3;
+    }
+    #startButton:disabled { /* MOD: Style for disabled start button */
+        background-color: #cccccc;
+        cursor: not-allowed;
     }
     #gameOverMessage {
       position: absolute;
@@ -61,20 +80,41 @@
       left: 50%;
       transform: translate(-50%, -50%);
       font-size: 22px;
-      color: red;
+      color: white;
+      background-color: rgba(255, 0, 0, 0.7); /* MOD: Background for better visibility */
+      padding: 20px;
+      border-radius: 10px;
       font-weight: bold;
-      z-index: 10;
+      z-index: 10000; /* MOD: Ensure it's on top */
       display: none;
       text-align: center;
     }
     .blood-overlay {
       position: absolute;
-      width: 60px;
-      height: 60px;
-      background-image: url('https://i.imgur.com/AhrFSJL.jpeg');
-      background-size: cover;
-      z-index: 1000;
+      width: 70px; /* MOD: Slightly larger blood */
+      height: 70px;
+      background-image: url('https://i.imgur.com/AhrFSJL.jpeg'); /* This is a placeholder blood splatter image */
+      background-size: contain; /* MOD: contain to ensure full image is visible */
+      background-repeat: no-repeat;
+      background-position: center;
+      z-index: 500; /* MOD: Ensure it's above faces but below game over message */
       pointer-events: none;
+      opacity: 0.8; /* MOD: Slight transparency */
+    }
+    /* MOD: Score Popup Animation (Fix #11) */
+    .score-popup {
+      position: absolute;
+      font-size: 22px;
+      font-weight: bold;
+      color: gold;
+      text-shadow: 1px 1px 2px black;
+      pointer-events: none;
+      animation: scorePopupAnim 0.7s ease-out forwards;
+      z-index: 100;
+    }
+    @keyframes scorePopupAnim {
+      0% { transform: translateY(0) scale(1); opacity: 1; }
+      100% { transform: translateY(-50px) scale(1.5); opacity: 0; }
     }
   </style>
 </head>
@@ -82,11 +122,13 @@
   <h1>Taylan's Game</h1>
   <div id="scoreBoard">Score: <span id="score">0</span></div>
   <div id="timer">Time: <span id="timeLeft">30</span>s</div>
-  <div id="combo"></div>
+  <div id="combo" style="min-height: 24px;"></div>
   <div id="gameArea">
     <div id="gameOverMessage"></div>
   </div>
-  <button id="startButton">Start Game</button>  <script>
+  <button id="startButton">Start Game</button>
+
+  <script>
     const gameArea = document.getElementById('gameArea');
     const scoreDisplay = document.getElementById('score');
     const timeDisplay = document.getElementById('timeLeft');
@@ -96,76 +138,236 @@
 
     const staceyURL = 'https://i.imgur.com/qDTf6hn.jpeg';
     const jakeURL = 'https://i.imgur.com/hDQyFFS.jpeg';
-    const bloodURL = 'https://i.imgur.com/AhrFSJL.jpeg';
+    // const bloodURL = 'https://i.imgur.com/AhrFSJL.jpeg'; // Already in CSS
 
     let score = 0;
     let timeLeft = 30;
     let gameInterval, spawnInterval;
-    let comboCount = 0;
     let gameActive = false;
 
+    // MOD: Combo System Variables (Fix #7)
+    let comboCount = 0;
+    let comboTimeout;
+
+    // MOD: Background Flicker Variables (Fix #4)
+    let flickerInterval;
+    let originalBodyBackground = getComputedStyle(document.body).getPropertyValue('--original-bg'); // Get from CSS var
+    let isFlickerRed = false;
+
     function spawnFace() {
-      const isJake = Math.random() < 0.2;
+      if (!gameActive) return; // MOD: Ensure no spawning if game is not active
+
+      const isJake = Math.random() < 0.25; // MOD: Slightly increased Jake's probability
       const img = document.createElement('img');
       img.src = isJake ? jakeURL : staceyURL;
       img.classList.add('face');
+      img.setAttribute('draggable', 'false'); // MOD: Prevent drag artifacts
 
-      const x = Math.random() * (gameArea.clientWidth - 60);
-      const y = Math.random() * (gameArea.clientHeight - 60);
+      // Ensure face spawns fully within the gameArea
+      const faceSize = 60;
+      const x = Math.random() * (gameArea.clientWidth - faceSize);
+      const y = Math.random() * (gameArea.clientHeight - faceSize);
       img.style.left = x + 'px';
       img.style.top = y + 'px';
 
-      img.addEventListener('click', () => {
-        if (!gameActive) return;
+      img.addEventListener('click', (event) => {
+        if (!gameActive) return; // MOD: Double check, important for Fix #6
+
         if (isJake) {
+          // MOD: Set gameActive false immediately (Fix #6)
+          gameActive = false;
+
+          // MOD: Create and show blood overlay immediately (Fix #2)
           const blood = document.createElement('div');
           blood.className = 'blood-overlay';
-          blood.style.left = x + 'px';
-          blood.style.top = y + 'px';
+          // Position blood centered on Jake's face
+          blood.style.left = (img.offsetLeft + (img.offsetWidth / 2) - 35) + 'px'; // 35 is half of blood overlay width 70px
+          blood.style.top = (img.offsetTop + (img.offsetHeight / 2) - 35) + 'px'; // 35 is half of blood overlay height 70px
           gameArea.appendChild(blood);
+
+          // MOD: Optional - Vibrate for Jake click (different pattern)
+          if (navigator.vibrate) {
+            navigator.vibrate([100, 50, 100]); // Longer vibration for negative feedback
+          }
+
           gameOverMessage.textContent = 'YOU KILLED HIM, GAME OVER DUDE';
           gameOverMessage.style.display = 'block';
-          endGame();
-        } else {
+          endGame(); // This will now handle remaining cleanup
+        } else { // Clicked Stacey
+          // MOD: Stacey click logic
           img.classList.add('sparkle');
-          score += 5;
+
+          // MOD: Combo System (Fix #7)
+          comboCount++;
+          const pointsEarned = 5 * (comboCount > 1 ? 2 : 1); // Example: double points for combo
+          score += pointsEarned;
           scoreDisplay.textContent = score;
+          comboDisplay.textContent = comboCount > 1 ? `Combo: ${comboCount}x!` : '';
+
+          clearTimeout(comboTimeout);
+          comboTimeout = setTimeout(() => {
+            comboCount = 0;
+            comboDisplay.textContent = '';
+          }, 2000); // Reset combo after 2 seconds of inactivity
+
+          // MOD: Score Popup (Fix #11)
+          const scorePopup = document.createElement('div');
+          scorePopup.textContent = `+${pointsEarned}`;
+          scorePopup.className = 'score-popup';
+          // Position popup above the clicked face
+          scorePopup.style.left = (img.offsetLeft + img.offsetWidth / 2 - 15) + 'px'; // Adjust for popup width
+          scorePopup.style.top = (img.offsetTop - 10) + 'px';
+          gameArea.appendChild(scorePopup);
+          setTimeout(() => {
+            if (scorePopup.parentNode) scorePopup.remove();
+          }, 700); // Match animation duration
+
+          // MOD: Mobile Tap Feedback (Fix #10)
+          if (navigator.vibrate) {
+            navigator.vibrate(30); // Short vibration for positive feedback
+          }
+
+          // MOD: Remove face after sparkle animation completes (Fix #3)
+          // Sparkle animation is 0.6s
+          img.style.pointerEvents = 'none'; // Prevent re-clicking during animation
+          setTimeout(() => {
+            if (img.parentNode) img.remove();
+          }, 600);
         }
-        setTimeout(() => img.remove(), 200);
       });
 
       gameArea.appendChild(img);
+      // MOD: Slightly longer lifetime for faces before auto-removal
       setTimeout(() => {
-        if (gameArea.contains(img)) gameArea.removeChild(img);
-      }, 1200);
+        if (gameArea.contains(img) && !img.classList.contains('sparkle')) { // Only remove if not already clicked & sparkling
+            // MOD: If a Stacey despawns naturally, reset combo (optional, makes combo harder)
+            if (!isJake) {
+                comboCount = 0;
+                comboDisplay.textContent = '';
+                clearTimeout(comboTimeout);
+            }
+            gameArea.removeChild(img);
+        }
+      }, 1800); // Increased from 1200ms
     }
 
     function updateTimer() {
       timeLeft--;
       timeDisplay.textContent = timeLeft;
-      if (timeLeft <= 0) endGame();
+      if (timeLeft <= 0) {
+        gameOverMessage.textContent = "Time's Up! GAME OVER";
+        gameOverMessage.style.display = 'block';
+        endGame();
+      }
+    }
+
+    // MOD: Background Flicker Function (Fix #4)
+    function toggleBackgroundColor() {
+        if (isFlickerRed) {
+            document.body.style.background = 'rgba(0,0,255,0.3)'; // Semi-transparent blue
+        } else {
+            document.body.style.background = 'rgba(255,0,0,0.3)'; // Semi-transparent red
+        }
+        isFlickerRed = !isFlickerRed;
     }
 
     function startGame() {
       gameActive = true;
       score = 0;
       timeLeft = 30;
-      comboCount = 0;
+      comboCount = 0; // MOD: Reset combo count (Fix #7)
       scoreDisplay.textContent = score;
       timeDisplay.textContent = timeLeft;
+      comboDisplay.textContent = ''; // MOD: Clear combo display (Fix #7)
       gameOverMessage.style.display = 'none';
+
+      // MOD: Start button behavior (Fix #8)
+      startButton.textContent = 'Game in Progress...';
       startButton.disabled = true;
-      spawnInterval = setInterval(spawnFace, 900);
+
+      // MOD: Clear previous game elements (Fix #5)
+      clearGameElements();
+
+      spawnInterval = setInterval(spawnFace, 850); // MOD: Slightly faster spawn
       gameInterval = setInterval(updateTimer, 1000);
+
+      // MOD: Start background flicker (Fix #4)
+      if (flickerInterval) clearInterval(flickerInterval); // Clear if any old one exists
+      flickerInterval = setInterval(toggleBackgroundColor, 300); // Flicker every 300ms
     }
 
     function endGame() {
       gameActive = false;
       clearInterval(spawnInterval);
       clearInterval(gameInterval);
+      clearTimeout(comboTimeout); // MOD: Clear combo timeout
+
+      // MOD: Stop background flicker and restore original (Fix #4)
+      clearInterval(flickerInterval);
+      document.body.style.background = originalBodyBackground;
+
+      // MOD: Start button behavior - change to "Restart Game" (Fix #8)
+      startButton.textContent = 'Restart Game';
       startButton.disabled = false;
+
+      // MOD: Call clearGameElements with a delay if game over message needs to be seen first,
+      // or ensure game over message is not inside gameArea if gameArea.innerHTML is used.
+      // Current approach: selective removal, so no delay needed for gameOverMessage.
+      // Faces/blood are removed, but new ones stop spawning. Existing ones from before endGame will be handled by clearGameElements.
+      // A slight delay could allow the last blood splatter to be seen before a potential full clear.
+      // For now, immediate clear as per request to remove elements.
+      // setTimeout(clearGameElements, 500); // Optional delay
+      // No, clearGameElements is now called at start of startGame too.
+      // When endGame is called, new spawns stop. Individual faces have their own removal timeouts.
+      // To be absolutely sure all are gone *on game end*:
+      // clearGameElements(); // This would remove blood splatter for Jake immediately.
+      // Let's leave the Jake blood splatter and only clear on new game start.
+      // The request was "Ensure all .face, .blood-overlay ... are cleared ... when the game ends *or restarts*."
+      // So, clearing at the start of `startGame` is appropriate.
+      // For Jake click, the blood is added, then endGame is called. It should persist until restart.
+      // Let's add a specific function to clear active game elements for robustness
+      // and call it appropriately.
+
+      // If game ended due to Jake, the blood overlay should stay.
+      // If time up, no blood overlay.
+      // On restart, all should be cleared. This is handled by clearGameElements in startGame.
+    }
+
+    // MOD: Function to clear dynamic game elements (Fix #5)
+    function clearGameElements() {
+        const faces = gameArea.querySelectorAll('.face');
+        faces.forEach(face => face.remove());
+
+        const bloodOverlays = gameArea.querySelectorAll('.blood-overlay');
+        bloodOverlays.forEach(overlay => overlay.remove());
+
+        const scorePopups = gameArea.querySelectorAll('.score-popup');
+        scorePopups.forEach(popup => popup.remove());
     }
 
     startButton.addEventListener('click', startGame);
-  </script></body>
+
+    // MOD: Optional - Sound Effects (Fix #12 - requires audio files)
+    /*
+    const staceySound = new Audio('path/to/stacey_click_sound.mp3'); // Provide actual path
+    const jakeSound = new Audio('path/to/jake_click_sound.mp3');   // Provide actual path
+    const bgMusic = new Audio('path/to/background_music.mp3');    // Provide actual path
+    bgMusic.loop = true;
+
+    // In Stacey click:
+    // staceySound.currentTime = 0; staceySound.play();
+
+    // In Jake click:
+    // jakeSound.currentTime = 0; jakeSound.play();
+
+    // In startGame():
+    // bgMusic.play();
+
+    // In endGame():
+    // bgMusic.pause(); bgMusic.currentTime = 0;
+
+    // Add a mute button if implementing sounds.
+    */
+  </script>
+</body>
 </html>
