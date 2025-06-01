@@ -22,7 +22,7 @@
     height: 70vh;
     max-width: 400px;
     max-height: 600px;
-    background-color: #fff;
+    background-color: #fff !important; /* Added !important for testing against overrides */
     border: 2px solid #333;
     position: relative;
     box-shadow: 0 6px 12px rgba(0,0,0,0.15);
@@ -35,8 +35,9 @@
     border-radius: 50%;
     position: absolute;
     cursor: pointer;
-    transition: transform 0.1s ease-out, opacity 0.1s ease-out, width 0.1s ease-out, height 0.1s ease-out; /* Transition for shrinking and fading */
+    transition: transform 0.1s ease-out, opacity 0.1s ease-out, width 0.1s ease-out, height 0.1s ease-out;
     display: none;
+    z-index: 1000; /* Ensure dot is on top */
   }
   #dot.pop {
     transform: scale(1.2);
@@ -45,18 +46,18 @@
   #scoreBoard {
     font-size: 28px;
     margin-bottom: 10px;
-    color: #333;
+    color: #333; /* Color might need adjustment if body bg is dark */
   }
   #timer {
     font-size: 22px;
     margin-bottom: 15px;
-    color: #555;
+    color: #555; /* Color might need adjustment */
   }
   #combo {
     font-size: 18px;
     color: #007bff;
     margin-bottom: 5px;
-    min-height: 20px; /* Reserve space to prevent layout shift */
+    min-height: 20px;
   }
   .score-popup {
     position: absolute;
@@ -66,7 +67,8 @@
     border-radius: 5px;
     font-size: 16px;
     animation: fadeOut 0.5s ease-in-out forwards;
-    pointer-events: none; /* So it doesn't interfere with dot clicks */
+    pointer-events: none;
+    z-index: 1001; /* Above the dot briefly */
   }
   @keyframes fadeOut {
     to { opacity: 0; transform: translateY(-20px); }
@@ -93,6 +95,12 @@
     color: #d32f2f;
     font-weight: bold;
   }
+  /* If text becomes unreadable due to dark theme, uncomment this */
+  /*
+  h1, #scoreBoard, #timer, #combo {
+    color: #ffffff !important;
+  }
+  */
 </style>
 </head>
 <body>
@@ -108,6 +116,8 @@
   <div id="gameOverMessage">Game Over!</div>
 
 <script>
+  console.log("Taylan's Game script starting...");
+
   const gameArea = document.getElementById('gameArea');
   const dot = document.getElementById('dot');
   const scoreDisplay = document.getElementById('score');
@@ -115,6 +125,10 @@
   const startButton = document.getElementById('startButton');
   const gameOverMessage = document.getElementById('gameOverMessage');
   const comboDisplay = document.getElementById('combo');
+
+  if (!gameArea) console.error("Error: gameArea element not found!");
+  if (!dot) console.error("Error: dot element not found!");
+  if (!startButton) console.error("Error: startButton element not found!");
 
   let score = 0;
   let timeLeft = 30;
@@ -125,26 +139,39 @@
   let currentDotSize = initialDotSize;
   let comboCount = 0;
   let lastTapTime = 0;
-  const comboThreshold = 700; // Milliseconds between taps for a combo (increased slightly for playability)
-  let currentSpawnInterval = 1500; // Initial spawn interval
-  const minSpawnInterval = 600; // Minimum spawn interval
-  const maxSpawnInterval = 1500; // Initial spawn interval (reset point)
-  const dotShrinkAmount = 1; // How much the dot shrinks each time
-  const minDotSize = 20; // Minimum size of the dot
+  const comboThreshold = 700;
+  let currentSpawnInterval = 1500;
+  const minSpawnInterval = 600;
+  const maxSpawnInterval = 1500;
+  const dotShrinkAmount = 1;
+  const minDotSize = 20;
 
   function getRandomPosition() {
     const gameAreaWidth = gameArea.offsetWidth;
     const gameAreaHeight = gameArea.offsetHeight;
+    console.log(`gameArea dimensions: Width=${gameAreaWidth}, Height=${gameAreaHeight}`);
 
-    const x = Math.random() * (gameAreaWidth - currentDotSize);
-    const y = Math.random() * (gameAreaHeight - currentDotSize);
+    if (gameAreaWidth === 0 || gameAreaHeight === 0) {
+        console.warn("Warning: gameArea has zero width or height! Dot may not be visible.");
+    }
+
+    // Ensure dot can actually fit. If not, place it at 0,0 (it will be small anyway)
+    const availableWidth = Math.max(0, gameAreaWidth - currentDotSize);
+    const availableHeight = Math.max(0, gameAreaHeight - currentDotSize);
+
+    const x = Math.random() * availableWidth;
+    const y = Math.random() * availableHeight;
 
     return { x, y };
   }
 
   function moveDot() {
-    if (!gameActive) return;
+    console.log("moveDot called. gameActive:", gameActive);
+    if (!gameActive || !dot) return;
+
     const pos = getRandomPosition();
+    console.log("Calculated position for dot:", pos, "Current dot size:", currentDotSize);
+
     dot.style.left = pos.x + 'px';
     dot.style.top = pos.y + 'px';
     dot.style.width = currentDotSize + 'px';
@@ -152,21 +179,30 @@
     dot.style.transform = 'scale(1)';
     dot.style.opacity = 1;
     dot.style.display = 'block';
+    console.log("Dot display set to block. Left:", dot.style.left, "Top:", dot.style.top);
+
 
     clearTimeout(dotTimeout);
-    // The timeout for the dot to disappear if not clicked should be related to currentSpawnInterval
-    // but give a bit of leeway.
     dotTimeout = setTimeout(() => {
       if (gameActive) {
-        comboCount = 0; // Reset combo if dot is missed
+        console.log("Dot timed out, moving to next.");
+        comboCount = 0;
         comboDisplay.textContent = '';
         moveDot();
       }
-    }, currentSpawnInterval + 700); // Give a bit more time than the spawn interval
+    }, currentSpawnInterval + 700);
   }
 
-  function handleDotClick(event) {
-    if (!gameActive || dot.style.display === 'none') return;
+  function handleDotClick(clickEvent) {
+    if (!gameActive || !dot || dot.style.display === 'none') {
+        console.log("handleDotClick ignored: game not active or dot not displayed.");
+        return;
+    }
+    if (!clickEvent) {
+        console.error("handleDotClick called with invalid event object");
+        return;
+    }
+    console.log("Dot clicked!");
 
     const currentTime = Date.now();
     if (currentTime - lastTapTime < comboThreshold) {
@@ -177,30 +213,27 @@
     lastTapTime = currentTime;
     comboDisplay.textContent = comboCount > 1 ? `Combo x${comboCount}!` : '';
 
-    const comboBonus = Math.max(0, comboCount - 1) * 2; // Bigger bonus for combos
-    const points = 5 + comboBonus; // Base points increased
+    const comboBonus = Math.max(0, comboCount - 1) * 2;
+    const points = 5 + comboBonus;
     score += points;
     scoreDisplay.textContent = score;
 
     dot.classList.add('pop');
     setTimeout(() => dot.classList.remove('pop'), 100);
 
-    // Create score popup relative to gameArea to avoid issues with page scrolling if any
     const gameAreaRect = gameArea.getBoundingClientRect();
-    // We want the popup to appear near the click, but within the gameArea coordinates
-    const popupX = event.clientX - gameAreaRect.left;
-    const popupY = event.clientY - gameAreaRect.top;
+    const popupX = clickEvent.clientX - gameAreaRect.left;
+    const popupY = clickEvent.clientY - gameAreaRect.top;
 
     const scorePopup = document.createElement('div');
     scorePopup.classList.add('score-popup');
     scorePopup.textContent = `+${points}`;
-    // Position it at the click, then adjust slightly to be centered/above
     scorePopup.style.left = (popupX - 15) + 'px';
     scorePopup.style.top = (popupY - 30) + 'px';
 
     gameArea.appendChild(scorePopup);
     setTimeout(() => {
-        if (gameArea.contains(scorePopup)) { // Check if it hasn't been removed by game end
+        if (gameArea.contains(scorePopup)) {
             gameArea.removeChild(scorePopup);
         }
     }, 500);
@@ -209,17 +242,22 @@
     clearTimeout(dotTimeout);
 
     currentDotSize = Math.max(minDotSize, currentDotSize - dotShrinkAmount);
-    currentSpawnInterval = Math.max(minSpawnInterval, currentSpawnInterval - 30); // Spawn faster
+    currentSpawnInterval = Math.max(minSpawnInterval, currentSpawnInterval - 30);
 
-    setTimeout(moveDot, 100); // Spawn next dot quickly
+    setTimeout(moveDot, 100);
   }
 
-  dot.addEventListener('click', handleDotClick);
-  // Use 'touchstart' for better responsiveness on mobile for the dot itself
-  dot.addEventListener('touchstart', function(event) {
-    event.preventDefault(); // Prevent mouse event from firing as well
-    handleDotClick(event.touches[0]); // Pass touch event coordinates
-  });
+  if (dot) {
+    dot.addEventListener('click', handleDotClick);
+    dot.addEventListener('touchstart', function(event) {
+      event.preventDefault();
+      if (event.touches.length > 0) { // Ensure there's touch data
+        handleDotClick(event.touches[0]);
+      } else {
+        console.warn("Dot touchstart event had no touches data.");
+      }
+    });
+  }
 
 
   function updateTimer() {
@@ -231,8 +269,13 @@
   }
 
   function startGame() {
+    console.log("startGame called.");
+    if (!gameArea || !dot) {
+        console.error("Cannot start game, critical elements missing.");
+        return;
+    }
     score = 0;
-    timeLeft = 30; // Standard game time
+    timeLeft = 30;
     gameActive = true;
     currentDotSize = initialDotSize;
     comboCount = 0;
@@ -240,35 +283,42 @@
     scoreDisplay.textContent = score;
     timeLeftDisplay.textContent = timeLeft;
     comboDisplay.textContent = '';
-    startButton.disabled = true;
-    gameOverMessage.style.display = 'none';
-    dot.style.display = 'none';
+    if(startButton) startButton.disabled = true;
+    if(gameOverMessage) gameOverMessage.style.display = 'none';
+    if(dot) dot.style.display = 'none'; // Hide dot before first move
 
-    setTimeout(moveDot, 500); // Initial delay before first dot
+    console.log("Game started. Scheduling first dot move.");
+    setTimeout(moveDot, 500);
     gameInterval = setInterval(updateTimer, 1000);
   }
 
   function endGame() {
+    console.log("endGame called. Final score:", score);
     gameActive = false;
     clearInterval(gameInterval);
     clearTimeout(dotTimeout);
-    dot.style.display = 'none';
-    gameOverMessage.style.display = 'block';
-    gameOverMessage.textContent = `Game Over! Final Score: ${score}`;
-    startButton.disabled = false;
+    if(dot) dot.style.display = 'none';
+    if(gameOverMessage) {
+        gameOverMessage.style.display = 'block';
+        gameOverMessage.textContent = `Game Over! Final Score: ${score}`;
+    }
+    if(startButton) startButton.disabled = false;
   }
 
-  startButton.addEventListener('click', startGame);
-  // Also allow starting game with touch on mobile for the button
-  startButton.addEventListener('touchstart', function(event){
-    event.preventDefault();
-    if(!startButton.disabled){
-        startGame();
-    }
-  });
+  if (startButton) {
+    startButton.addEventListener('click', startGame);
+    startButton.addEventListener('touchstart', function(event){
+      event.preventDefault();
+      if(!startButton.disabled){
+          startGame();
+      }
+    });
+  } else {
+    console.error("Start button not found to attach listeners.");
+  }
 
-  // Initial setup
-  gameOverMessage.style.display = 'none';
+  if(gameOverMessage) gameOverMessage.style.display = 'none';
+  console.log("Taylan's Game script loaded and initialized.");
 
 </script>
 
