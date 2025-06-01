@@ -115,6 +115,58 @@
       0% { transform: translateY(0) scale(1); opacity: 1; }
       100% { transform: translateY(-50px) scale(1.5); opacity: 0; }
     }
+
+    /* ADDED: Styles for Instruction Modal */
+    #instructionModal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent overlay */
+      display: none; /* Hidden by default */
+      justify-content: center;
+      align-items: center;
+      z-index: 20000; /* Higher than gameOverMessage */
+      padding: 15px;
+      box-sizing: border-box;
+    }
+
+    #instructionModalContent {
+      background-color: #fff;
+      padding: 25px 30px;
+      border-radius: 10px;
+      text-align: center;
+      max-width: 400px; /* Adjust as needed */
+      width: 90%;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    #instructionModalContent h2 {
+        margin-top: 0;
+        color: #333;
+    }
+
+    #instructionModalContent p {
+      margin-bottom: 20px;
+      font-size: 1em; /* Adjusted for potentially smaller modal */
+      line-height: 1.5;
+      color: #555;
+    }
+
+    #closeInstructionsButton {
+      padding: 12px 25px;
+      font-size: 1em;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    #closeInstructionsButton:hover {
+        background-color: #0056b3;
+    }
   </style>
 </head>
 <body>
@@ -131,6 +183,14 @@
 
   <button id="startButton">Start Game</button>
 
+  <div id="instructionModal">
+    <div id="instructionModalContent">
+      <h2>How to Play</h2>
+      <p>Stacey's under arrest, catch her before she runs away! But if you accidentally hit Jake, you'll be under arrest for killing a cop! Who's side are you on?</p>
+      <button id="closeInstructionsButton">Got It!</button>
+    </div>
+  </div>
+
   <script>
     const gameArea = document.getElementById('gameArea');
     const scoreDisplay = document.getElementById('score');
@@ -141,6 +201,10 @@
 
     const music = document.getElementById('gameMusic');
     const gameOverSound = document.getElementById('gameOverSound');
+
+    // ADDED: Get Instruction Modal elements
+    const instructionModal = document.getElementById('instructionModal');
+    const closeInstructionsButton = document.getElementById('closeInstructionsButton');
 
     const staceyURL = 'https://i.imgur.com/qDTf6hn.jpeg';
     const jakeURL = 'https://i.imgur.com/hDQyFFS.jpeg';
@@ -158,6 +222,32 @@
     let isFlickerRed = false;
     
     let gameOverFlickerTimeout = null;
+
+    // --- Instruction Modal Logic ---
+    function showInstructions() {
+      instructionModal.style.display = 'flex';
+      startButton.disabled = true; // Disable start button while instructions are up
+    }
+
+    function hideInstructions() {
+      instructionModal.style.display = 'none';
+      localStorage.setItem('instructionsShown', 'true');
+      startButton.disabled = false; // Re-enable start button
+    }
+
+    // Check on page load if instructions should be shown
+    window.addEventListener('load', () => {
+      if (localStorage.getItem('instructionsShown') !== 'true') {
+        showInstructions();
+      } else {
+        // Ensure start button is enabled if instructions were already shown
+        startButton.disabled = false; 
+      }
+    });
+
+    closeInstructionsButton.addEventListener('click', hideInstructions);
+    // --- End of Instruction Modal Logic ---
+
 
     function spawnFace() {
       if (!gameActive) return;
@@ -188,7 +278,7 @@
             navigator.vibrate([100, 50, 100]);
           }
 
-          gameOverMessage.textContent = 'YOU KILLED JAKE! GAME OVER DUDE';
+          gameOverMessage.textContent = 'YOU KILLED HIM, GAME OVER DUDE';
           gameOverMessage.style.display = 'block';
           endGame();
         } else { // Clicked Stacey
@@ -307,7 +397,7 @@
       clearTimeout(comboTimeout);
 
       startButton.textContent = 'Restart Game';
-      startButton.disabled = false;
+      startButton.disabled = false; // Make sure start button is enabled at game over
 
       music.pause();
       music.currentTime = 0;
@@ -325,7 +415,7 @@
           }
           document.body.style.background = originalBodyBackground;
           gameOverFlickerTimeout = null; 
-        }, 10000); // MODIFIED: Flicker duration now 10 seconds (10000ms)
+        }, 10000); 
       }
     }
 
