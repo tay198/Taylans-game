@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>Taylan's Game</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -13,45 +14,65 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
       height: 100vh;
-      overflow: hidden;
     }
-    #gameArea {
-      width: 90vw;
-      height: 70vh;
-      max-width: 400px;
-      max-height: 600px;
-      background-color: #fff !important;
-      border: 2px solid #333;
-      position: relative;
-      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-      overflow: hidden;
-    }
-    .face {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      position: absolute;
-      cursor: pointer;
-      transition: transform 0.1s ease-out, opacity 0.1s ease-out;
-      display: none;
-      object-fit: cover;
-      z-index: 1000;
+    h1 {
+      font-size: 1.8em;
+      margin-top: 20px;
     }
     #scoreBoard, #timer {
-      font-size: 20px;
-      margin: 5px 0;
+      font-size: 1.2em;
+      margin: 5px;
       color: #333;
     }
     #combo {
-      font-size: 16px;
+      font-size: 1em;
       color: #007bff;
       min-height: 20px;
     }
+    #gameArea {
+      width: 95vw;
+      height: 60vh;
+      background: #fff !important;
+      border: 2px solid #333;
+      position: relative;
+      border-radius: 8px;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+    .face {
+      width: 18vw;
+      max-width: 80px;
+      height: auto;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      position: absolute;
+      cursor: pointer;
+      object-fit: cover;
+      display: none;
+      z-index: 1000;
+      transition: transform 0.1s ease, opacity 0.1s ease;
+    }
+    button {
+      padding: 14px 28px;
+      font-size: 18px;
+      margin: 15px 0;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    #gameOverMessage {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #d32f2f;
+      margin-top: 10px;
+    }
     .score-popup {
       position: absolute;
-      background-color: rgba(0, 0, 0, 0.7);
+      background-color: rgba(0, 0, 0, 0.75);
       color: white;
       padding: 5px 10px;
       border-radius: 5px;
@@ -63,22 +84,6 @@
     @keyframes fadeOut {
       to { opacity: 0; transform: translateY(-20px); }
     }
-    button {
-      padding: 12px 24px;
-      font-size: 18px;
-      cursor: pointer;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 7px;
-      margin-top: 15px;
-    }
-    #gameOverMessage {
-      display: none;
-      font-size: 22px;
-      color: #d32f2f;
-      font-weight: bold;
-    }
   </style>
 </head>
 <body>
@@ -88,10 +93,10 @@
   <div id="timer">Time: <span id="timeLeft">30</span>s</div>
   <div id="combo"></div>
   <div id="gameArea">
-    <img id="face" class="face" src="" alt="Face">
+    <img id="face" class="face" src="" alt="Target">
   </div>
   <button id="startButton">Start Game</button>
-  <div id="gameOverMessage">Game Over!</div>
+  <div id="gameOverMessage"></div>
 
   <script>
     const gameArea = document.getElementById('gameArea');
@@ -114,8 +119,8 @@
     let gameActive = false;
 
     function getRandomPosition() {
-      const w = gameArea.clientWidth - face.offsetWidth;
-      const h = gameArea.clientHeight - face.offsetHeight;
+      const w = gameArea.clientWidth - face.clientWidth;
+      const h = gameArea.clientHeight - face.clientHeight;
       return {
         x: Math.random() * w,
         y: Math.random() * h
@@ -130,42 +135,43 @@
       face.dataset.type = isStacey ? "stacey" : "jake";
 
       const pos = getRandomPosition();
-      face.style.left = pos.x + "px";
-      face.style.top = pos.y + "px";
+      face.style.left = `${pos.x}px`;
+      face.style.top = `${pos.y}px`;
       face.style.display = "block";
 
-      spawnTimeout = setTimeout(spawnFace, 1000);
+      spawnTimeout = setTimeout(spawnFace, 1100);
     }
 
     function handleFaceClick(e) {
       if (!gameActive || face.style.display === 'none') return;
 
       const isStacey = face.dataset.type === "stacey";
+      const now = Date.now();
 
       if (!isStacey) {
         endGame("Oops! You clicked Jake!");
         return;
       }
 
-      const currentTime = Date.now();
-      if (currentTime - lastTapTime < 700) {
+      if (now - lastTapTime < 700) {
         comboCount++;
       } else {
         comboCount = 1;
       }
-      lastTapTime = currentTime;
+      lastTapTime = now;
 
-      const comboBonus = Math.max(0, comboCount - 1) * 2;
+      const comboBonus = (comboCount - 1) * 2;
       const points = 5 + comboBonus;
       score += points;
       scoreDisplay.textContent = score;
       comboDisplay.textContent = comboCount > 1 ? `Combo x${comboCount}!` : "";
 
-      const popup = document.createElement("div");
+      const rect = gameArea.getBoundingClientRect();
+      const popup = document.createElement('div');
       popup.className = "score-popup";
       popup.textContent = `+${points}`;
-      popup.style.left = e.clientX - gameArea.getBoundingClientRect().left + "px";
-      popup.style.top = e.clientY - gameArea.getBoundingClientRect().top + "px";
+      popup.style.left = (e.clientX - rect.left) + "px";
+      popup.style.top = (e.clientY - rect.top) + "px";
       gameArea.appendChild(popup);
       setTimeout(() => popup.remove(), 500);
 
@@ -177,36 +183,38 @@
       timeLeft = 30;
       comboCount = 0;
       gameActive = true;
-      scoreDisplay.textContent = "0";
+      scoreDisplay.textContent = score;
       timeLeftDisplay.textContent = timeLeft;
       comboDisplay.textContent = "";
-      gameOverMessage.style.display = "none";
+      gameOverMessage.textContent = "";
       startButton.disabled = true;
+      face.style.display = "none";
 
       spawnFace();
       gameInterval = setInterval(() => {
         timeLeft--;
         timeLeftDisplay.textContent = timeLeft;
-        if (timeLeft <= 0) endGame();
+        if (timeLeft <= 0) {
+          endGame();
+        }
       }, 1000);
     }
 
-    function endGame(reason = "") {
+    function endGame(message = `Game Over! Final Score: ${score}`) {
       gameActive = false;
       clearInterval(gameInterval);
       clearTimeout(spawnTimeout);
       face.style.display = "none";
+      gameOverMessage.textContent = message;
       startButton.disabled = false;
-      gameOverMessage.style.display = "block";
-      gameOverMessage.textContent = reason || `Game Over! Final Score: ${score}`;
     }
 
-    face.addEventListener("click", handleFaceClick);
-    face.addEventListener("touchstart", (e) => {
-      if (e.touches.length > 0) handleFaceClick(e.touches[0]);
+    face.addEventListener('click', handleFaceClick);
+    face.addEventListener('touchstart', (e) => {
+      if (e.touches && e.touches.length > 0) handleFaceClick(e.touches[0]);
     });
 
-    startButton.addEventListener("click", startGame);
+    startButton.addEventListener('click', startGame);
   </script>
 
 </body>
