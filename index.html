@@ -9,7 +9,7 @@
       --original-bg: linear-gradient(135deg, #e0f7fa, #c5e1a5);
       background: var(--original-bg);
       margin: 0;
-      padding: 10px 0;
+      padding: 0; /* MODIFIED: Was 10px 0 */
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -18,17 +18,23 @@
       overflow-y: auto;
       overflow-x: hidden;
     }
+    /* ADDED: Styling for H1 to reduce its space */
+    h1 {
+      font-size: 1.8em; /* MODIFIED: Smaller than default 2em */
+      margin-top: 8px;   /* MODIFIED: Reduced top margin */
+      margin-bottom: 8px;/* MODIFIED: Reduced bottom margin */
+    }
     #scoreBoard, #timer, #combo {
-      margin: 8px;
-      font-size: 20px;
+      margin: 4px; /* MODIFIED: Was 8px */
+      font-size: 18px; /* MODIFIED: Was 20px */
       color: #333;
     }
     #gameArea {
       position: relative;
       width: 90vw;
-      height: 70vh;
+      height: 65vh; /* MODIFIED: Was 70vh */
       max-width: 450px;
-      max-height: 650px;
+      max-height: 650px; /* Kept max-height, 65vh will usually be determining factor on phones */
       background-color: #fff;
       border: 2px solid #333;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
@@ -52,9 +58,9 @@
       100% { transform: scale(0.8) rotate(-15deg); opacity: 0; filter: brightness(0.8); }
     }
     #startButton {
-      margin-top: 20px;
-      padding: 15px 30px;
-      font-size: 18px;
+      margin-top: 8px;    /* MODIFIED: Was 20px */
+      padding: 10px 20px; /* MODIFIED: Was 15px 30px */
+      font-size: 16px;    /* MODIFIED: Was 18px */
       background-color: #007bff;
       color: white;
       border: none;
@@ -116,7 +122,7 @@
   <h1>Taylan's Game</h1>
   <div id="scoreBoard">Score: <span id="score">0</span></div>
   <div id="timer">Time: <span id="timeLeft">30</span>s</div>
-  <div id="combo" style="min-height: 24px;"></div>
+  <div id="combo" style="min-height: 24px;"></div> {/* Note: min-height: 24px might be larger than 18px font needs, but it's fine */}
   <div id="gameArea">
     <div id="gameOverMessage"></div>
   </div>
@@ -181,7 +187,7 @@
             navigator.vibrate([100, 50, 100]);
           }
 
-          gameOverMessage.textContent = 'YOU KILLED HIM, GAME OVER DUDE';
+          gameOverMessage.textContent = 'YOU KILLED JAKE!, GAME OVER DUDE';
           gameOverMessage.style.display = 'block';
           endGame();
         } else { // Clicked Stacey
