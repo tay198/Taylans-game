@@ -4,6 +4,9 @@
   <title>Taylan's Game</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
       font-family: Arial, sans-serif;
       text-align: center;
@@ -13,16 +16,20 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      height: 100vh;
-      overflow: hidden;
+      justify-content: flex-start;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    h1 {
+      font-size: clamp(1.5rem, 5vw, 2.5rem);
+      margin: 1rem;
     }
     #gameArea {
       width: 90vw;
-      height: 70vh;
+      height: 60vh;
       max-width: 400px;
       max-height: 600px;
-      background-color: #fff !important;
+      background-color: #fff;
       border: 2px solid #333;
       position: relative;
       box-shadow: 0 6px 12px rgba(0,0,0,0.15);
@@ -35,76 +42,59 @@
       border-radius: 50%;
       position: absolute;
       cursor: pointer;
-      transition: transform 0.1s ease-out, opacity 0.1s ease-out, width 0.1s ease-out, height 0.1s ease-out;
+      transition: transform 0.1s ease-out, opacity 0.1s ease-out;
       display: none;
-      z-index: 1000;
+      z-index: 10;
     }
     #dot.pop {
       transform: scale(1.2);
       opacity: 0.8;
     }
-    #scoreBoard {
-      font-size: 28px;
-      margin-bottom: 10px;
+    #scoreBoard, #timer, #combo, #highScore {
+      font-size: clamp(1rem, 4vw, 1.4rem);
+      margin: 0.3rem;
       color: #333;
     }
-    #timer {
-      font-size: 22px;
-      margin-bottom: 15px;
-      color: #555;
-    }
     #combo {
-      font-size: 18px;
       color: #007bff;
-      margin-bottom: 5px;
-      min-height: 20px;
+      min-height: 1.5em;
     }
     .score-popup {
       position: absolute;
       background-color: rgba(0, 0, 0, 0.7);
       color: white;
-      padding: 5px 10px;
+      padding: 4px 8px;
       border-radius: 5px;
-      font-size: 16px;
+      font-size: 14px;
       animation: fadeOut 0.5s ease-in-out forwards;
       pointer-events: none;
-      z-index: 1001;
+      z-index: 100;
     }
     @keyframes fadeOut {
       to { opacity: 0; transform: translateY(-20px); }
     }
     button {
-      padding: 12px 24px;
-      font-size: 20px;
+      padding: 1rem 2rem;
+      font-size: clamp(1rem, 4vw, 1.3rem);
       cursor: pointer;
       background-color: #007bff;
       color: white;
       border: none;
       border-radius: 7px;
-      margin-top: 10px;
+      margin: 1.5rem 0;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      width: 80%;
+      max-width: 300px;
     }
     button:disabled {
       background-color: #ccc;
       cursor: default;
     }
     #gameOverMessage {
-      display: none;
-      margin-top: 25px;
-      font-size: 22px;
+      font-size: clamp(1rem, 4vw, 1.4rem);
       color: #d32f2f;
       font-weight: bold;
-    }
-    #themeToggle {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      font-size: 14px;
-      padding: 8px 14px;
-      border-radius: 6px;
-      background: #333;
-      color: #fff;
-      z-index: 2000;
+      margin-bottom: 1rem;
     }
   </style>
 </head>
@@ -112,6 +102,7 @@
 
   <h1>Taylan's Game</h1>
   <div id="scoreBoard">Score: <span id="score">0</span></div>
+  <div id="highScore">High Score: 0</div>
   <div id="timer">Time: <span id="timeLeft">30</span>s</div>
   <div id="combo"></div>
   <div id="gameArea">
@@ -119,186 +110,153 @@
   </div>
   <button id="startButton">Start Game</button>
   <div id="gameOverMessage">Game Over!</div>
-  <button id="themeToggle">Toggle Theme</button>
 
-  <select id="modeSelect">
-    <option value="time">Time Attack</option>
-    <option value="endless">Endless Mode</option>
-  </select>
+  <script>
+    const gameArea = document.getElementById('gameArea');
+    const dot = document.getElementById('dot');
+    const scoreDisplay = document.getElementById('score');
+    const timeLeftDisplay = document.getElementById('timeLeft');
+    const startButton = document.getElementById('startButton');
+    const gameOverMessage = document.getElementById('gameOverMessage');
+    const comboDisplay = document.getElementById('combo');
+    const highScoreDisplay = document.getElementById('highScore');
 
-  <audio id="popSound" src="https://www.soundjay.com/button/beep-07.wav"></audio>
-  <audio id="powerSound" src="https://www.soundjay.com/button/beep-10.wav"></audio>
+    let score = 0;
+    let highScore = localStorage.getItem('tayGameHighScore') || 0;
+    highScoreDisplay.textContent = `High Score: ${highScore}`;
 
-<script>
-  const gameArea = document.getElementById('gameArea');
-  const dot = document.getElementById('dot');
-  const scoreDisplay = document.getElementById('score');
-  const timeLeftDisplay = document.getElementById('timeLeft');
-  const startButton = document.getElementById('startButton');
-  const gameOverMessage = document.getElementById('gameOverMessage');
-  const comboDisplay = document.getElementById('combo');
-  const themeToggle = document.getElementById('themeToggle');
-  const modeSelect = document.getElementById('modeSelect');
-  const popSound = document.getElementById('popSound');
-  const powerSound = document.getElementById('powerSound');
+    let timeLeft = 30;
+    let gameInterval;
+    let dotTimeout;
+    let gameActive = false;
+    let initialDotSize = 50;
+    let currentDotSize = initialDotSize;
+    let comboCount = 0;
+    let lastTapTime = 0;
+    const comboThreshold = 700;
+    let currentSpawnInterval = 1500;
+    const minSpawnInterval = 600;
+    const maxSpawnInterval = 1500;
+    const dotShrinkAmount = 1;
+    const minDotSize = 20;
 
-  let score = 0;
-  let timeLeft = 30;
-  let gameInterval;
-  let dotTimeout;
-  let gameActive = false;
-  let initialDotSize = 50;
-  let currentDotSize = initialDotSize;
-  let comboCount = 0;
-  let lastTapTime = 0;
-  const comboThreshold = 700;
-  let currentSpawnInterval = 1500;
-  const minSpawnInterval = 600;
-  const maxSpawnInterval = 1500;
-  const dotShrinkAmount = 1;
-  const minDotSize = 20;
-  let isPowerDot = false;
-  let mode = 'time';
-  let darkTheme = false;
-
-  modeSelect.addEventListener('change', () => {
-    mode = modeSelect.value;
-  });
-
-  themeToggle.addEventListener('click', () => {
-    darkTheme = !darkTheme;
-    document.body.style.background = darkTheme ? '#111' : 'linear-gradient(135deg, #e0f7fa, #c5e1a5)';
-    gameArea.style.backgroundColor = darkTheme ? '#333' : '#fff';
-  });
-
-  function getRandomPosition() {
-    const w = gameArea.clientWidth;
-    const h = gameArea.clientHeight;
-    const x = Math.random() * (w - currentDotSize);
-    const y = Math.random() * (h - currentDotSize);
-    return { x, y };
-  }
-
-  function moveDot() {
-    if (!gameActive) return;
-    isPowerDot = Math.random() < 0.2;
-    const pos = getRandomPosition();
-    dot.style.left = pos.x + 'px';
-    dot.style.top = pos.y + 'px';
-    dot.style.width = currentDotSize + 'px';
-    dot.style.height = currentDotSize + 'px';
-    dot.style.backgroundColor = isPowerDot ? '#ffd700' : '#ff4081';
-    dot.style.transform = 'scale(1)';
-    dot.style.opacity = 1;
-    dot.style.display = 'block';
-
-    clearTimeout(dotTimeout);
-    dotTimeout = setTimeout(() => {
-      if (gameActive) {
-        comboCount = 0;
-        comboDisplay.textContent = '';
-        moveDot();
+    function updateHighScore() {
+      if (score > highScore) {
+        highScore = score;
+        localStorage.setItem('tayGameHighScore', highScore);
+        highScoreDisplay.textContent = `High Score: ${highScore}`;
       }
-    }, currentSpawnInterval + 700);
-  }
-
-  function handleDotClick(e) {
-    if (!gameActive || dot.style.display === 'none') return;
-    const now = Date.now();
-    comboCount = (now - lastTapTime < comboThreshold) ? comboCount + 1 : 1;
-    lastTapTime = now;
-
-    const basePoints = isPowerDot ? 15 : 5;
-    const comboBonus = Math.max(0, comboCount - 1) * 2;
-    const points = basePoints + comboBonus;
-    score += points;
-    scoreDisplay.textContent = score;
-    comboDisplay.textContent = comboCount > 1 ? `Combo x${comboCount}!` : '';
-
-    if (isPowerDot) {
-      powerSound.currentTime = 0;
-      powerSound.play();
-      dot.style.boxShadow = '0 0 15px 6px rgba(255, 215, 0, 0.8)';
-    } else {
-      popSound.currentTime = 0;
-      popSound.play();
-      dot.style.boxShadow = '0 0 15px 5px rgba(255, 64, 129, 0.6)';
     }
 
-    setTimeout(() => {
-      dot.style.boxShadow = 'none';
-    }, 200);
-
-    const r = gameArea.getBoundingClientRect();
-    const popupX = e.clientX - r.left;
-    const popupY = e.clientY - r.top;
-
-    const popup = document.createElement('div');
-    popup.classList.add('score-popup');
-    popup.textContent = `+${points}`;
-    popup.style.left = (popupX - 15) + 'px';
-    popup.style.top = (popupY - 30) + 'px';
-    gameArea.appendChild(popup);
-    setTimeout(() => popup.remove(), 500);
-
-    dot.style.display = 'none';
-    clearTimeout(dotTimeout);
-    currentDotSize = Math.max(minDotSize, currentDotSize - dotShrinkAmount);
-    currentSpawnInterval = Math.max(minSpawnInterval, currentSpawnInterval - 30);
-    setTimeout(moveDot, 100);
-  }
-
-  dot.addEventListener('click', handleDotClick);
-  dot.addEventListener('touchstart', function(event) {
-    event.preventDefault();
-    if (event.touches && event.touches.length > 0) {
-      handleDotClick(event.touches[0]);
+    function getRandomPosition() {
+      const width = gameArea.clientWidth;
+      const height = gameArea.clientHeight;
+      const x = Math.random() * (width - currentDotSize);
+      const y = Math.random() * (height - currentDotSize);
+      return { x, y };
     }
-  });
 
-  function updateTimer() {
-    if (mode === 'time') {
+    function moveDot() {
+      if (!gameActive) return;
+      const pos = getRandomPosition();
+      dot.style.left = `${pos.x}px`;
+      dot.style.top = `${pos.y}px`;
+      dot.style.width = `${currentDotSize}px`;
+      dot.style.height = `${currentDotSize}px`;
+      dot.style.opacity = 1;
+      dot.style.display = 'block';
+
+      clearTimeout(dotTimeout);
+      dotTimeout = setTimeout(() => {
+        if (gameActive) {
+          comboCount = 0;
+          comboDisplay.textContent = '';
+          moveDot();
+        }
+      }, currentSpawnInterval + 700);
+    }
+
+    function handleDotClick(event) {
+      if (!gameActive || dot.style.display === 'none') return;
+      const currentTime = Date.now();
+      comboCount = currentTime - lastTapTime < comboThreshold ? comboCount + 1 : 1;
+      lastTapTime = currentTime;
+      comboDisplay.textContent = comboCount > 1 ? `Combo x${comboCount}!` : '';
+      const comboBonus = Math.max(0, comboCount - 1) * 2;
+      const points = 5 + comboBonus;
+      score += points;
+      scoreDisplay.textContent = score;
+
+      dot.classList.add('pop');
+      setTimeout(() => dot.classList.remove('pop'), 100);
+
+      const rect = gameArea.getBoundingClientRect();
+      const popup = document.createElement('div');
+      popup.className = 'score-popup';
+      popup.textContent = `+${points}`;
+      popup.style.left = `${event.clientX - rect.left - 15}px`;
+      popup.style.top = `${event.clientY - rect.top - 30}px`;
+      gameArea.appendChild(popup);
+      setTimeout(() => popup.remove(), 500);
+
+      dot.style.display = 'none';
+      clearTimeout(dotTimeout);
+      currentDotSize = Math.max(minDotSize, currentDotSize - dotShrinkAmount);
+      currentSpawnInterval = Math.max(minSpawnInterval, currentSpawnInterval - 30);
+      setTimeout(moveDot, 100);
+    }
+
+    dot.addEventListener('click', handleDotClick);
+    dot.addEventListener('touchstart', function(e) {
+      e.preventDefault();
+      if (e.touches && e.touches.length > 0) {
+        handleDotClick(e.touches[0]);
+      }
+    });
+
+    function updateTimer() {
       timeLeft--;
       timeLeftDisplay.textContent = timeLeft;
       if (timeLeft <= 0) endGame();
     }
-  }
 
-  function startGame() {
-    score = 0;
-    timeLeft = mode === 'time' ? 30 : 9999;
-    gameActive = true;
-    currentDotSize = initialDotSize;
-    comboCount = 0;
-    currentSpawnInterval = maxSpawnInterval;
-    scoreDisplay.textContent = score;
-    timeLeftDisplay.textContent = timeLeft;
-    comboDisplay.textContent = '';
-    startButton.disabled = true;
-    gameOverMessage.style.display = 'none';
-    dot.style.display = 'none';
-    moveDot();
-    gameInterval = setInterval(updateTimer, 1000);
-  }
+    function startGame() {
+      score = 0;
+      timeLeft = 30;
+      gameActive = true;
+      currentDotSize = initialDotSize;
+      comboCount = 0;
+      currentSpawnInterval = maxSpawnInterval;
+      scoreDisplay.textContent = score;
+      timeLeftDisplay.textContent = timeLeft;
+      comboDisplay.textContent = '';
+      startButton.disabled = true;
+      gameOverMessage.style.display = 'none';
+      dot.style.display = 'none';
 
-  function endGame() {
-    gameActive = false;
-    clearInterval(gameInterval);
-    clearTimeout(dotTimeout);
-    dot.style.display = 'none';
-    gameOverMessage.style.display = 'block';
-    gameOverMessage.textContent = `Game Over! Final Score: ${score}`;
-    startButton.disabled = false;
-  }
-
-  startButton.addEventListener('click', startGame);
-  startButton.addEventListener('touchstart', function(event){
-    event.preventDefault();
-    if(!startButton.disabled){
-      startGame();
+      moveDot();
+      gameInterval = setInterval(updateTimer, 1000);
     }
-  });
 
-</script>
+    function endGame() {
+      gameActive = false;
+      clearInterval(gameInterval);
+      clearTimeout(dotTimeout);
+      dot.style.display = 'none';
+      updateHighScore();
+      gameOverMessage.textContent = `Game Over! Final Score: ${score}`;
+      gameOverMessage.style.display = 'block';
+      startButton.disabled = false;
+    }
+
+    startButton.addEventListener('click', startGame);
+    startButton.addEventListener('touchstart', function(e){
+      e.preventDefault();
+      if (!startButton.disabled) startGame();
+    });
+
+    gameOverMessage.style.display = 'none';
+  </script>
+
 </body>
 </html>
